@@ -1,0 +1,55 @@
+{
+  "project_info": {
+    "project_number": "122823411744",
+    "firebase_url": "https://van-event.firebaseio.com",
+    "project_id": "van-event",
+    "storage_bucket": "van-event.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:122823411744:android:3d49fa98fba5de2e469445",
+        "android_client_info": {
+          "package_name": "com.example.van_events_project"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "122823411744-enh0dc6vt9oag49vfj60l59c56m0v6ku.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.van_events_project",
+            "certificate_hash": "7ccc4c31dc123cbc881cac18cf13b867404c4677"
+          }
+        },
+        {
+          "client_id": "122823411744-kksl1malfdq07hnuhitgmfmigmh332il.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAR0-SMBEfek58hi7hvsTV1sosSTL-Ezp8"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "122823411744-kksl1malfdq07hnuhitgmfmigmh332il.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "122823411744-8tmq1s6j3j9n2bblmc458vhl8f39353l.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "hgfggvb"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
