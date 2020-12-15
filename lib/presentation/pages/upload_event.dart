@@ -314,10 +314,10 @@ class UploadEventState extends State<UploadEvent> {
                       FormBuilderDateTimePicker(
                         controller: uploadEventRead.dateDebutController,
                         firstDate: DateTime.now(),
-                        initialValue: !uploadEventRead.isUpdating?widget.myEvent.dateDebut:null,
+                        initialValue: uploadEventRead.isUpdating?widget.myEvent.dateDebut:null,
                         initialTime: TimeOfDay.now() ,
 
-                        initialDate: !uploadEventRead.isUpdating
+                        initialDate: uploadEventRead.isUpdating
                             ? uploadEventRead.dateDebut ?? DateTime.now()
                             : DateTime.now(),
                         locale: Locale('fr'),
@@ -343,7 +343,7 @@ class UploadEventState extends State<UploadEvent> {
                       FormBuilderDateTimePicker(
                         controller: uploadEventRead.dateFinController,
                         firstDate: uploadEventRead.dateDebut ?? DateTime.now(),
-                        initialValue: !uploadEventRead.isUpdating?widget.myEvent.dateFin:null,
+                        initialValue: uploadEventRead.isUpdating?widget.myEvent.dateFin:null,
                         initialDate:
                         uploadEventRead.dateDebut ?? DateTime.now(),
                         name: "Date de fin",
@@ -371,102 +371,106 @@ class UploadEventState extends State<UploadEvent> {
                         validator:FormBuilderValidators.required(context,),
                       ),
                       Divider(),
-                      Text(
-                        'A l\'affiche',
-                        style: Theme.of(context).textTheme.bodyText2,
-                      ),
-                      Consumer(
-                        builder: (context, watch, child) {
-                          return CheckboxListTile(
-                            onChanged: (bool val) {
-                              uploadEventRead.setIsAffiche();
-                            },
-                            value: watch(uploadEventProvider).isAffiche,
-                            activeColor: Theme.of(context).colorScheme.primary,
-                            title: Text(
-                              'A l\'affiche',
-                              style: Theme.of(context).textTheme.headline5,
-                            ),
-                          );
-                        },
-                      ),
-                      Consumer(builder: (context, watch, child) {
-                        return Visibility(
-                          visible: watch(uploadEventProvider).isAffiche,
-                          child: CheckboxListTile(
-                            onChanged: (bool val) {
-                              uploadEventRead.setJusquauJourJ();
-                            },
-                            value: watch(uploadEventProvider).isJusquauJourJ,
-                            activeColor: Theme.of(context).colorScheme.primary,
-                            title: Text(
-                              watch(uploadEventProvider).isJusquauJourJ
-                                  ? 'Jusqu\'au jour J'
-                                  : 'Durée:',
-                              style: Theme.of(context).textTheme.headline5,
-                            ),
+                      !uploadEventRead.isUpdating?Column(
+                        children: <Widget>[
+                          Text(
+                            'A l\'affiche',
+                            style: Theme.of(context).textTheme.bodyText2,
                           ),
-                        );
-                      }),
-                      Consumer(builder: (context, watch, child) {
-                        return Visibility(
-                          visible: !watch(uploadEventProvider).isJusquauJourJ &&
-                              watch(uploadEventProvider).isAffiche,
-                          child: Column(
-                            children: [
-                              FormBuilderDateTimePicker(
-                                name: "Date de début d\'affiche",
-                                firstDate: DateTime.now(),
-                                initialDate: DateTime.now(),
-                                controller:
-                                uploadEventRead.debutAfficheController,
-                                onChanged: (dt) {
-                                  uploadEventRead.setDebutAffiche(dt);
+                          Consumer(
+                            builder: (context, watch, child) {
+                              return CheckboxListTile(
+                                onChanged: (bool val) {
+                                  uploadEventRead.setIsAffiche();
                                 },
-                                style: Theme.of(context).textTheme.headline5,
-                                cursorColor:
-                                Theme.of(context).colorScheme.onBackground,
-                                inputType: InputType.both,
-                                format: DateFormat("dd/MM/yyyy 'à' HH:mm"),
-                                decoration: InputDecoration(
-                                    labelText:
-                                    widget.myEvent?.dateDebutAffiche != null
-                                        ? DateFormat("dd/MM/yyyy 'à' HH:mm")
-                                        .format(widget
-                                        .myEvent?.dateDebutAffiche)
-                                        : 'Date de début d\'affiche'),
-                                validator:FormBuilderValidators.required(context,),
-                              ),
-                              SizedBox(
-                                height: 4,
-                              ),
-                              FormBuilderDateTimePicker(
-                                firstDate: DateTime.now(),
-                                initialDate: uploadEventRead.debutAffiche?? DateTime.now(),
-                                name: "Date de fin d\'affiche",
-                                controller:
-                                uploadEventRead.finAfficheController,
-                                onChanged: (dt) {
-                                  uploadEventRead.setFinAffiche(dt);
-                                },
-                                style: Theme.of(context).textTheme.headline5,
-                                cursorColor:
-                                Theme.of(context).colorScheme.onBackground,
-                                inputType: InputType.both,
-                                format: DateFormat("dd/MM/yyyy 'à' HH:mm"),
-                                decoration: InputDecoration(
-                                    labelText: widget.myEvent?.dateFinAffiche !=
-                                        null
-                                        ? DateFormat("dd/MM/yyyy 'à' HH:mm")
-                                        .format(
-                                        widget.myEvent?.dateFinAffiche)
-                                        : 'Date de fin d\'affiche'),
-                                validator:FormBuilderValidators.required(context,),
-                              ),
-                            ],
+                                value: watch(uploadEventProvider).isAffiche,
+                                activeColor: Theme.of(context).colorScheme.primary,
+                                title: Text(
+                                  'A l\'affiche',
+                                  style: Theme.of(context).textTheme.headline5,
+                                ),
+                              );
+                            },
                           ),
-                        );
-                      }),
+                          Consumer(builder: (context, watch, child) {
+                            return Visibility(
+                              visible: watch(uploadEventProvider).isAffiche,
+                              child: CheckboxListTile(
+                                onChanged: (bool val) {
+                                  uploadEventRead.setJusquauJourJ(val);
+                                },
+                                value: watch(uploadEventProvider).isJusquauJourJ,
+                                activeColor: Theme.of(context).colorScheme.primary,
+                                title: Text(
+                                  watch(uploadEventProvider).isJusquauJourJ
+                                      ? 'Jusqu\'au jour J'
+                                      : 'Durée:',
+                                  style: Theme.of(context).textTheme.headline5,
+                                ),
+                              ),
+                            );
+                          }),
+                          Consumer(builder: (context, watch, child) {
+                            return Visibility(
+                              visible: !watch(uploadEventProvider).isJusquauJourJ &&
+                                  watch(uploadEventProvider).isAffiche,
+                              child: Column(
+                                children: [
+                                  FormBuilderDateTimePicker(
+                                    name: "Date de début d\'affiche",
+                                    firstDate: DateTime.now(),
+                                    initialDate: DateTime.now(),
+                                    controller:
+                                    uploadEventRead.debutAfficheController,
+                                    onChanged: (dt) {
+                                      uploadEventRead.setDebutAffiche(dt);
+                                    },
+                                    style: Theme.of(context).textTheme.headline5,
+                                    cursorColor:
+                                    Theme.of(context).colorScheme.onBackground,
+                                    inputType: InputType.both,
+                                    format: DateFormat("dd/MM/yyyy 'à' HH:mm"),
+                                    decoration: InputDecoration(
+                                        labelText:
+                                        widget.myEvent?.dateDebutAffiche != null
+                                            ? DateFormat("dd/MM/yyyy 'à' HH:mm")
+                                            .format(widget
+                                            .myEvent?.dateDebutAffiche)
+                                            : 'Date de début d\'affiche'),
+                                    validator:FormBuilderValidators.required(context,),
+                                  ),
+                                  SizedBox(
+                                    height: 4,
+                                  ),
+                                  FormBuilderDateTimePicker(
+                                    firstDate: DateTime.now(),
+                                    initialDate: uploadEventRead.debutAffiche?? DateTime.now(),
+                                    name: "Date de fin d\'affiche",
+                                    controller:
+                                    uploadEventRead.finAfficheController,
+                                    onChanged: (dt) {
+                                      uploadEventRead.setFinAffiche(dt);
+                                    },
+                                    style: Theme.of(context).textTheme.headline5,
+                                    cursorColor:
+                                    Theme.of(context).colorScheme.onBackground,
+                                    inputType: InputType.both,
+                                    format: DateFormat("dd/MM/yyyy 'à' HH:mm"),
+                                    decoration: InputDecoration(
+                                        labelText: widget.myEvent?.dateFinAffiche !=
+                                            null
+                                            ? DateFormat("dd/MM/yyyy 'à' HH:mm")
+                                            .format(
+                                            widget.myEvent?.dateFinAffiche)
+                                            : 'Date de fin d\'affiche'),
+                                    validator:FormBuilderValidators.required(context,),
+                                  ),
+                                ],
+                              ),
+                            );
+                          }),
+                        ],
+                      ):SizedBox(),
                       Divider(),
                       Text(
                         'Adresse',
@@ -837,11 +841,7 @@ class CardFormulaState extends State<CardFormula> {
                     }
                   },
                   keyboardType: TextInputType.text,
-                  validator: FormBuilderValidators.compose([
-                    FormBuilderValidators.required(context),
-                    FormBuilderValidators.match(context,
-                        r'^[a-zA-ZáàâäãåçéèêëíìîïñóòôöõúùûüýÿæœÁÀÂÄÃÅÇÉÈÊËÍÌÎÏÑÓÒÔÖÕÚÙÛÜÝŸÆŒ ]{2,30}$')
-                  ])
+                  validator: FormBuilderValidators.required(context),
               ),
               SizedBox(
                 height: 10,

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_form_builder/flutter_form_builder.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
+import 'package:open_mail_app/open_mail_app.dart';
 import 'package:van_events_project/domain/repositories/my_user_repository.dart';
 import 'package:van_events_project/presentation/widgets/model_body.dart';
 import 'package:van_events_project/presentation/widgets/model_screen.dart';
@@ -108,8 +109,25 @@ class ResetPassword extends StatelessWidget {
         await context
             .read(myUserRepository)
             .resetEmail(_fbKey.currentState.fields['email'].value);
-        Show.showDialogToDismiss(
-            context, 'Reset', 'Un email a été envoyé', 'Ok');
+
+
+        final result = await Show.showDialogToDismiss(context, 'Email envoyé',
+            'Veuillez vérifier vos emails', 'Ok')
+            .then((_)async => await OpenMailApp.openMailApp() );
+
+        if (!result.didOpen && !result.canOpen){
+          Show.showDialogToDismiss(context, 'Oops', 'Pas d\'application de messagerie installée', 'Ok');
+        }else if(!result.didOpen && result.canOpen){
+          showDialog(
+            context: context,
+            builder: (_) {
+              return MailAppPickerDialog(
+                mailApps: result.options,
+              );
+            },
+          );
+        }
+
       } catch (e) {
         Show.showSnackBarError(context,_scaffoldKey, 'Email inconnu');
       }

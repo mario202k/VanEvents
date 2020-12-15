@@ -1,21 +1,20 @@
 {
   "project_info": {
-    "project_number": "122823411744",
-    "firebase_url": "https://van-event.firebaseio.com",
-    "project_id": "van-event",
-    "storage_bucket": "van-event.appspot.com"
+    "project_number": "273524316243",
+    "project_id": "myvanevents",
+    "storage_bucket": "myvanevents.appspot.com"
   },
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:122823411744:android:3d49fa98fba5de2e469445",
+        "mobilesdk_app_id": "1:273524316243:android:b05824f31ea0d645374ea6",
         "android_client_info": {
           "package_name": "com.example.van_events_project"
         }
       },
       "oauth_client": [
         {
-          "client_id": "122823411744-enh0dc6vt9oag49vfj60l59c56m0v6ku.apps.googleusercontent.com",
+          "client_id": "273524316243-rc09nc40vd5hdh1v9a543uu1cqalb1i1.apps.googleusercontent.com",
           "client_type": 1,
           "android_info": {
             "package_name": "com.example.van_events_project",
@@ -23,28 +22,21 @@
           }
         },
         {
-          "client_id": "122823411744-kksl1malfdq07hnuhitgmfmigmh332il.apps.googleusercontent.com",
+          "client_id": "273524316243-m0b620nd1gr87326p332l3rc6rboni3l.apps.googleusercontent.com",
           "client_type": 3
         }
       ],
       "api_key": [
         {
-          "current_key": "AIzaSyAR0-SMBEfek58hi7hvsTV1sosSTL-Ezp8"
+          "current_key": "AIzaSyCqtsXCbkclGaorm9pRf7wVtfaY6SORjfE"
         }
       ],
       "services": {
         "appinvite_service": {
           "other_platform_oauth_client": [
             {
-              "client_id": "122823411744-kksl1malfdq07hnuhitgmfmigmh332il.apps.googleusercontent.com",
+              "client_id": "273524316243-m0b620nd1gr87326p332l3rc6rboni3l.apps.googleusercontent.com",
               "client_type": 3
-            },
-            {
-              "client_id": "122823411744-8tmq1s6j3j9n2bblmc458vhl8f39353l.apps.googleusercontent.com",
-              "client_type": 2,
-              "ios_info": {
-                "bundle_id": "hgfggvb"
-              }
             }
           ]
         }

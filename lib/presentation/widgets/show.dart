@@ -328,12 +328,17 @@ class Show {
         });
   }
 
-  static Future showDialogGenresEtTypes(BuildContext context, int indexStart,TabController tabController){
+  static Future showDialogLieuQuandGenresEtTypes(BuildContext context,List userGenres,
+  List userTypes, int indexStart,TabController tabController, List listLieu,
+      List listQuand, GeoPoint geoPoint){
+    print('showDialogLieuQuandGenresEtTypes');
+    print('!!!!!!!!!!');
     Widget lieuQuandAlertDialog(BuildContext context) {
       return LieuQuandAlertDialog();
     }
 
     SizedBox genreAlertDialog(BuildContext context) {
+      print("genreAlertDialog");
       return SizedBox(
         width: double.maxFinite,
         child: ListView.builder(
@@ -420,43 +425,43 @@ class Show {
       );
     }
 
-    void modificationLieuEtDate(BuildContext context, List lieu, List quand) {
-      if (lieu == null || lieu.isEmpty) {
-        return;
-      }
-
-      switch (lieu[0]) {
-        case 'address':
-          context.read(boolToggleProvider).setLieux(Lieu.address);
-
-          context.read(boolToggleProvider).setSelectedAdress(lieu[1]);
-          break;
-        case 'aroundMe':
-          context.read(boolToggleProvider).setLieux(Lieu.aroundMe);
-          break;
-      }
-      switch (quand[0]) {
-        case 'date':
-          context.read(boolToggleProvider).setQuand(Quand.date);
-
-          if (quand[1].toString() != 'null') {
-            Timestamp time = quand[1] as Timestamp;
-
-            context.read(boolToggleProvider).setSelectedDate(time.toDate());
-          }
-
-          break;
-        case 'ceSoir':
-          context.read(boolToggleProvider).setQuand(Quand.ceSoir);
-          break;
-        case 'demain':
-          context.read(boolToggleProvider).setQuand(Quand.demain);
-          break;
-        case 'avenir':
-          context.read(boolToggleProvider).setQuand(Quand.avenir);
-          break;
-      }
-    }
+    // void modificationLieuEtDate(BuildContext context, List lieu, List quand) {
+    //   if (lieu == null || lieu.isEmpty) {
+    //     return;
+    //   }
+    //
+    //   switch (lieu[0]) {
+    //     case 'address':
+    //       context.read(boolToggleProvider).setLieux(Lieu.address);
+    //
+    //       context.read(boolToggleProvider).setSelectedAdress(lieu[1]);
+    //       break;
+    //     case 'aroundMe':
+    //       context.read(boolToggleProvider).setLieux(Lieu.aroundMe);
+    //       break;
+    //   }
+    //   switch (quand[0]) {
+    //     case 'date':
+    //       context.read(boolToggleProvider).setQuand(Quand.date);
+    //
+    //       if (quand[1].toString() != 'null') {
+    //         Timestamp time = quand[1] as Timestamp;
+    //
+    //         context.read(boolToggleProvider).setSelectedDate(time.toDate());
+    //       }
+    //
+    //       break;
+    //     case 'ceSoir':
+    //       context.read(boolToggleProvider).setQuand(Quand.ceSoir);
+    //       break;
+    //     case 'demain':
+    //       context.read(boolToggleProvider).setQuand(Quand.demain);
+    //       break;
+    //     case 'avenir':
+    //       context.read(boolToggleProvider).setQuand(Quand.avenir);
+    //       break;
+    //   }
+    // }
     List<Widget> containersAlertDialog = [
       lieuQuandAlertDialog(context),
       genreAlertDialog(context),
@@ -467,14 +472,19 @@ class Show {
       genreCupertino(context),
       typeCupertino(context)
     ];
+    context.read(boolToggleProvider).initGenre(genres: userGenres);
 
-    context.read(boolToggleProvider).initLieuEtLieu();
+    context.read(boolToggleProvider).initLieuQuandGeo(listLieu: listLieu, listQuand: listQuand);
+
+    context.read(boolToggleProvider).initType(types: userTypes);
+
+    //context.read(boolToggleProvider).initLieuEtLieu();
 
     final myUserRead = context.read(myUserProvider);
 
-    modificationLieuEtDate(context, myUserRead?.lieu, myUserRead?.quand);
+    //modificationLieuEtDate(context, myUserRead?.lieu, myUserRead?.quand);
 
-    context.read(boolToggleProvider).initGenre();
+    // context.read(boolToggleProvider).initGenre();
     for (int i = 0; i < (myUserRead.genres != null
         ? myUserRead.genres.toList()
         : []).length; i++) {
@@ -483,7 +493,7 @@ class Show {
       }
     }
 
-    context.read(boolToggleProvider).initType();
+    // context.read(boolToggleProvider).initType();
     for (int i = 0; i < (myUserRead.types != null ? myUserRead.types.toList() : []).length; i++) {
       if (context.read(boolToggleProvider).type.containsKey(myUserRead.types[i])) {
         context.read(boolToggleProvider).modificationType(myUserRead.types[i]);

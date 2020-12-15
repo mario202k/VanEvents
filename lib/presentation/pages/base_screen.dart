@@ -19,7 +19,7 @@ import 'package:van_events_project/presentation/widgets/model_screen.dart';
 import 'package:van_events_project/services/firebase_cloud_messaging.dart';
 
 final navigationProvider = StateProvider<String>((ref) {
-  return 'Home Events';
+  return 'HomeEvents';
 });
 
 class BaseScreens extends HookWidget {
@@ -35,22 +35,6 @@ class BaseScreens extends HookWidget {
     final myUser = useProvider(myUserProvider);
     NotificationHandler().initializeFcmNotification(myUser.id, context);
 
-    final state = useProvider(navigationProvider);
-    int i = 0;
-    switch (state.state) {
-      case 'HomeEvents':
-        i = 0;
-        break;
-      case 'Chat':
-        i = 1;
-        break;
-      case 'Billets':
-        i = 2;
-        break;
-      case 'Profil':
-        i = 3;
-        break;
-    }
     return ModelScreen(
       child: Stack(
         children: <Widget>[
@@ -63,188 +47,228 @@ class BaseScreens extends HookWidget {
                       ? MainAxisAlignment.start
                       : MainAxisAlignment.center,
                   children: [
-                    Text(
-                      state.state,
-                      style: Theme.of(context).textTheme.headline1,
+                    Consumer(
+                        builder: (context, watch,_) {
+                          final nav = watch(navigationProvider).state;
+                        return Text(
+                          nav,
+                          style: Theme.of(context).textTheme.headline1,
+                        );
+                      }
                     ),
                   ],
                 ),
               ),
             ),
-            body: state.state == 'HomeEvents'
-                ? HomeEvents()
-                : state.state == 'Chat'
-                    ? Chat()
-                    : state.state == 'Billets'
-                        ? Billets()
-                        : Profil(),
+            body: Consumer(
+                builder: (context, watch,_) {
+                  final nav = watch(navigationProvider).state;
+                return nav == 'HomeEvents'
+                    ? HomeEvents()
+                    : nav == 'Chat'
+                        ? Chat()
+                        : nav == 'Billets'
+                            ? Billets()
+                            : Profil();
+              }
+            ),
           ),
           Align(
             alignment: Alignment.bottomCenter,
-            child: CurvedNavigationBar(
-              backgroundColor: Colors.transparent,
-              index: i,
-              color: Theme.of(context).colorScheme.primary,
-              height: 45,
-              onTap: (index) {
-                switch (index) {
-                  case 0:
-                    state.state = 'HomeEvents';
+            child:Consumer(
+              builder: (context, watch,_) {
+                final nav = watch(navigationProvider).state;
+
+                int i;
+                switch (nav) {
+                  case 'HomeEvents':
+                    i = 0;
                     break;
-                  case 1:
-                    state.state = 'Chat';
+                  case 'Chat':
+                    i = 1;
                     break;
-                  case 2:
-                    state.state = 'Billets';
+                  case 'Billets':
+                    i = 2;
                     break;
-                  case 3:
-                    state.state = 'Profil';
+                  case 'Profil':
+                    i = 3;
                     break;
                 }
-              },
-              items: <Widget>[
-                Icon(
-                  FontAwesomeIcons.home,
-                  size: 30,
-                  color: Theme.of(context).colorScheme.onPrimary,
-                ),
-                Icon(
-                  FontAwesomeIcons.comments,
-                  size: 30,
-                  color: Theme.of(context).colorScheme.onPrimary,
-                ),
-                Icon(
-                  FontAwesomeIcons.ticketAlt,
-                  size: 30,
-                  color: Theme.of(context).colorScheme.onPrimary,
-                ),
-                Icon(
-                  FontAwesomeIcons.user,
-                  size: 30,
-                  color: Theme.of(context).colorScheme.onPrimary,
-                ),
-              ],
+
+                return CurvedNavigationBar(
+                  backgroundColor: Colors.transparent,
+                  index: i,
+                  color: Theme.of(context).colorScheme.primary,
+                  height: 45,
+                  onTap: (index) {
+                    switch (index) {
+                      case 0:
+                        context.read(navigationProvider).state = 'HomeEvents';
+                        break;
+                      case 1:
+                        context.read(navigationProvider).state = 'Chat';
+                        break;
+                      case 2:
+                        context.read(navigationProvider).state = 'Billets';
+                        break;
+                      case 3:
+                        context.read(navigationProvider).state = 'Profil';
+                        break;
+                    }
+                  },
+                  items: <Widget>[
+                    Icon(
+                      FontAwesomeIcons.home,
+                      size: 30,
+                      color: Theme.of(context).colorScheme.onPrimary,
+                    ),
+                    Icon(
+                      FontAwesomeIcons.comments,
+                      size: 30,
+                      color: Theme.of(context).colorScheme.onPrimary,
+                    ),
+                    Icon(
+                      FontAwesomeIcons.ticketAlt,
+                      size: 30,
+                      color: Theme.of(context).colorScheme.onPrimary,
+                    ),
+                    Icon(
+                      FontAwesomeIcons.user,
+                      size: 30,
+                      color: Theme.of(context).colorScheme.onPrimary,
+                    ),
+                  ],
+                );
+              }
             ),
           ),
           //TopAppBar(state.toString()),
-          state.toString() == 'Chat'
-              ? Positioned(
-                  right: 15,
-                  bottom: 60,
-                  child: AnimatedBuilder(
-                      animation: _animationController,
-                      builder: (context, _) {
-                        return Container(
-                          width: 120,
-                          height: 120,
-                          child: Stack(
-                            overflow: Overflow.visible,
-                            children: <Widget>[
-                              Positioned(
-                                bottom: 0,
-                                right: 0,
-                                child: Transform.translate(
-                                  offset: Offset(
-                                      -maxSlide * _animationController.value,
-                                      0),
-                                  child: Transform.rotate(
-                                    angle: _animationController.value *
-                                        2.0 *
-                                        math.pi,
-                                    child: Transform.scale(
-                                      scale: _animationController.value,
-                                      child: FloatingActionButton(
-                                          heroTag: 1,
-                                          child: Icon(
-                                            FontAwesomeIcons.userFriends,
-                                            color: Theme.of(context)
-                                                .colorScheme
-                                                .onSecondary,
-                                          ),
-                                          onPressed: () {
-                                            ExtendedNavigator.of(context).push(
-                                                Routes.searchUserEvent,
-                                                arguments:
-                                                    SearchUserEventArguments(
-                                                        isEvent: false));
-                                          }),
+          Consumer(
+              builder: (context, watch,_) {
+                final nav = watch(navigationProvider).state;
+              return nav == 'Chat'
+                  ? Positioned(
+                      right: 15,
+                      bottom: 60,
+                      child: AnimatedBuilder(
+                          animation: _animationController,
+                          builder: (context, _) {
+                            return Container(
+                              width: 120,
+                              height: 120,
+                              child: Stack(
+                                overflow: Overflow.visible,
+                                children: <Widget>[
+                                  Positioned(
+                                    bottom: 0,
+                                    right: 0,
+                                    child: Transform.translate(
+                                      offset: Offset(
+                                          -maxSlide * _animationController.value,
+                                          0),
+                                      child: Transform.rotate(
+                                        angle: _animationController.value *
+                                            2.0 *
+                                            math.pi,
+                                        child: Transform.scale(
+                                          scale: _animationController.value,
+                                          child: FloatingActionButton(
+                                              heroTag: 1,
+                                              child: Icon(
+                                                FontAwesomeIcons.userFriends,
+                                                color: Theme.of(context)
+                                                    .colorScheme
+                                                    .onSecondary,
+                                              ),
+                                              onPressed: () {
+                                                ExtendedNavigator.of(context).push(
+                                                    Routes.searchUserEvent,
+                                                    arguments:
+                                                        SearchUserEventArguments(
+                                                            isEvent: false));
+                                              }),
+                                        ),
+                                      ),
                                     ),
                                   ),
-                                ),
-                              ),
-                              Positioned(
-                                bottom: 0,
-                                right: 0,
-                                child: Transform.translate(
-                                  offset: Offset(0,
-                                      -maxSlide * _animationController.value),
-                                  child: Transform.rotate(
-                                    angle: _animationController.value *
-                                        2.0 *
-                                        math.pi,
-                                    child: Transform.scale(
-                                      scale: _animationController.value,
-                                      child: FloatingActionButton(
-                                          heroTag: 2,
-                                          child: Icon(
-                                            FontAwesomeIcons.users,
-                                            color: Theme.of(context)
-                                                .colorScheme
-                                                .onSecondary,
-                                          ),
-                                          onPressed: () {
-                                            ExtendedNavigator.of(context).push(
-                                                Routes.searchUserEvent,
-                                                arguments:
-                                                    SearchUserEventArguments(
-                                                        isEvent: true));
-                                          }
-                                          //ExtendedNavigator.of(context).pushNamed(Routes.uploadEvent),
-                                          ),
+                                  Positioned(
+                                    bottom: 0,
+                                    right: 0,
+                                    child: Transform.translate(
+                                      offset: Offset(0,
+                                          -maxSlide * _animationController.value),
+                                      child: Transform.rotate(
+                                        angle: _animationController.value *
+                                            2.0 *
+                                            math.pi,
+                                        child: Transform.scale(
+                                          scale: _animationController.value,
+                                          child: FloatingActionButton(
+                                              heroTag: 2,
+                                              child: Icon(
+                                                FontAwesomeIcons.users,
+                                                color: Theme.of(context)
+                                                    .colorScheme
+                                                    .onSecondary,
+                                              ),
+                                              onPressed: () {
+                                                ExtendedNavigator.of(context).push(
+                                                    Routes.searchUserEvent,
+                                                    arguments:
+                                                        SearchUserEventArguments(
+                                                            isEvent: true));
+                                              }
+                                              //ExtendedNavigator.of(context).pushNamed(Routes.uploadEvent),
+                                              ),
+                                        ),
+                                      ),
                                     ),
                                   ),
-                                ),
+                                  Positioned(
+                                    bottom: 0,
+                                    right: 0,
+                                    child: FloatingActionButton(
+                                        heroTag: 3,
+                                        child: Icon(
+                                          FontAwesomeIcons.search,
+                                          color: Theme.of(context)
+                                              .colorScheme
+                                              .onSecondary,
+                                        ),
+                                        onPressed: () {
+                                          //NotificationHandler().showOverlayWindow();
+                                          _animationController.isCompleted
+                                              ? _animationController.reverse()
+                                              : _animationController.forward();
+                                        }
+                                        //ExtendedNavigator.of(context).pushNamed(Routes.uploadEvent),
+                                        ),
+                                  ),
+                                ],
                               ),
-                              Positioned(
-                                bottom: 0,
-                                right: 0,
-                                child: FloatingActionButton(
-                                    heroTag: 3,
-                                    child: Icon(
-                                      FontAwesomeIcons.search,
-                                      color: Theme.of(context)
-                                          .colorScheme
-                                          .onSecondary,
-                                    ),
-                                    onPressed: () {
-                                      //NotificationHandler().showOverlayWindow();
-                                      _animationController.isCompleted
-                                          ? _animationController.reverse()
-                                          : _animationController.forward();
-                                    }
-                                    //ExtendedNavigator.of(context).pushNamed(Routes.uploadEvent),
-                                    ),
-                              ),
-                            ],
-                          ),
-                        );
-                      }),
-                )
-              : SizedBox(),
-          Visibility(
-            visible: state.toString() == 'Billets' ? true : false,
-            child: Positioned(
-                right: 15,
-                bottom: 60,
-                child: FloatingActionButton(
-                  child: Icon(
-                    FontAwesomeIcons.car,
-                    color: Theme.of(context).colorScheme.onSecondary,
-                  ),
-                  onPressed: () {
-                    ExtendedNavigator.of(context).push(Routes.transport);
-                  },
-                )),
+                            );
+                          }),
+                    )
+                  : SizedBox();
+            }
+          ),
+          Consumer(
+              builder: (context, watch,_) {
+                final nav = watch(navigationProvider).state;
+
+                return nav == 'Billets' ?Positioned(
+                    right: 15,
+                    bottom: 60,
+                    child: FloatingActionButton(
+                      child: Icon(
+                        FontAwesomeIcons.car,
+                        color: Theme.of(context).colorScheme.onSecondary,
+                      ),
+                      onPressed: () {
+                        ExtendedNavigator.of(context).push(Routes.transport);
+                      },
+                    )):SizedBox();
+            }
           )
         ],
       ),

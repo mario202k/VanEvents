@@ -2,7 +2,6 @@ import 'dart:math' as math;
 
 import 'package:auto_route/auto_route.dart';
 import 'package:flutter/material.dart';
-import 'package:van_events_project/domain/repositories/my_user_repository.dart';
 import 'package:van_events_project/presentation/widgets/my_drawer.dart';
 
 class CustomDrawer extends StatefulWidget {
@@ -24,14 +23,11 @@ class CustomDrawerState extends State<CustomDrawer>
   final double maxSlide = 300.0;
   AnimationController _animationController;
   bool _canBeDragged = false;
-  MyUserRepository myUserRepo;
+
 
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addObserver(this);
-
-    myUserRepo = MyUserRepository(uid: widget.uid);
     _animationController = AnimationController(
       vsync: this,
       duration: Duration(milliseconds: 650),
@@ -41,62 +37,42 @@ class CustomDrawerState extends State<CustomDrawer>
   @override
   void dispose() {
     _animationController.dispose();
-    WidgetsBinding.instance.removeObserver(this);
     super.dispose();
-  }
-
-  @override
-  void didChangeAppLifecycleState(AppLifecycleState state) {
-    super.didChangeAppLifecycleState(state);
-    switch (state) {
-      case AppLifecycleState.paused:
-        myUserRepo.setInactive();
-        break;
-      case AppLifecycleState.resumed:
-        myUserRepo.setOnline();
-        break;
-      case AppLifecycleState.inactive:
-        myUserRepo.setInactive();
-        break;
-      case AppLifecycleState.detached:
-        myUserRepo.setInactive();
-        break;
-    }
   }
 
   void toggleDrawer() => _animationController.isCompleted ? close() : open();
 
-  void _onDragEnd(DragEndDetails details) {
-    if (_animationController.isDismissed || _animationController.isCompleted) {
-      return;
-    }
-    if (details.velocity.pixelsPerSecond.dx.abs() >= 365.0) {
-      double visualVelocity = details.velocity.pixelsPerSecond.dx /
-          MediaQuery.of(context).size.width;
-      _animationController.fling(velocity: visualVelocity);
-    } else if (_animationController.value < 0.5) {
-      close();
-    } else {
-      open();
-    }
-  }
+  // void _onDragEnd(DragEndDetails details) {
+  //   if (_animationController.isDismissed || _animationController.isCompleted) {
+  //     return;
+  //   }
+  //   if (details.velocity.pixelsPerSecond.dx.abs() >= 365.0) {
+  //     double visualVelocity = details.velocity.pixelsPerSecond.dx /
+  //         MediaQuery.of(context).size.width;
+  //     _animationController.fling(velocity: visualVelocity);
+  //   } else if (_animationController.value < 0.5) {
+  //     close();
+  //   } else {
+  //     open();
+  //   }
+  // }
 
   void close() => _animationController.reverse();
 
   void open() => _animationController.forward();
 
-  void _onDragUpdate(DragUpdateDetails details) {
-    if (_canBeDragged) {
-      double delta = details.primaryDelta / maxSlide;
-      _animationController.value += delta;
-    }
-  }
-
-  void _onDragStart(DragStartDetails details) {
-    bool isDragOpenFromLeft = _animationController.isDismissed;
-    bool isDragCloseFromRight = _animationController.isCompleted;
-    _canBeDragged = isDragOpenFromLeft || isDragCloseFromRight;
-  }
+  // void _onDragUpdate(DragUpdateDetails details) {
+  //   if (_canBeDragged) {
+  //     double delta = details.primaryDelta / maxSlide;
+  //     _animationController.value += delta;
+  //   }
+  // }
+  //
+  // void _onDragStart(DragStartDetails details) {
+  //   bool isDragOpenFromLeft = _animationController.isDismissed;
+  //   bool isDragCloseFromRight = _animationController.isCompleted;
+  //   _canBeDragged = isDragOpenFromLeft || isDragCloseFromRight;
+  // }
 
   @override
   Widget build(BuildContext context) {

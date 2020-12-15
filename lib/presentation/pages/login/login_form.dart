@@ -158,8 +158,8 @@ class LoginForm extends HookWidget {
                                             }
                                           },
 
-                                          validator: FormBuilderValidators.compose([FormBuilderValidators.required(context),
-                                            FormBuilderValidators.email(context)]),
+                                          validator: FormBuilderValidators.compose([FormBuilderValidators.required(context,errorText: 'Champs requis'),
+                                            FormBuilderValidators.email(context,errorText: 'email non valide')]),
 
                                         ),
                                       ),
@@ -208,8 +208,8 @@ class LoginForm extends HookWidget {
                                               }
                                             },
 
-                                            validator: FormBuilderValidators.compose([FormBuilderValidators.required(context),
-                                              FormBuilderValidators.match(context, r'^(?=.*[a-z])(?=.*[A-Z])(?=.*\d.*)[a-zA-Z0-9\S]{8,15}$')]),
+                                            validator: FormBuilderValidators.compose([FormBuilderValidators.required(context,errorText: 'Champs requis'),
+                                              FormBuilderValidators.match(context, r'^(?=.*[a-z])(?=.*[A-Z])(?=.*\d.*)[a-zA-Z0-9\S]{8,15}$',errorText: '1 majuscule, 1 chiffre, 8 caractères')]),
 
                                           );
                                         }),

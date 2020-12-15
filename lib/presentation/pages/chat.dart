@@ -19,6 +19,7 @@ import 'package:van_events_project/domain/routing/route.gr.dart';
 class Chat extends HookWidget  {
   @override
   Widget build(BuildContext context) {
+    print('buildChat');
     final myChatRepo = context.read(myChatRepositoryProvider);
     return StreamBuilder<List<Object>>(
       stream: myChatRepo.chatRoomsStream(),

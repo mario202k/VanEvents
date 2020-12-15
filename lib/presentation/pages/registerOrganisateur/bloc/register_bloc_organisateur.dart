@@ -1,4 +1,5 @@
 import 'dart:async';
+
 import 'package:bloc/bloc.dart';
 import 'package:cloud_functions/cloud_functions.dart';
 import 'package:flutter/cupertino.dart';
@@ -8,7 +9,6 @@ import 'package:van_events_project/domain/repositories/my_user_repository.dart';
 import 'package:van_events_project/domain/repositories/stripe_repository.dart';
 import 'package:van_events_project/presentation/pages/registerOrganisateur/bloc/register_event_organisateur.dart';
 import 'package:van_events_project/presentation/pages/registerOrganisateur/bloc/register_state_organisateur.dart';
-import 'package:van_events_project/providers/authentication_cubit/authentication_cubit.dart';
 import 'package:van_events_project/providers/toggle_bool_chat_room.dart';
 
 
@@ -39,9 +39,7 @@ class RegisterBlocOrganisateur
           event.postal_code,
           event.state,
           event.account_holder_name,
-          event.account_holder_type,
           event.account_number,
-          event.business_type,
           event.password,
           event.nom,
           event.prenom,
@@ -62,9 +60,7 @@ class RegisterBlocOrganisateur
       String postal_code,
       String state,
       String account_holder_name,
-      String account_holder_type,
       String account_number,
-      String business_type,
       String password,
       String nom,
       String prenom,
@@ -90,9 +86,7 @@ class RegisterBlocOrganisateur
                 postal_code,
                 state,
                 account_holder_name,
-                account_holder_type,
                 account_number,
-                business_type,
                 password,
                 nom,
                 prenom,
@@ -116,24 +110,9 @@ class RegisterBlocOrganisateur
         yield RegisterStateOrganisateur.success(rep);
       } else {
 
+        stripeRepository.deleteStripeAccount(stripeRep.data['stripeAccount']);
 
-        try {
-          final HttpsCallable callable = CloudFunctions.instance.getHttpsCallable(
-            functionName: 'deleteStripeAccount',
-          );
-          await callable.call(
-            <String, dynamic>{
-              'stripeAccount': stripeRep.data['stripeAccount'],
-            },
-          );
-        } on CloudFunctionsException catch (e) {
-          print(e);
-        } catch (e) {
-          print(e);
-        }
-
-        yield RegisterStateOrganisateur.failure(
-            'Impossible de créer le compte');
+        yield RegisterStateOrganisateur.failure(rep);
       }
     } else {
       yield RegisterStateOrganisateur.failure(

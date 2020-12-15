@@ -102,7 +102,7 @@ class _WalkthroughState extends State<Walkthrough> {
                                           ))),
                                   SizedBox(height: 30.0),
                                   Text(
-                                    'Achetez vos tickets simplement.',
+                                    'Achetez vos billets simplement.',
                                     style:
                                         Theme.of(context).textTheme.bodyText2,
                                   ),

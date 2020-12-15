@@ -1,3 +1,5 @@
+import 'package:firebase_auth/firebase_auth.dart';
+
 class Path {
   static String user(String uid) => 'users/$uid';
 
@@ -9,7 +11,7 @@ class Path {
 
   static String messages(String chatId) => 'chats/$chatId/messages';
 
-  static eventPhotos(String idEvent, String name) => 'photos/$idEvent/$name';
+  static eventPhotos(String idEvent, String name) => 'eventsImages/$idEvent/$name';
 
   static transport(String id) => 'transports/$id';
 
@@ -29,11 +31,27 @@ class Path {
 
   static chat(String idChatRoom) =>'chats/$idChatRoom';
 
-  static chatMembre(String idChatRoom, String uid) =>'chats/$idChatRoom/$uid';
+  static chatMembre(String idChatRoom, String uid) =>'chats/$idChatRoom/chatMembres/$uid';
 
   static billet(String id) => 'billets/$id';
 
-  static chatImage(String chatId, String nom) =>'chats/$chatId/$nom';
+  static chatImage(String chatId, String nom) =>'chatsImages/$chatId/$nom';
 
   static profilImage(String uid, String pathprofil) =>'imageProfil/$uid/$pathprofil';
+
+  static signInUrl(String email)=> 'https://myvanevents.page.link/signIn?email=$email';
+
+  static androidPackageName() => 'com.example.van_events_project';
+
+  static iOSBundleId() => 'com.example.vanEventsProject';
+
+  static actionCodeSettingsSignIn (String email) => ActionCodeSettings(
+      url: signInUrl(email),
+      androidInstallApp: true,
+      androidMinimumVersion: '9',
+      androidPackageName: androidPackageName(),
+      iOSBundleId: iOSBundleId(),
+      handleCodeInApp: true);
+
+  static logoImage(String pathlogo) =>'imageLogo/$pathlogo';
 }

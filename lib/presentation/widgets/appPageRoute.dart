@@ -46,7 +46,7 @@ class AppPageRoute extends MaterialPageRoute<String> {
   Color get barrierColor => null;
 
   @override
-  Duration get transitionDuration => const Duration(milliseconds: 2900);
+  Duration get transitionDuration => const Duration(milliseconds: 3300);
 
   CupertinoPageRoute<String> get _cupertinoPageRoute {
     assert(_useCupertinoTransitions);

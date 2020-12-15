@@ -22,9 +22,7 @@ class RegisterSubmitted extends RegisterEventOrganisateur {
   final String postal_code;
   final String state;
   final String account_holder_name;
-  final String account_holder_type;
   final String account_number;
-  final String business_type;
   final String password;
   final String nom;
   final String prenom;
@@ -46,9 +44,7 @@ class RegisterSubmitted extends RegisterEventOrganisateur {
       this.postal_code,
       this.state,
       this.account_holder_name,
-      this.account_holder_type,
       this.account_number,
-      this.business_type,
       this.password,
       this.nom,
       this.prenom,
@@ -69,9 +65,7 @@ class RegisterSubmitted extends RegisterEventOrganisateur {
         postal_code,
         state,
         account_holder_name,
-        account_holder_type,
         account_number,
-        business_type,
         password,
         nom,
         prenom,
@@ -81,6 +75,6 @@ class RegisterSubmitted extends RegisterEventOrganisateur {
 
   @override
   String toString() {
-    return 'RegisterSubmitted{nomSociete: $nomSociete, email: $email, supportEmail: $supportEmail, phone: $phone, url: $url, city: $city, line1: $line1, line2: $line2, postal_code: $postal_code, state: $state, account_holder_name: $account_holder_name, account_holder_type: $account_holder_type, account_number: $account_number, business_type: $business_type, password: $password, nom: $nom, prenom: $prenom, SIREN: $SIREN, date_of_birth: $date_of_birth, boolToggleRead: $boolToggleRead, stripeRepository: $stripeRepository, myUserRepository: $myUserRepository}';
+    return 'RegisterSubmitted{nomSociete: $nomSociete, email: $email, supportEmail: $supportEmail, phone: $phone, url: $url, city: $city, line1: $line1, line2: $line2, postal_code: $postal_code, state: $state, account_holder_name: $account_holder_name, account_number: $account_number, password: $password, nom: $nom, prenom: $prenom, SIREN: $SIREN, date_of_birth: $date_of_birth, boolToggleRead: $boolToggleRead, stripeRepository: $stripeRepository, myUserRepository: $myUserRepository}';
   }
 }

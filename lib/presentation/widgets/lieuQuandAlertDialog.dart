@@ -267,9 +267,7 @@ class _LieuQuandAlertDialogState extends State<LieuQuandAlertDialog>
                   context.read(boolToggleProvider).setQuand(value);
                 },
                 title: FormBuilderDateTimePicker(
-                  initialValue: myUser.quand[0] == 'date'
-                      ? (myUser.quand[1] as Timestamp)?.toDate() ?? null
-                      : null,
+                  initialValue: toggle.dateQuand,
                   firstDate: DateTime.now(),
                   name: "Date",
                   //focusNode: _nodes[1],

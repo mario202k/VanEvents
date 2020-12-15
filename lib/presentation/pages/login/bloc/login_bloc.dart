@@ -54,7 +54,8 @@ class LoginBloc extends Bloc<LoginEvent, LoginState> {
       UserCredential authResult = await myUserRepository
           .signInWithCredentials(email, password);
 
-      if (authResult.user.emailVerified) {
+      if (authResult.user.emailVerified || authResult.user.metadata.creationTime
+          .compareTo(authResult.user.metadata.lastSignInTime) < 0 ) {
         await myUserRepository
             .createOrUpdateUserOnDatabase(authResult.user);
 
@@ -71,8 +72,7 @@ class LoginBloc extends Bloc<LoginEvent, LoginState> {
   Stream<LoginState> _mapLoginWithAnonymous(MyUserRepository myUserRepository) async* {
     yield LoginState.loading();
     try {
-      print('///');
-     // print(authResult.additionalUserInfo.toString());
+
       UserCredential authResult = await myUserRepository.loginAnonymous();
 
       await myUserRepository

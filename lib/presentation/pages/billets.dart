@@ -20,6 +20,7 @@ import 'package:van_events_project/presentation/widgets/show.dart';
 class Billets extends HookWidget {
   @override
   Widget build(BuildContext context) {
+    print('buildBillet');
     final myBilletRepo = useProvider(myBilletRepositoryProvider);
     return StreamBuilder(
       stream: myBilletRepo.streamBilletsMyUser(),

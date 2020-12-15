@@ -44,7 +44,7 @@ class NotificationHandler {
     flutterLocalNotificationsPlugin = new FlutterLocalNotificationsPlugin();
 
     var initializationSettingsAndroid =
-        new AndroidInitializationSettings('app_icon');
+        new AndroidInitializationSettings('launcher_icon');
     var initializationSettingsIOS = new IOSInitializationSettings(
         requestSoundPermission: true,
         requestAlertPermission: true,

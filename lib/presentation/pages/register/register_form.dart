@@ -7,9 +7,11 @@ import 'package:flutter_form_builder/flutter_form_builder.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
+import 'package:open_mail_app/open_mail_app.dart';
 import 'package:van_events_project/domain/repositories/my_user_repository.dart';
 import 'package:van_events_project/presentation/pages/register/bloc/bloc.dart';
 import 'package:van_events_project/presentation/pages/register/register_button.dart';
+import 'package:van_events_project/presentation/widgets/show.dart';
 import 'package:van_events_project/providers/toggle_bool_chat_room.dart';
 
 class RegisterForm extends HookWidget {
@@ -27,7 +29,7 @@ class RegisterForm extends HookWidget {
     final myUserRepo = useProvider(myUserRepository);
 
     return BlocListener<RegisterBloc, RegisterState>(
-      listener: (context, state) {
+      listener: (context, state) async {
         if (state.isSubmitting) {
           Scaffold.of(context)
             ..hideCurrentSnackBar()
@@ -45,18 +47,23 @@ class RegisterForm extends HookWidget {
         }
 
         if (state.isSuccess) {
-          Scaffold.of(context)
-            ..hideCurrentSnackBar()
-            ..showSnackBar(
-              SnackBar(
-                content: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(state.rep),
-                  ],
-                ),
-              ),
+          final result = await Show.showDialogToDismiss(context, 'Email envoyé',
+              'Veuillez vérifier vos emails', 'Ok')
+              .then((_)async => await OpenMailApp.openMailApp() );
+
+          if (!result.didOpen && !result.canOpen){
+            Show.showDialogToDismiss(context, 'Oops', 'Pas d\'application de messagerie installée', 'Ok');
+          }else if(!result.didOpen && result.canOpen){
+            showDialog(
+              context: context,
+              builder: (_) {
+                return MailAppPickerDialog(
+                  mailApps: result.options,
+                );
+              },
             );
+          }
+
         }
 
         if (state.isFailure) {
@@ -132,8 +139,8 @@ class RegisterForm extends HookWidget {
                               FocusScope.of(context).requestFocus(_nodeNom);
                             }
                           },
-                          validator: FormBuilderValidators.compose([FormBuilderValidators.required(context),
-                            FormBuilderValidators.match(context, r'^[a-zA-ZáàâäãåçéèêëíìîïñóòôöõúùûüýÿæœÁÀÂÄÃÅÇÉÈÊËÍÌÎÏÑÓÒÔÖÕÚÙÛÜÝŸÆŒ ]{2,40}$')]),
+                          validator: FormBuilderValidators.compose([FormBuilderValidators.required(context,errorText: 'Champs requis'),
+                            FormBuilderValidators.match(context, r'^[a-zA-ZáàâäãåçéèêëíìîïñóòôöõúùûüýÿæœÁÀÂÄÃÅÇÉÈÊËÍÌÎÏÑÓÒÔÖÕÚÙÛÜÝŸÆŒ\- ]{2,60}$',errorText: 'Erreur de saisie')]),
 
 
                         ),
@@ -165,8 +172,8 @@ class RegisterForm extends HookWidget {
                             }
                           },
 
-                          validator: FormBuilderValidators.compose([FormBuilderValidators.required(context),
-                            FormBuilderValidators.match(context, r'^[a-zA-ZáàâäãåçéèêëíìîïñóòôöõúùûüýÿæœÁÀÂÄÃÅÇÉÈÊËÍÌÎÏÑÓÒÔÖÕÚÙÛÜÝŸÆŒ ]{2,40}$')]),
+                          validator: FormBuilderValidators.compose([FormBuilderValidators.required(context,errorText: 'Champs requis'),
+                            FormBuilderValidators.match(context, r'^[a-zA-ZáàâäãåçéèêëíìîïñóòôöõúùûüýÿæœÁÀÂÄÃÅÇÉÈÊËÍÌÎÏÑÓÒÔÖÕÚÙÛÜÝŸÆŒ\- ]{2,60}$',errorText: 'Erreur de saisie')]),
 
                         ),
                       ),
@@ -198,8 +205,8 @@ class RegisterForm extends HookWidget {
                                   .requestFocus(_nodePassword);
                             }
                           },
-                          validator: FormBuilderValidators.compose([FormBuilderValidators.required(context),
-                            FormBuilderValidators.email(context)]),
+                          validator: FormBuilderValidators.compose([FormBuilderValidators.required(context,errorText: 'Champs requis'),
+                            FormBuilderValidators.email(context,errorText: 'email non valide')]),
 
 
                         ),
@@ -246,8 +253,8 @@ class RegisterForm extends HookWidget {
                                 }
                               },
 
-                              validator: FormBuilderValidators.compose([FormBuilderValidators.required(context),
-                                FormBuilderValidators.match(context, r'^(?=.*[a-z])(?=.*[A-Z])(?=.*\d.*)[a-zA-Z0-9\S]{8,15}$')]),
+                              validator: FormBuilderValidators.compose([FormBuilderValidators.required(context,errorText: 'Champs requis'),
+                                FormBuilderValidators.match(context, r'^(?=.*[a-z])(?=.*[A-Z])(?=.*\d.*)[a-zA-Z0-9\S]{8,15}$',errorText: '1 majuscule, 1 chiffre, 8 caractères')]),
 
                             );
                           }
@@ -292,10 +299,17 @@ class RegisterForm extends HookWidget {
                                   _onFormSubmitted(context,boolToggleRead,myUserRepo);
                                 }
                               },
+                              validator:(val){
+                                if(val != _fbKey.currentState.fields['Mot de passe']
+                                    .value){
+                                  return 'Pas idendtique';
+                                }
+                                return null;
+                              }
 
-                              validator: FormBuilderValidators.compose([FormBuilderValidators.required(context),
-                                FormBuilderValidators.equal(context, _fbKey.currentState.fields['Mot de passe']
-                                    .value)]),
+                              // validator: FormBuilderValidators.compose([FormBuilderValidators.required(context,errorText: 'Champs requis'),
+                              //   FormBuilderValidators.equal(context, _fbKey.currentState.fields['Mot de passe']
+                              //       .value,errorText: 'Pas identique')]),
 
 
                             );
@@ -364,6 +378,7 @@ class RegisterForm extends HookWidget {
 
   void _onFormSubmitted(BuildContext context,BoolToggle boolToggleRead,
       MyUserRepository myUserRepository) {
+
     if(_fbKey.currentState.validate()){
 
       BlocProvider.of<RegisterBloc>(context).add(

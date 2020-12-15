@@ -19,6 +19,14 @@ class RouteAuthentication extends HookWidget {
     final myUser = useProvider(myUserProvider);
     final myUserRepo = useProvider(myUserRepository);
 
+    if(myUserRepo.uid != null){
+      BlocProvider.of<AuthenticationCubit>(context).authenticationLoggedIn(myUserRepo);
+    }else{
+      BlocProvider.of<AuthenticationCubit>(context).authenticationStarted(myUserRepo,context);
+    }
+
+
+
     return ModelScreen(
       child: BlocListener<AuthenticationCubit, AuthenticationState>(
         listener: (context, state) {

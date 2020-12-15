@@ -1,5 +1,6 @@
 {
   "projects": {
-    "default": "van-event"
+    "default": "van-event",
+    "vanevents": "myvanevents"
   }
 }

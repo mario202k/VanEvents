@@ -16,6 +16,7 @@ class CguCgvAccept extends HookWidget {
   @override
   Widget build(BuildContext context) {
     final myUserRepo = useProvider(myUserRepository);
+    myUserRepo.setUid(uid);
     return Scaffold(
       appBar: AppBar(
         title: Text('CGU CGV'),
@@ -72,7 +73,7 @@ class CguCgvAccept extends HookWidget {
                     child: Text('Non'),
                     onPressed: () {
 
-                      myUserRepo.setInactive();
+
                       BlocProvider.of<AuthenticationCubit>(context)
                           .authenticationLoggedOut(myUserRepo);
                       Navigator.of(context)

@@ -101,10 +101,13 @@ class MyEventRepository{
           element.types[0] == "route" || element.types[0] == 'country');
     }
 
-    _service.getDocId(path: Path.events());
+    // _service.getDocId(path: Path.events());
 
+    print("coucou");
     String docId = oldId ?? _service.getDocId(path: Path.events());
 
+
+    print(docId);
 
     await _service.setData(path: Path.event(docId), data: {
       "id": docId,
@@ -159,7 +162,7 @@ class MyEventRepository{
         'isGroupe': true,
         'titre': titre,
         'imageFlyerUrl': urlFlyer,
-      } ,path: Path.chats());
+      } ,path: Path.chat(idChatRoom));
 
       if (flyer == null && images == null) {
         await _service.setData(data: {
@@ -371,6 +374,7 @@ class MyEventRepository{
             map23Types(types, date, dateTimePlusUn);
             break;
           case 'demain':
+            print('Types!!!!!!!');
             final date = DateTime.now();
             date.add(Duration(days: 1));
             final dateTimePlusUn = date.add(Duration(days: 1));
@@ -426,7 +430,7 @@ class MyEventRepository{
 
               return collectionStreamTypes(types).map((event) => event
                   .where((element) =>
-                  dateCompriEntre(element, date, dateTimePlusUn)));
+                  dateCompriEntre(element, date, dateTimePlusUn)).toList());
             }
             break;
 
@@ -460,7 +464,7 @@ class MyEventRepository{
 
               return collectionStreamTypes(types).map((event) => event
                   .where((element) =>
-                  dateCompriEntre(element, date, dateTimePlusUn)));
+                  dateCompriEntre(element, date, dateTimePlusUn)).toList());
             }
 
             break;
@@ -550,18 +554,20 @@ class MyEventRepository{
   }
 
   Stream<List<MyEvent>> map23Types(List types, DateTime date, DateTime dateTimePlusUn) {
+    print('map23Types');
     return _service.collectionStream(path: Path.events(),
         queryBuilder: (query)=>query.where('types', arrayContainsAny: types),
         builder: (map)=>MyEvent.fromMap(map)).map((event) => event
-        .where((element) => dateCompriEntre(element, date, dateTimePlusUn)));
+        .where((element) => dateCompriEntre(element, date, dateTimePlusUn)).toList());
   }
 
   Stream<List<MyEvent>> map2Types(List types, List listLieu, DateTime date, DateTime dateTimePlusUn) {
+    print('map2Types');
     return _service.collectionStream(path: Path.events(),
         queryBuilder: (query)=>query.where('types', arrayContainsAny: types),
         builder: (map)=>MyEvent.fromMap(map)).map((event) => event
         .where((event) => event.adresseZone.contains(listLieu[1]))
-        .where((element) => dateCompriEntre(element, date, dateTimePlusUn)));
+        .where((element) => dateCompriEntre(element, date, dateTimePlusUn)).toList());
   }
 
   void adzonDateComType(List types, List listLieu, DateTime date, DateTime dateTimePlusUn) {
@@ -576,6 +582,9 @@ class MyEventRepository{
   }
 
   Stream<List<MyEvent>> allTypes(List types) {
+    if(types.contains(null)){
+      return Stream.empty();
+    }
     return _service.collectionStream(path: Path.events(),
         queryBuilder: (query)=>query.where('types', arrayContainsAny: types),
         builder: (map)=>MyEvent.fromMap(map));
@@ -610,6 +619,7 @@ class MyEventRepository{
           return dateCompriGenre(genres, date, dateTimePlusUn);
           break;
         case 'demain':
+
           final date = DateTime.now();
           date.add(Duration(days: 1));
           final dateTimePlusUn = date.add(Duration(days: 1));
@@ -690,6 +700,7 @@ class MyEventRepository{
             map23Genres(genres, date, dateTimePlusUn);
             break;
           case 'demain':
+            print('!!!!!!!!!!!!!!!!');
             final date = DateTime.now();
             date.add(Duration(days: 1));
             final dateTimePlusUn = date.add(Duration(days: 1));
@@ -872,15 +883,16 @@ class MyEventRepository{
     return _service.collectionStream(path: Path.events(),
               queryBuilder: (query)=>query.where('genres', arrayContainsAny: genres),
               builder: (map)=>MyEvent.fromMap(map)).map((event) => event
-              .where((element) => dateCompriEntre(element, date, dateTimePlusUn)));
+              .where((element) => dateCompriEntre(element, date, dateTimePlusUn)).toList());
   }
 
   Stream<List<MyEvent>> map2Genres(List genres, List listLieu, DateTime date, DateTime dateTimePlusUn) {
+    print('map2Genres');
     return _service.collectionStream(path: Path.events(),
               queryBuilder: (query)=>query.where('genres', arrayContainsAny: genres),
               builder: (map)=>MyEvent.fromMap(map)).map((event) => event
               .where((event) => event.adresseZone.contains(listLieu[1]))
-              .where((element) => dateCompriEntre(element, date, dateTimePlusUn)));
+              .where((element) => dateCompriEntre(element, date, dateTimePlusUn)).toList());
   }
 
   void adzonDateComGenre(List genres, List listLieu, DateTime date, DateTime dateTimePlusUn) {
@@ -895,6 +907,10 @@ class MyEventRepository{
   }
 
   Stream<List<MyEvent>> allGenres(List genres) {
+    if(genres.contains(null)){
+      return Stream.empty();
+    }
+
     return _service.collectionStream(path: Path.events(),
         queryBuilder: (query)=>query.where('genres', arrayContainsAny: genres),
         builder: (map)=>MyEvent.fromMap(map));

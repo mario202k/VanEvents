@@ -19,7 +19,8 @@ class StripeRepository {
   Future<HttpsCallableResult> retrievePromotionCode(String codePromo) async {
     HttpsCallableResult stripeResponse;
     try {
-      final HttpsCallable callable = FirebaseFunctions.instance.httpsCallable(
+      final HttpsCallable callable =
+          FirebaseFunctions.instanceFor(region: 'europe-west1').httpsCallable(
         'retrievePromotionCode',
       );
       stripeResponse = await callable.call(
@@ -38,7 +39,8 @@ class StripeRepository {
   Future<HttpsCallableResult> retrieveStripeCouponList() async {
     HttpsCallableResult stripeResponse;
     try {
-      final HttpsCallable callable = FirebaseFunctions.instance.httpsCallable(
+      final HttpsCallable callable =
+          FirebaseFunctions.instanceFor(region: 'europe-west1').httpsCallable(
         'retrieveCouponList',
       );
       stripeResponse = await callable.call();
@@ -68,7 +70,7 @@ class StripeRepository {
       HttpsCallableResult intentResponse;
       try {
         final HttpsCallable callablePaymentIntent =
-            FirebaseFunctions.instance.httpsCallable(
+            FirebaseFunctions.instanceFor(region: 'europe-west1').httpsCallable(
           'paymentIntent',
         );
         intentResponse = await callablePaymentIntent.call(
@@ -132,7 +134,7 @@ class StripeRepository {
       HttpsCallableResult intentResponse;
       try {
         final HttpsCallable callablePaymentIntent =
-            FirebaseFunctions.instance.httpsCallable(
+            FirebaseFunctions.instanceFor(region: 'europe-west1').httpsCallable(
           'paymentIntent',
         );
         intentResponse = await callablePaymentIntent.call(
@@ -194,7 +196,7 @@ class StripeRepository {
       HttpsCallableResult intentResponse;
       try {
         final HttpsCallable callablePaymentIntent =
-            FirebaseFunctions.instance.httpsCallable(
+            FirebaseFunctions.instanceFor(region: 'europe-west1').httpsCallable(
           'paymentIntentUploadEvents',
         );
         intentResponse = await callablePaymentIntent.call(
@@ -244,7 +246,8 @@ class StripeRepository {
       String fileName, String stripeAccount, String person) async {
     HttpsCallableResult stripeResponse;
     try {
-      final HttpsCallable callable = FirebaseFunctions.instance.httpsCallable(
+      final HttpsCallable callable =
+          FirebaseFunctions.instanceFor(region: 'europe-west1').httpsCallable(
         'uploadFileToStripe',
       );
       stripeResponse = await callable.call(
@@ -267,7 +270,8 @@ class StripeRepository {
       String stripeAccount, String person) async {
     HttpsCallableResult stripeResponse;
     try {
-      final HttpsCallable callable = FirebaseFunctions.instance.httpsCallable(
+      final HttpsCallable callable =
+          FirebaseFunctions.instanceFor(region: 'europe-west1').httpsCallable(
         'retrievePerson',
       );
       stripeResponse = await callable.call(
@@ -285,7 +289,8 @@ class StripeRepository {
   Future<HttpsCallableResult> payoutList(String stripeAccount) async {
     HttpsCallableResult stripeResponse;
     try {
-      final HttpsCallable callable = FirebaseFunctions.instance.httpsCallable(
+      final HttpsCallable callable =
+          FirebaseFunctions.instanceFor(region: 'europe-west1').httpsCallable(
         'payoutList',
       );
       stripeResponse = await callable.call(
@@ -304,7 +309,8 @@ class StripeRepository {
   Future<HttpsCallableResult> transfersList(String stripeAccount) async {
     HttpsCallableResult stripeResponse;
     try {
-      final HttpsCallable callable = FirebaseFunctions.instance.httpsCallable(
+      final HttpsCallable callable =
+          FirebaseFunctions.instanceFor(region: 'europe-west1').httpsCallable(
         'transfersList',
       );
       stripeResponse = await callable.call(
@@ -332,21 +338,16 @@ class StripeRepository {
       String postalCode,
       String state,
       String accountHolderName,
-      String accountHolderType,
       String accountNumber,
-      String businessType,
       String password,
       String nom,
       String prenom,
       String siren,
       String dateOfBirth) async {
-    businessType = 'company';
-    accountHolderType = 'company';
-
     HttpsCallableResult stripeResponse;
     try {
       final HttpsCallable callablePaymentIntent =
-          FirebaseFunctions.instance.httpsCallable(
+          FirebaseFunctions.instanceFor(region: 'europe-west1').httpsCallable(
         'createStripeAccount',
       );
       stripeResponse = await callablePaymentIntent.call(
@@ -362,9 +363,9 @@ class StripeRepository {
           'postal_code': postalCode,
           'state': state,
           'account_holder_name': accountHolderName,
-          'account_holder_type': accountHolderType,
+          'account_holder_type': 'company',
           'account_number': accountNumber,
-          'business_type': businessType,
+          'business_type': 'company',
           'password': password,
           'siren': siren,
           'first_name': prenom,
@@ -374,6 +375,9 @@ class StripeRepository {
       );
     } on FirebaseFunctionsException catch (e) {
       print(e);
+      print(e.details);
+      print(e.message);
+      print(e.stackTrace);
     } catch (e) {
       print(e);
     }
@@ -384,7 +388,8 @@ class StripeRepository {
   Future<HttpsCallableResult> allStripeAccounts() async {
     HttpsCallableResult stripeResponse;
     try {
-      final HttpsCallable callable = FirebaseFunctions.instance.httpsCallable(
+      final HttpsCallable callable =
+          FirebaseFunctions.instanceFor(region: 'europe-west1').httpsCallable(
         'allStripeAccounts',
       );
       stripeResponse = await callable.call();
@@ -400,7 +405,8 @@ class StripeRepository {
   Future<HttpsCallableResult> deleteStripeAccount(String id) async {
     HttpsCallableResult stripeResponse;
     try {
-      final HttpsCallable callable = FirebaseFunctions.instance.httpsCallable(
+      final HttpsCallable callable =
+          FirebaseFunctions.instanceFor(region: 'europe-west1').httpsCallable(
         'deleteStripeAccount',
       );
       stripeResponse = await callable.call(
@@ -420,7 +426,8 @@ class StripeRepository {
   Future<HttpsCallableResult> organisateurBalance(String id) async {
     HttpsCallableResult stripeResponse;
     try {
-      final HttpsCallable callable = FirebaseFunctions.instance.httpsCallable(
+      final HttpsCallable callable =
+          FirebaseFunctions.instanceFor(region: 'europe-west1').httpsCallable(
         'balance',
       );
       stripeResponse = await callable.call(
@@ -440,7 +447,8 @@ class StripeRepository {
   Future<HttpsCallableResult> retrieveStripeAccount(String stripeId) async {
     HttpsCallableResult stripeResponse;
     try {
-      final HttpsCallable callable = FirebaseFunctions.instance.httpsCallable(
+      final HttpsCallable callable =
+          FirebaseFunctions.instanceFor(region: 'europe-west1').httpsCallable(
         'retrieveStripeAccount',
       );
       stripeResponse = await callable.call(

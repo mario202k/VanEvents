@@ -106,7 +106,7 @@ class FirestoreService {
   String getDocId<T>({
     @required String path,
   }) {
-    return FirebaseFirestore.instance.doc(path).id;
+    return FirebaseFirestore.instance.collection(path).doc().id;
   }
 
   /// Generic file upload for any [path] and [contentType]

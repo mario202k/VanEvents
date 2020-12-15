@@ -43,6 +43,7 @@ class _ChatRoomState extends State<ChatRoom> with WidgetsBindingObserver {
     WidgetsBinding.instance.addObserver(this);
     scrollController.addListener(scrollListener);
     chatRoomRead = context.read(chatRoomProvider);
+    db = context.read(myChatRepositoryProvider);
     chatRoomRead.initial(widget.chatId, context);
 
     context.read(chatRoomProvider).fetchAllMessages();
@@ -215,8 +216,8 @@ class _ChatRoomState extends State<ChatRoom> with WidgetsBindingObserver {
                         replacement: Visibility(
                           visible:
                               watchChat.oldMessages.isEmpty &&
-                                  watchChat.messages != null &&
-                                  watchChat.messages.isNotEmpty,
+
+                                  watchChat.messages.isEmpty,
                           child: Center(child: Text('Pas de messages.')),
                         ),
                       );
@@ -240,14 +241,6 @@ class _ChatRoomState extends State<ChatRoom> with WidgetsBindingObserver {
                                     itemBuilder: (context, index) {
                                       final oldMessage =
                                           chatRoomRead.oldMessages[index];
-                                      print(chatRoomRead
-                                          .myUsersList.first);
-
-                                      print(chatRoomRead
-                                          .myUsersList[1]);
-
-                                      print(oldMessage.idFrom);
-
 
                                       final MyUser userFrom = chatRoomRead
                                           .myUsersList

@@ -19,7 +19,7 @@ class ModelBody extends StatelessWidget {
                 minWidth: constraints.maxWidth,
                 minHeight: constraints.maxHeight),
             child: Padding(
-              padding: const EdgeInsets.fromLTRB(10, 20, 10, 20),
+              padding: const EdgeInsets.fromLTRB(10, 20, 10, 60),
               child: child,
             ),
           ),

@@ -1,5 +1,6 @@
 import 'dart:io';
 
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/foundation.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:google_maps_webservice/places.dart';
@@ -23,6 +24,7 @@ class BoolToggle with ChangeNotifier {
   List<Prediction> suggestions = List<Prediction>();
   Lieu lieu;
   Quand quand;
+  DateTime dateQuand;
   Position position;
   Map<String, bool> genre = {
     'Classique': false,
@@ -306,9 +308,43 @@ class BoolToggle with ChangeNotifier {
     notifyListeners();
   }
 
-  void initLieuEtLieu() {
-    lieu = Lieu.address;
-    quand = Quand.avenir;
+  void initLieuQuandGeo({List listLieu, List listQuand}) {
+    print('initLieuQuandGeo');
+    print(listQuand);
+    Quand quand;
+
+    switch(listQuand[0]){
+
+      case 'date': quand = Quand.date;
+      dateQuand = (listQuand[1] as Timestamp)?.toDate();
+      break;
+      case 'ceSoir' : quand = Quand.ceSoir;
+      break;
+      case 'demain' : quand = Quand.demain;
+      break;
+      case 'avenir' : quand = Quand.avenir;
+      break;
+      default : quand = Quand.avenir;
+    }
+
+    Lieu lieu;
+    //address, aroundMe
+
+    switch(listLieu[0]){
+
+      case 'address': lieu = Lieu.address;
+      setSelectedAdress(listLieu[1]);
+      break;
+      case 'aroundMe' : lieu = Lieu.aroundMe;
+      break;
+      default : lieu = Lieu.address;
+    }
+
+
+    this.lieu = lieu;
+    this.quand = quand;
+
+    notifyListeners();
   }
 
   void modificationLieuEtDate(List<String> myLieu, List<String> myQuand) {}

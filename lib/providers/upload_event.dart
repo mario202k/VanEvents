@@ -171,11 +171,13 @@ class UploadEventChangeNotifier extends ChangeNotifier {
     notifyListeners();
   }
 
-  setJusquauJourJ() {
+  setJusquauJourJ(bool val) {
     isJusquauJourJ = !isJusquauJourJ;
     if(isJusquauJourJ){
       debutAffiche = null;
       finAffiche = null;
+    }else{
+
     }
     dateAffiche();
     updateDaysAffiche();
@@ -607,20 +609,22 @@ class UploadEventChangeNotifier extends ChangeNotifier {
       coords: coords,
       dateDebut: dateDebut,
       dateFin: dateFin,
-      dateDebutAffiche: isAffiche ? debutAffiche : null,
-      dateFinAffiche: isAffiche ? finAffiche : null,
+      dateDebutAffiche: isAffiche ? finalDebutAffiche : null,
+      dateFinAffiche: isAffiche ? finalFinAffiche : null,
       description: description.text,
       flyer: flyer,
       images: images,
       stripeAccount: myEvent?.stripeAccount ?? myStripeAccount,
     )
-        .whenComplete(() {
+        .then((rep) {
       showSpinner = false;
       Show.showSnackBar('Event ajouter', myScaffoldKey);
       notifyListeners();
     }).catchError((e) {
       print(e);
       Show.showSnackBar('Impossible d\'ajouter l\'Event', myScaffoldKey);
+      showSpinner = false;
+      notifyListeners();
     });
   }
 

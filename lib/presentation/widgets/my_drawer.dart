@@ -1,13 +1,20 @@
+import 'dart:io';
+
 import 'package:auto_route/auto_route.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart' show rootBundle;
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
+import 'package:path_provider/path_provider.dart';
+import 'package:share/share.dart';
+import 'package:shimmer/shimmer.dart';
 import 'package:van_events_project/domain/models/my_user.dart';
 import 'package:van_events_project/domain/repositories/my_user_repository.dart';
 import 'package:van_events_project/domain/routing/route.gr.dart';
+import 'package:van_events_project/presentation/pages/base_screen.dart';
 import 'package:van_events_project/providers/authentication_cubit/authentication_cubit.dart';
 
 import 'custom_drawer.dart';
@@ -18,6 +25,8 @@ class MyDrawer extends HookWidget {
     print('buildMyDrawer');
     final myUser = useProvider(myUserProvider);
     final myUserRepo = useProvider(myUserRepository);
+    final myUserStream =useProvider(streamMyUserProvider);
+    final nav = useProvider(navigationProvider);
 
     return SizedBox(
         width: 300,
@@ -57,37 +66,37 @@ class MyDrawer extends HookWidget {
                                   borderRadius: BorderRadius.circular(25),
                                   color: Theme.of(context).colorScheme.primary,
                                 ),
-                                // child: SizedBox(
-                                //     width: constraints.maxWidth,
-                                //     height: 50,
-                                //     child: myUserStream.when(
-                                //         data: (myUser) {
-                                //           return Center(
-                                //               child: Text(
-                                //             myUser.nom ?? '',
-                                //             style: Theme.of(context)
-                                //                 .textTheme
-                                //                 .headline6,
-                                //           ));
-                                //         },
-                                //         loading: () => Shimmer.fromColors(
-                                //               baseColor: Colors.white,
-                                //               highlightColor: Theme.of(context)
-                                //                   .colorScheme
-                                //                   .primary,
-                                //               child: Container(
-                                //                 width: 220,
-                                //                 height: 220,
-                                //                 //color: Colors.white,
-                                //                 decoration: BoxDecoration(
-                                //                     borderRadius:
-                                //                         BorderRadius.all(
-                                //                             Radius.circular(
-                                //                                 25)),
-                                //                     color: Colors.white),
-                                //               ),
-                                //             ),
-                                //         error: (err, stack) => SizedBox())),
+                                child: SizedBox(
+                                    width: constraints.maxWidth,
+                                    height: 50,
+                                    child: myUserStream.when(
+                                        data: (myUser) {
+                                          return Center(
+                                              child: Text(
+                                            myUser.nom ?? '',
+                                            style: Theme.of(context)
+                                                .textTheme
+                                                .headline6,
+                                          ));
+                                        },
+                                        loading: () => Shimmer.fromColors(
+                                              baseColor: Colors.white,
+                                              highlightColor: Theme.of(context)
+                                                  .colorScheme
+                                                  .primary,
+                                              child: Container(
+                                                width: 220,
+                                                height: 220,
+                                                //color: Colors.white,
+                                                decoration: BoxDecoration(
+                                                    borderRadius:
+                                                        BorderRadius.all(
+                                                            Radius.circular(
+                                                                25)),
+                                                    color: Colors.white),
+                                              ),
+                                            ),
+                                        error: (err, stack) => SizedBox())),
                               ),
                             ),
                           ),
@@ -97,48 +106,47 @@ class MyDrawer extends HookWidget {
                                 radius: 59,
                                 backgroundColor:
                                 Theme.of(context).colorScheme.secondary,
-                                // child: myUserStream.when(
-                                //     data: (myUser) => CircleAvatar(
-                                //           backgroundImage: myUser
-                                //                   .imageUrl.isNotEmpty
-                                //               ? NetworkImage(myUser.imageUrl)
-                                //               : AssetImage(
-                                //                   'assets/img/normal_user_icon.png'),
-                                //           radius: 57,
-                                //           backgroundColor: Theme.of(context)
-                                //               .colorScheme
-                                //               .primary,
-                                //           child: RawMaterialButton(
-                                //             shape: const CircleBorder(),
-                                //             onPressed: () {
-                                //               BlocProvider.of<NavigationBloc>(
-                                //                       context)
-                                //                   .add(NavigationEvents.Profil);
-                                //               CustomDrawer.of(context).close();
-                                //             },
-                                //             padding: const EdgeInsets.all(57.0),
-                                //           ),
-                                //         ),
-                                //     loading: () => Shimmer.fromColors(
-                                //           baseColor: Colors.white,
-                                //           highlightColor: Theme.of(context)
-                                //               .colorScheme
-                                //               .primary,
-                                //           child: CircleAvatar(
-                                //             radius: 59,
-                                //             backgroundColor: Theme.of(context)
-                                //                 .colorScheme
-                                //                 .secondary,
-                                //           ),
-                                //         ),
-                                //     error: (err, stack) {
-                                //       return CircleAvatar(
-                                //         radius: 59,
-                                //         backgroundColor: Theme.of(context)
-                                //             .colorScheme
-                                //             .secondary,
-                                //       );
-                                //     }),
+                                child: myUserStream.when(
+                                    data: (myUser) => CircleAvatar(
+                                          backgroundImage: myUser
+                                                  .imageUrl.isNotEmpty
+                                              ? NetworkImage(myUser.imageUrl)
+                                              : AssetImage(
+                                                  'assets/img/normal_user_icon.png'),
+                                          radius: 57,
+                                          backgroundColor: Theme.of(context)
+                                              .colorScheme
+                                              .primary,
+                                          child: RawMaterialButton(
+                                            shape: const CircleBorder(),
+                                            onPressed: () {
+                                              nav.state = 'Profil';
+
+                                              CustomDrawer.of(context).close();
+                                            },
+                                            padding: const EdgeInsets.all(57.0),
+                                          ),
+                                        ),
+                                    loading: () => Shimmer.fromColors(
+                                          baseColor: Colors.white,
+                                          highlightColor: Theme.of(context)
+                                              .colorScheme
+                                              .primary,
+                                          child: CircleAvatar(
+                                            radius: 59,
+                                            backgroundColor: Theme.of(context)
+                                                .colorScheme
+                                                .secondary,
+                                          ),
+                                        ),
+                                    error: (err, stack) {
+                                      return CircleAvatar(
+                                        radius: 59,
+                                        backgroundColor: Theme.of(context)
+                                            .colorScheme
+                                            .secondary,
+                                      );
+                                    }),
                               )),
                         ],
                         //mainAxisAlignment: MainAxisAlignment.center,
@@ -169,8 +177,8 @@ class MyDrawer extends HookWidget {
                                   size: 22,
                                 ),
                                 onTap: () {
-                                  // BlocProvider.of<NavigationBloc>(context)
-                                  //     .add(NavigationEvents.Chat);
+
+                                  nav.state = 'Chat';
                                   CustomDrawer.of(context).close();
                                 },
                               ),
@@ -191,8 +199,7 @@ class MyDrawer extends HookWidget {
                                   size: 22,
                                 ),
                                 onTap: () {
-                                  // BlocProvider.of<NavigationBloc>(context)
-                                  //     .add(NavigationEvents.Billets);
+                                  nav.state = 'Billets';
                                   CustomDrawer.of(context).close();
                                 },
                               ),
@@ -212,6 +219,14 @@ class MyDrawer extends HookWidget {
                                   color: Colors.white,
                                   size: 22,
                                 ),
+                                onTap: ()async{
+                                  // final file = await getImageFileFromAssets('assets/img/vanEventsIconRouge.png');
+
+                                  //myUserRepo.uploadLogo(file);
+
+                                  Share.share('https://myvanevents.page.link/qh74');
+
+                                  },
                               ),
                             ),
                             Container(
@@ -376,7 +391,7 @@ class MyDrawer extends HookWidget {
                             color: Colors.white,
                           ),
                           onTap: () async {
-                            myUserRepo.setInactive();
+                            // myUserRepo.setInactive();
                             BlocProvider.of<AuthenticationCubit>(context).authenticationLoggedOut(myUserRepo);
                             // context
                             //     .bloc<AuthenticationBloc>()
@@ -391,5 +406,14 @@ class MyDrawer extends HookWidget {
             );
           }),
         ));
+  }
+
+  Future<File> getImageFileFromAssets(String path) async {
+    final byteData = await rootBundle.load(path);
+
+    final file = File('${(await getTemporaryDirectory()).path}/icon.png');
+    await file.writeAsBytes(byteData.buffer.asUint8List(byteData.offsetInBytes, byteData.lengthInBytes));
+
+    return file;
   }
 }

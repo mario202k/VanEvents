@@ -40,6 +40,7 @@ class _SearchUserEventState extends State<SearchUserEvent> {
 
   @override
   Widget build(BuildContext context) {
+    final uid = context.read(myUserProvider).id;
     return ModelScreen(
         child: Scaffold(
       appBar: PreferredSize(
@@ -115,60 +116,57 @@ class _SearchUserEventState extends State<SearchUserEvent> {
                   MyEvent.fromMap(documentSnapshot.data());
             }
 
-            return Visibility(
-              visible: (widget.isEvent ? myEvent.titre : myUser.nom)
-                  .toLowerCase()
-                  .contains(query.toLowerCase()),
-              child: Padding(
-                padding: const EdgeInsets.all(8.0),
-                child: ListTile(
-                  title: Text(widget.isEvent ? myEvent.titre : myUser.nom,
-                      style: Theme.of(context).textTheme.headline5),
-                  leading: (widget.isEvent
-                              ? myEvent.imageFlyerUrl
-                              : myUser.imageUrl)
-                          .isNotEmpty
-                      ? CachedNetworkImage(
-                          imageUrl: widget.isEvent
-                              ? myEvent.imageFlyerUrl
-                              : myUser.imageUrl,
-                          imageBuilder: (context, imageProvider) =>
-                              CircleAvatar(
-                            backgroundImage: imageProvider,
-                            radius: 25,
-                            backgroundColor:
-                                Theme.of(context).colorScheme.primary,
-                          ),
-                          fit: BoxFit.cover,
-                          placeholder: (context, url) => Shimmer.fromColors(
-                            baseColor: Theme.of(context).colorScheme.onPrimary,
-                            highlightColor:
-                                Theme.of(context).colorScheme.primary,
-                            child: CircleAvatar(
-                              radius: 25,
-                            ),
-                          ),
-                          errorWidget: (context, url, error) =>
-                              Icon(Icons.error),
-                        )
-                      : CircleAvatar(
-                          radius: 25,
-                          backgroundColor:
-                              Theme.of(context).colorScheme.primary,
-                          backgroundImage:
-                              AssetImage('assets/img/normal_user_icon.png'),
-                        ),
-                  onTap: () async {
-                    final db = context.read(myChatRepositoryProvider);
-                    if (myUser != null) {
-                      await toChatRoomUser(db, myUser, context);
-                    } else if (myEvent != null) {
-                      await toChatRoomEvent(myEvent, db, context);
-                    }
-                  },
+            return(widget.isEvent ? myEvent.titre : myUser.nom)
+                .toLowerCase()
+                .contains(query.toLowerCase())? (myEvent != null || myUser.id != uid)? Padding(
+              padding: const EdgeInsets.all(8.0),
+              child: ListTile(
+                title: Text(widget.isEvent ? myEvent.titre : myUser.nom,
+                    style: Theme.of(context).textTheme.headline5),
+                leading: (widget.isEvent
+                    ? myEvent.imageFlyerUrl
+                    : myUser.imageUrl)
+                    .isNotEmpty
+                    ? CachedNetworkImage(
+                  imageUrl: widget.isEvent
+                      ? myEvent.imageFlyerUrl
+                      : myUser.imageUrl,
+                  imageBuilder: (context, imageProvider) =>
+                      CircleAvatar(
+                        backgroundImage: imageProvider,
+                        radius: 25,
+                        backgroundColor:
+                        Theme.of(context).colorScheme.primary,
+                      ),
+                  fit: BoxFit.cover,
+                  placeholder: (context, url) => Shimmer.fromColors(
+                    baseColor: Theme.of(context).colorScheme.onPrimary,
+                    highlightColor:
+                    Theme.of(context).colorScheme.primary,
+                    child: CircleAvatar(
+                      radius: 25,
+                    ),
+                  ),
+                  errorWidget: (context, url, error) =>
+                      Icon(Icons.error),
+                )
+                    : CircleAvatar(
+                  radius: 25,
+                  backgroundColor:
+                  Theme.of(context).colorScheme.primary,
+                  backgroundImage:
+                  AssetImage('assets/img/normal_user_icon.png'),
                 ),
+                onTap: () async {
+                  final db = context.read(myChatRepositoryProvider);
+                  if (myUser != null) {
+                    await toChatRoomUser(db, myUser, context);
+                  } else if (myEvent != null) {
+                    await toChatRoomEvent(myEvent, db, context);
+                  }
+                },
               ),
-            );
+            ): SizedBox():SizedBox();
           },
           listeners: [
             refreshChangeListener,
