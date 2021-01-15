@@ -1,5 +1,6 @@
 import 'dart:io';
 
+import 'package:async/async.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:giphy_picker/giphy_picker.dart';
@@ -14,9 +15,12 @@ import 'package:van_events_project/services/firestore_path.dart';
 import 'package:van_events_project/services/firestore_service.dart';
 
 final myChatRepositoryProvider = Provider<MyChatRepository>((ref) {
-  final uid = ref.read(myUserProvider).id;
+  final uid = ref.watch(myUserProvider).id;
+  print(uid);
+  print('!!!!!!!!');
   return MyChatRepository(uid: uid);
 });
+
 
 class MyChatRepository {
   final _service = FirestoreService.instance;
@@ -25,9 +29,10 @@ class MyChatRepository {
 
   MyChatRepository({this.uid, this.chatId});
 
-  Stream<List<MyChat>> chatRoomsStream() {
+  Stream<List<MyChat>> chatRoomsStream(String uid) {
+
     return _service.collectionStream(
-        path: Path.chats(),
+        path: MyPath.chats(),
         builder: (data) => MyChat.fromMap(data),
         queryBuilder: (query) => query.where('membres.$uid', isEqualTo: true));
   }
@@ -36,7 +41,7 @@ class MyChatRepository {
 //////////????????????? a tester
     return _service
         .collectionStream(
-            path: Path.messages(chatId),
+            path: MyPath.messages(chatId),
             builder: (data) => MyMessage.fromMap(data),
             queryBuilder: (query) =>
                 query.orderBy('date', descending: true).limit(1))
@@ -45,7 +50,7 @@ class MyChatRepository {
 
   Future<MyMessage> getLastChatMessagesChatRoom(String chatId) async {
     return (await _service.collectionFuture(
-            path: Path.messages(chatId),
+            path: MyPath.messages(chatId),
             builder: (data) => MyMessage.fromMap(data),
             queryBuilder: (query) =>
                 query.orderBy('date', descending: true).limit(1)))
@@ -55,7 +60,7 @@ class MyChatRepository {
   Stream<int> getNbChatMessageNonLu(String chatId) {
     return _service
         .collectionStream(
-            path: Path.messages(chatId),
+            path: MyPath.messages(chatId),
             queryBuilder: (query) => query
                 .where('state', isLessThan: 2)
                 .where('idTo', isEqualTo: uid),
@@ -64,55 +69,57 @@ class MyChatRepository {
   }
 
   Stream<MyMessage> getChatMessageStream(String chatId, String id) {
-    return _service
-        .documentStream(
-            path: Path.message(chatId, id),
-            builder: (map) => MyMessage.fromMap(map));
+    return _service.documentStream(
+        path: MyPath.message(chatId, id),
+        builder: (map) => MyMessage.fromMap(map));
   }
 
   Stream<List<MyMessage>> getChatMessages(String chatId) {
     return _service.collectionStream(
-        path: Path.messages(chatId),
+        path: MyPath.messages(chatId),
         queryBuilder: (query) => query.orderBy('date', descending: true),
         builder: (map) => MyMessage.fromMap(map));
   }
 
   Future<void> sendMessage(MyMessage message) async {
     return await _service.setData(
-        path: Path.message(chatId, message.id), data: message.toMap());
+        path: MyPath.message(chatId, message.id), data: message.toMap());
   }
 
   Future<String> creationChatRoom(MyUser friend) async {
     //création d'un chatRoom
     String idChatRoom = '';
 
-    _service
+    await _service
         .collectionFuture(
-            path: Path.chats(),
+            path: MyPath.chats(),
             queryBuilder: (query) => query
                 .where('membres.${friend.id}', isEqualTo: true)
                 .where('membres.$uid', isEqualTo: true)
                 .where('isGroupe', isEqualTo: false),
             builder: (data) => MyChat.fromMap(data))
         .then((value) async {
-      if (value != null) {
+      if (value != null && value.isNotEmpty) {
         idChatRoom = value.first.id;
+        print(idChatRoom);
+        print('!!!');
       } else {
-        idChatRoom = _service.getDocId(path: Path.chats());
-        await _service.setData(path: Path.chat(idChatRoom), data: {
+        idChatRoom = _service.getDocId(path: MyPath.chats());
+        print(idChatRoom);
+        await _service.setData(path: MyPath.chat(idChatRoom), data: {
           'id': idChatRoom,
           'createdAt': FieldValue.serverTimestamp(),
           'isGroupe': false,
           'membres': {uid: true, friend.id: true},
         }).then((value) async {
-          await _service.setData(path: Path.chatMembre(idChatRoom, uid), data: {
+          await _service.setData(path: MyPath.chatMembre(idChatRoom, uid), data: {
             'id': uid,
             'lastReading': FieldValue.serverTimestamp(),
             'isReading': true
           });
         }).then((value) async {
           await _service.setData(
-              path: Path.chatMembre(idChatRoom, friend.id),
+              path: MyPath.chatMembre(idChatRoom, friend.id),
               data: {
                 'id': friend.id,
                 'lastReading': friend.lastActivity,
@@ -125,12 +132,12 @@ class MyChatRepository {
   }
 
   Stream<ChatMembre> getChatMembre(String chatId, String idFriend) {
-
-    return _service.collectionStream(path: Path.chatMembre(chatId, idFriend),
-        builder: (map)=>ChatMembre.fromMap(map)).map((event) => event.first);
+    return _service.documentStream(
+        path: MyPath.chatMembre(chatId, idFriend),
+        builder: (map) => ChatMembre.fromMap(map));
   }
 
-  Stream<Stream<List<MyMessage>>> nbMessagesNonLu(String chatId) {
+  Stream<Stream<int>> nbMessagesNonLu(String chatId) {
     return FirebaseFirestore.instance
         .collection('chats')
         .doc(chatId)
@@ -141,23 +148,23 @@ class MyChatRepository {
             .collection('chats')
             .doc(chatId)
             .collection('messages')
-            //.where('idFrom', isEqualTo: uid)
             .where('date',
                 isGreaterThan: ChatMembre.fromMap(membre.data()).lastReading)
             .snapshots()
-            .map((docs) => docs.docs
-                .map((msg) => MyMessage.fromMap(msg.data()))
-                .toList()));
+            .map((docs) => docs.size)
+    );
   }
 
-  Future<MyChat> getMyChat(String chatId) {
 
-    return _service.getDoc(path: Path.chat(chatId), builder: (map)=>MyChat.fromMap(map));
+  Future<MyChat> getMyChat(String chatId) {
+    print(chatId);
+    return _service.getDoc(
+        path: MyPath.chat(chatId), builder: (map) => MyChat.fromMap(map));
   }
 
   Future<List<MyUser>> chatMyUsersFuture(MyChat myChat) {
-
-    return _service.collectionFuture(path: Path.users(), builder: (map)=>MyUser.fromMap(map));
+    return _service.collectionFuture(
+        path: MyPath.users(), builder: (map) => MyUser.fromMap(map));
   }
 
   void setChatId(String chatId) {
@@ -165,17 +172,15 @@ class MyChatRepository {
   }
 
   Stream<MyUser> userFriendStream(String id) {
-
-    return _service
-        .documentStream(
-            path: Path.user(id), builder: (map) => MyUser.fromMap(map));
+    return _service.documentStream(
+        path: MyPath.user(id), builder: (map) => MyUser.fromMap(map));
   }
-  Future addAmongGroupe(String chatId) async {
 
-    return await _service.setData(path: Path.chat(chatId), data: {
+  Future addAmongGroupe(String chatId) async {
+    return await _service.setData(path: MyPath.chat(chatId), data: {
       'membres': {uid: true}
     }).then((value) async {
-      return await _service.setData(path: Path.chatMembre(chatId,uid), data: {
+      return await _service.setData(path: MyPath.chatMembre(chatId, uid), data: {
         'id': uid,
         'lastReading': FieldValue.serverTimestamp(),
         'isReading': true
@@ -184,19 +189,31 @@ class MyChatRepository {
   }
 
   Future setIsReading() async {
-    return await _service.setData(path: Path.chatMembre(chatId, uid),
-        data: {'lastReading': FieldValue.serverTimestamp(), 'isReading': true});
+    return await _service.setData(path: MyPath.chatMembre(chatId, uid), data: {
+      'lastReading': FieldValue.serverTimestamp(),
+      'isReading': true,
+      'isWriting': false
+    });
   }
 
-
-  Future setIsNotReading()async {
-    return await _service.setData(path: Path.chatMembre(chatId, uid),
-        data: {'lastReading': FieldValue.serverTimestamp(), 'isReading': false});
+  Future setIsNotReading() async {
+    return await _service.setData(path: MyPath.chatMembre(chatId, uid), data: {
+      'lastReading': FieldValue.serverTimestamp(),
+      'isReading': false,
+      'isWriting': false
+    });
   }
 
-  void displayAndSendImage(
-      File image, ChatRoomChangeNotifier chatRoomRead) {
-    String messageId = _service.getDocId(path: Path.messages(chatId));
+  Future setIsWriting() async {
+    return await _service.setData(path: MyPath.chatMembre(chatId, uid), data: {
+      'lastReading': FieldValue.serverTimestamp(),
+      'isReading': false,
+      'isWriting': true
+    });
+  }
+
+  void displayAndSendImage(File image, ChatRoomChangeNotifier chatRoomRead) {
+    String messageId = _service.getDocId(path: MyPath.messages(chatId));
 
     String idTo;
 
@@ -212,6 +229,7 @@ class MyChatRepository {
             ? MyMessageType.image
             : MyMessageType.reply,
         replyType: MyMessageReplyType.image,
+        replyMessageId: chatRoomRead.replyMessageId,
         date: DateTime.now());
 
     chatRoomRead.addListPhoto(messageId, image);
@@ -219,48 +237,48 @@ class MyChatRepository {
 
     chatRoomRead.myNewMessages(myMessage);
 
-    uploadImageChat(chatRoomRead, image, chatRoomRead.myChat.id, uid, idTo,messageId)
+    uploadImageChat(
+            chatRoomRead, image, chatRoomRead.myChat.id, uid, idTo, messageId)
         .then((_) => chatRoomRead.setTempMessageToloaded(messageId))
         .catchError((e) {
       chatRoomRead.setTempMessageToError(messageId);
     });
   }
 
-  Future<void> uploadImageChat(ChatRoomChangeNotifier provider, File image, String chatId,
-      String idSender, String friendId,String messageId) async {
+  Future<void> uploadImageChat(ChatRoomChangeNotifier provider, File image,
+      String chatId, String idSender, String friendId, String messageId) async {
     String path = image.path.substring(image.path.lastIndexOf('/') + 1);
 
-
-    await _service.uploadImg(file: image, path: Path.chatImage(chatId,path), contentType: 'image/jpeg')
-        .then((url) {
-
+    await _service
+        .uploadImg(
+            file: image,
+            path: MyPath.chatImage(chatId, path),
+            contentType: 'image/jpeg')
+        .then((url) async {
       MyMessage myMessage = MyMessage(
           id: messageId,
           message: url,
           idTo: friendId,
           idFrom: uid,
-          type: provider
-              .replyMessage
-              .isEmpty ?
-          MyMessageType.image : MyMessageType.reply,
-          replyMessageId: provider
-              .replyMessageId,
-          replyType: MyMessageReplyType.image
-      );
+          type: provider.replyMessage.isEmpty
+              ? MyMessageType.image
+              : MyMessageType.reply,
+          replyMessageId: provider.replyMessageId,
+          replyType: MyMessageReplyType.image);
       if (myMessage.type == MyMessageType.reply) {
         provider.setReplyToNull();
       }
-      sendMessage(myMessage);
+      await sendMessage(myMessage);
     });
   }
 
-  void pickGif(BuildContext context,ChatRoomChangeNotifier chatRoomRead) async {
-    final gif = await GiphyPicker.pickGif(
-        context: context, apiKey: GIPHY_API_KEY);
+  void pickGif(
+      BuildContext context, ChatRoomChangeNotifier chatRoomRead) async {
+    final gif =
+        await GiphyPicker.pickGif(context: context, apiKey: GIPHY_API_KEY);
 
     if (gif != null) {
-
-      String messageId = _service.getDocId(path: Path.messages(chatId));
+      String messageId = _service.getDocId(path: MyPath.messages(chatId));
       String idTo;
 
       if (!chatRoomRead.myChat.isGroupe) {
@@ -280,17 +298,16 @@ class MyChatRepository {
 
       chatRoomRead.myNewMessages(myMessage);
 
+      await sendMessage(myMessage);
       if (myMessage.type == MyMessageType.reply) {
         chatRoomRead.setReplyToNull();
       }
-      sendMessage(myMessage);
     }
   }
 
-  void sendTextMessage(ChatRoomChangeNotifier chatRoomRead,
-      TextEditingController textEditingController) {
-
-    String messageId = _service.getDocId(path: Path.messages(chatId));
+  Future<void> sendTextMessage(ChatRoomChangeNotifier chatRoomRead,
+      TextEditingController textEditingController) async {
+    String messageId = _service.getDocId(path: MyPath.messages(chatId));
 
     String idTo;
 
@@ -320,10 +337,8 @@ class MyChatRepository {
     if (textEditingController.text.trim() != '') {
       chatRoomRead.setShowSendBotton(false);
       textEditingController.clear();
-      if (myMessage.type == MyMessageType.reply) {
-        chatRoomRead.setReplyToNull();
-      }
-      sendMessage(myMessage).catchError((err) {
+
+      await sendMessage(myMessage).catchError((err) {
         print(err);
         chatRoomRead.setShowSendBotton(true);
         chatRoomRead.setTempMessageToError(myMessage.id);
@@ -331,8 +346,17 @@ class MyChatRepository {
         chatRoomRead.setShowSendBotton(false);
         chatRoomRead.setTempMessageToloaded(myMessage.id);
       });
+      if (myMessage.type == MyMessageType.reply) {
+        chatRoomRead.setReplyToNull();
+      }
     } else {
       print('Text vide ou null');
     }
+  }
+
+  Future<MyMessage> getMessage(String chatId, String replyMessageId) async {
+    return await _service.getDoc(
+        path: MyPath.message(chatId, replyMessageId),
+        builder: (map) => MyMessage.fromMap(map));
   }
 }

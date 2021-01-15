@@ -1,4 +1,4 @@
-package com.example.van_events_project
+package com.vanevents.VanEvents
 
 import io.flutter.app.FlutterApplication
 import io.flutter.plugin.common.PluginRegistry

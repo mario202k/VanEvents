@@ -15,7 +15,7 @@ import 'package:van_events_project/domain/repositories/stripe_repository.dart';
 import 'package:van_events_project/presentation/pages/register/register_button.dart';
 import 'package:van_events_project/presentation/pages/registerOrganisateur/bloc/blocOrganisateur.dart';
 import 'package:van_events_project/presentation/widgets/show.dart';
-import 'package:van_events_project/providers/toggle_bool_chat_room.dart';
+import 'package:van_events_project/providers/toggle_bool.dart';
 
 class RegisterFormOrganisateur extends HookWidget {
   final GlobalKey<FormBuilderState> _fbKey = GlobalKey<FormBuilderState>();
@@ -76,7 +76,7 @@ class RegisterFormOrganisateur extends HookWidget {
                     Icon(Icons.error),
                   ],
                 ),
-                backgroundColor: Colors.red,
+                backgroundColor: Theme.of(context).colorScheme.error,
               ),
             );
         }
@@ -112,7 +112,7 @@ class RegisterFormOrganisateur extends HookWidget {
                         Card(
                           child: Column(
                             children: <Widget>[
-                              Text('Votre société'),
+                              Text('Votre société',style: Theme.of(context).textTheme.headline6,),
                               Padding(
                                 padding: const EdgeInsets.all(8.0),
                                 child: FormBuilderTextField(
@@ -638,7 +638,7 @@ class RegisterFormOrganisateur extends HookWidget {
                         Card(
                           child: Column(
                             children: <Widget>[
-                              Text('Sur vous'),
+                              Text('Sur vous',style: Theme.of(context).textTheme.headline6,),
                               Padding(
                                 padding: const EdgeInsets.all(8.0),
                                 child: FormBuilderTextField(
@@ -920,11 +920,13 @@ class RegisterFormOrganisateur extends HookWidget {
                     return CheckboxListTile(
                       onChanged: (bool val) => boolToggleRead.changeCGUCGV(),
                       value: watch(boolToggleProvider).cguCgv,
+
                       activeColor: Theme.of(context).colorScheme.primary,
+                      checkColor: Theme.of(context).colorScheme.background,
                       title: Wrap(
                         children: <Widget>[
                           Text('J\'ai lu et j\'accepte les',
-                              style: Theme.of(context).textTheme.headline5),
+                              style: Theme.of(context).textTheme.bodyText1),
                           InkWell(
                             onTap: () async {
                               const url = 'https://stripe.com/fr/legal';
@@ -938,11 +940,11 @@ class RegisterFormOrganisateur extends HookWidget {
                                 'Conditions d\'utilisation du service Stripe ',
                                 style: Theme.of(context)
                                     .textTheme
-                                    .headline5
+                                    .bodyText1
                                     .copyWith(color: Colors.blue)),
                           ),
                           Text('et le ',
-                              style: Theme.of(context).textTheme.headline5),
+                              style: Theme.of(context).textTheme.bodyText1),
                           InkWell(
                             onTap: () async {
                               const url =
@@ -956,12 +958,12 @@ class RegisterFormOrganisateur extends HookWidget {
                             child: Text('Contrat de compte connecté ',
                                 style: Theme.of(context)
                                     .textTheme
-                                    .headline5
+                                    .bodyText1
                                     .copyWith(color: Colors.blue)),
                           ),
                           Text(
                               ', ainsi que de recevoir les SMS automatisés envoyés par Stripe. Vous certifiez également que les informations que vous avez fournies à Stripe sont complètes et exactes',
-                              style: Theme.of(context).textTheme.headline5),
+                              style: Theme.of(context).textTheme.bodyText1),
                         ],
                       ),
                     );

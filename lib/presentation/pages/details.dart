@@ -15,9 +15,9 @@ import 'package:van_events_project/domain/models/my_user.dart';
 import 'package:van_events_project/domain/repositories/my_event_repository.dart';
 import 'package:van_events_project/domain/routing/route.gr.dart';
 import 'package:van_events_project/presentation/widgets/model_screen.dart';
+import 'package:van_events_project/providers/toggle_bool.dart';
 
 import 'GalleryPage.dart';
-
 
 class Details extends HookWidget {
   final MyEvent event;
@@ -29,391 +29,402 @@ class Details extends HookWidget {
     print('buildDetails');
     final db = context.read(myEventRepositoryProvider);
     final participants = db.participantsEvent(event.id);
+    final boolToggle = useProvider(boolToggleProvider);
 
-    return Consumer(
-        builder: (context, watch, child) {
-        return ModelScreen(
-          child: Scaffold(
-            resizeToAvoidBottomInset: false,
-            body: NestedScrollView(
-              headerSliverBuilder: (BuildContext context, bool innerBoxIsScrolled) {
-                return <Widget>[
-                  SliverAppBar(
-                    expandedHeight: 300,
-                    floating: false,
-                    pinned: true,
-                    flexibleSpace: FlexibleSpaceBar(
-                      centerTitle: true,
-                      title: Container(
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(25),
-                          color: Theme.of(context).colorScheme.secondary,
-
-                        ),
-                        child: Padding(
-                          padding: const EdgeInsets.all(8.0),
-                          child: Text(event.titre[0].toUpperCase()+event.titre.substring(1),
-                              overflow: TextOverflow.ellipsis,
-                              textAlign: TextAlign.center,
-                              style: Theme.of(context).textTheme.bodyText1.copyWith(
-                                  color: Theme.of(context).colorScheme.primary,fontWeight: FontWeight.bold)),
-                        ),
-                      ),
-                      background: Image(
-                        image: NetworkImage(event.imageFlyerUrl),
+    return Consumer(builder: (context, watch, child) {
+      return ModelScreen(
+        child: Scaffold(
+          resizeToAvoidBottomInset: false,
+          backgroundColor: Theme.of(context).colorScheme.background,
+          body: NestedScrollView(
+            //NestedScrollView
+            headerSliverBuilder:
+                (BuildContext context, bool innerBoxIsScrolled) {
+              return <Widget>[
+                SliverAppBar(
+                  expandedHeight: 300,
+                  floating: false,
+                  pinned: true,
+                  flexibleSpace: FlexibleSpaceBar(
+                    centerTitle: true,
+                    title: Text(
+                        event.titre[0].toUpperCase() + event.titre.substring(1),
+                        overflow: TextOverflow.ellipsis,
+                        textAlign: TextAlign.center,
+                        style: Theme.of(context).textTheme.headline4),
+                    background: Hero(
+                      tag: event.id,
+                      child: Image(
+                        image:
+                            boolToggle.imageProviderEvent[event.imageFlyerUrl],
                         fit: BoxFit.cover,
                       ),
                     ),
                   ),
-                ];
-              },
-              body: SingleChildScrollView(
-                padding: EdgeInsets.symmetric(horizontal: 25),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: <Widget>[
-                    SizedBox(
-                      height: 25,
-                    ),
-                    Row(
-                      mainAxisSize: MainAxisSize.max,
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: <Widget>[
-                        Icon(
-                          Icons.access_time,
-                          color: Theme.of(context).colorScheme.primary,
-                        ),
-                        Padding(
-                          padding: const EdgeInsets.all(8.0),
-                          child: Text(
-                            // "${DateFormat('dd/MM/yyyy').format(event.dateDebut)} à : ${event.dateDebut.hour}:${event.dateDebut.minute}"
-                            '${DateFormat('dd/MM/yyyy').format(event.dateDebut)} à : ${DateFormat('HH').format(event.dateDebut)}h${DateFormat('mm').format(event.dateDebut)}',
-                            style: Theme.of(context)
-                                .textTheme
-                                .headline5
-                                .copyWith(color: Colors.black,fontWeight: FontWeight.bold),
-                          ),
-                        ),
-                      ],
-                    ),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                      children: <Widget>[
-                        Container(
-                          decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(25),
-                            color: Theme.of(context).colorScheme.secondary,
-
-                          ),
-                          child: Container(
-                            decoration: BoxDecoration(
-                              borderRadius: BorderRadius.circular(25),
-                              color: Colors.black,),
-                            child: FlatButton.icon(
-                                onPressed: () {
-                                  final Event myEvent = Event(
-                                    title: event.titre,
-                                    description: event.description,
-                                    location: [
-                                      ...event.adresseRue,
-                                      ...event.adresseZone
-                                    ].join(' '),
-                                    startDate: event.dateDebut,
-                                    endDate: event.dateFin,
-                                  );
-
-                                  Add2Calendar.addEvent2Cal(myEvent);
-                                },
-                                icon: Icon(
-                                  Icons.calendar_today,
-                                  color: Theme.of(context).colorScheme.secondary,
-                                ),
-                                label: Flexible(
-                                    child: Text(
-                                  "Plannifier",style: TextStyle(color: Theme.of(context).colorScheme.secondary,fontWeight: FontWeight.bold)
-                                ))),
-                          ),
-                        ),
-                        Container(
-                          decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(25),
-                            color: Colors.black,
-
-                          ),
-                          child: FlatButton.icon(
-                              onPressed: () async {
-                                final availableMaps =
-                                    await MapLauncher.installedMaps;
-                                print(
-                                    availableMaps); // [AvailableMap { mapName: Google Maps, mapType: google }, ...]
-
-                                await availableMaps.first.showMarker(
-                                  coords: Coords(event.position.latitude,
-                                      event.position.longitude),
-                                  title: event.titre,
-                                  description: 'event.addressZone',
-                                );
-                              },
-                              icon: Icon(
-                                Icons.map,
-                                color: Theme.of(context).colorScheme.secondary,
-                              ),
-                              label: Flexible(child: Text("Y aller",style: TextStyle(color: Theme.of(context).colorScheme.secondary,fontWeight: FontWeight.bold)))),
-                        ),
-                      ],
-                    ),
-                    SizedBox(
-                      height: 25,
-                    ),
-                    Divider(),
-                    Padding(
-                      padding: const EdgeInsets.only(top: 16.0, bottom: 8.0),
-                      child: Text(
-                        "Description",
-                        style: Theme.of(context).textTheme.bodyText1.copyWith(
-                            color: Colors.black, fontWeight: FontWeight.w600),
+                ),
+              ];
+            },
+            body: SingleChildScrollView(
+              padding: EdgeInsets.symmetric(horizontal: 15),
+              physics: ClampingScrollPhysics(),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: <Widget>[
+                  SizedBox(
+                    height: 25,
+                  ),
+                  Row(
+                    mainAxisSize: MainAxisSize.max,
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: <Widget>[
+                      Icon(
+                        Icons.access_time,
                       ),
+                      Padding(
+                        padding: const EdgeInsets.all(8.0),
+                        child: Text(
+                          // "${DateFormat('dd/MM/yyyy').format(event.dateDebut)} à : ${event.dateDebut.hour}:${event.dateDebut.minute}"
+                          '${DateFormat('dd/MM/yyyy').format(event.dateDebut)} à : ${DateFormat('HH').format(event.dateDebut)}h${DateFormat('mm').format(event.dateDebut)}',
+                          style: Theme.of(context).textTheme.bodyText1,
+                        ),
+                      ),
+                    ],
+                  ),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                    children: <Widget>[
+                      // RaisedButton.icon(
+                      //     onPressed: () {
+                      //       final Event myEvent = Event(
+                      //         title: event.titre,
+                      //         description: event.description,
+                      //         location: [
+                      //           ...event.adresseRue,
+                      //           ...event.adresseZone
+                      //         ].join(' '),
+                      //         startDate: event.dateDebut,
+                      //         endDate: event.dateFin,
+                      //       );
+                      //
+                      //       Add2Calendar.addEvent2Cal(myEvent);
+                      //     },
+                      //     icon: Icon(
+                      //       Icons.calendar_today,
+                      //     ),
+                      //     label: Flexible(child: Text("Plannifier"))),
+                      RaisedButton.icon(
+                          onPressed: () {
+                            ExtendedNavigator.of(context).push(Routes.chatRoom,
+                                arguments: ChatRoomArguments(chatId: event.chatId));
+                          },
+                          icon: FaIcon(FontAwesomeIcons.comments),
+                          label: Text('Chat')),
+                      RaisedButton.icon(
+                          onPressed: () async {
+                            final availableMaps =
+                                await MapLauncher.installedMaps;
+                            print(
+                                availableMaps); // [AvailableMap { mapName: Google Maps, mapType: google }, ...]
+
+                            await availableMaps.first.showMarker(
+                              coords: Coords(event.position.latitude,
+                                  event.position.longitude),
+                              title: event.titre,
+                              description: 'event.addressZone',
+                            );
+                          },
+                          icon: Icon(
+                            Icons.map,
+                          ),
+                          label: Flexible(child: Text("Y aller"))),
+                    ],
+                  ),
+                  SizedBox(
+                    height: 25,
+                  ),
+                  Divider(),
+                  Padding(
+                    padding: const EdgeInsets.only(top: 16.0, bottom: 8.0),
+                    child: Text(
+                      "Description",
+                      style: Theme.of(context).textTheme.headline5,
                     ),
-                    Text(
-                      event.description,
-                      style: Theme.of(context)
-                          .textTheme
-                          .bodyText1
-                          .copyWith(color: Colors.black, fontSize: 20),
-                    ),
-                    Text(
-                      "Genres:",
-                      style: Theme.of(context).textTheme.bodyText1.copyWith(
-                          color: Colors.black, fontWeight: FontWeight.w600),
-                    ),
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: event.genres
-                              ?.map((e) => Text(
-                                    e,
-                                    style: Theme.of(context)
-                                        .textTheme
-                                        .bodyText1
-                                        .copyWith(
-                                            color: Colors.black, fontSize: 20),
-                                  ))
-                              ?.toList() ??
-                          [],
-                    ),
-                    Text(
-                      "Types:",
-                      style: Theme.of(context).textTheme.bodyText1.copyWith(
-                          color: Colors.black, fontWeight: FontWeight.w600),
-                    ),
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: event.types
-                              ?.map((e) => Text(
-                                    e,
-                                    style: Theme.of(context)
-                                        .textTheme
-                                        .bodyText1
-                                        .copyWith(
-                                            color: Colors.black, fontSize: 20),
-                                  ))
-                              ?.toList() ??
-                          [],
-                    ),
-                    SizedBox(
-                      height: 25,
-                    ),
-                    Divider(),
-                    SizedBox(
-                      height: 25,
-                    ),
-                    Text(
-                      "Photos",
-                      style: Theme.of(context).textTheme.bodyText1.copyWith(
-                          color: Colors.black, fontWeight: FontWeight.w600),
-                    ),
-                    GridView.builder(
-                        itemCount: event.imagePhotos.length,
-                        shrinkWrap: true,
-                        physics: ClampingScrollPhysics(),
-                        gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                            crossAxisCount: (MediaQuery.of(context).orientation ==
-                                    Orientation.landscape)
-                                ? 3
-                                : 2),
-                        itemBuilder: (BuildContext context, int index) {
-                          return CachedNetworkImage(
-                            placeholder: (context, url) => Shimmer.fromColors(
-                              baseColor: Colors.white,
-                              highlightColor: Theme.of(context).colorScheme.primary,
-                              child: Container(
-                                  height: 300, width: 300, color: Colors.white),
-                            ),
-                            imageBuilder: (context, imageProvider) => SizedBox(
+                  ),
+                  Text(event.description,
+                      style: Theme.of(context).textTheme.bodyText1),
+                  Text(
+                    "Genres:",
+                    style: Theme.of(context).textTheme.headline5,
+                  ),
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: event.genres
+                            ?.map((e) => Text(e,
+                                style: Theme.of(context).textTheme.bodyText1))
+                            ?.toList() ??
+                        [],
+                  ),
+                  Text(
+                    "Types:",
+                    style: Theme.of(context).textTheme.headline5,
+                  ),
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: event.types
+                            ?.map((e) => Text(e,
+                                style: Theme.of(context).textTheme.bodyText1))
+                            ?.toList() ??
+                        [],
+                  ),
+                  SizedBox(
+                    height: 25,
+                  ),
+                  Divider(),
+                  SizedBox(
+                    height: 25,
+                  ),
+                  Text("Photos", style: Theme.of(context).textTheme.headline5),
+                  GridView.builder(
+                      itemCount: event.imagePhotos.length,
+                      shrinkWrap: true,
+                      physics: ClampingScrollPhysics(),
+                      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                          crossAxisCount: (MediaQuery.of(context).orientation ==
+                                  Orientation.landscape)
+                              ? 3
+                              : 2),
+                      itemBuilder: (BuildContext context, int index) {
+                        return CachedNetworkImage(
+                          placeholder: (context, url) => Shimmer.fromColors(
+                            baseColor: Colors.white,
+                            highlightColor:
+                                Theme.of(context).colorScheme.primary,
+                            child: Container(
+                                height: 300, width: 300, color: Colors.white),
+                          ),
+                          imageBuilder: (context, imageProvider) {
+                            boolToggle.addDetailsPhotos(imageProvider, index);
+
+                            return SizedBox(
                               height: 300,
                               width: 300,
                               child: GestureDetector(
-                                  onTap: () =>
-                                      Navigator.of(context).push(MaterialPageRoute(
+                                  onTap: () => Navigator.of(context)
+                                      .push(MaterialPageRoute(
                                           builder: (context) => GalleryPage(
                                                 imageList: event.imagePhotos,
                                                 initialPage: index,
                                               ))),
                                   child: Hero(
                                     tag: event.imagePhotos[index].substring(
-                                        event.imagePhotos[index].indexOf('token=')),
+                                        event.imagePhotos[index]
+                                            .indexOf('token=')),
                                     child: Image(
                                       image: imageProvider,
                                       fit: BoxFit.fitHeight,
                                     ),
                                   )),
+                            );
+                          },
+                          errorWidget: (context, url, error) => Material(
+                            child: Image.asset(
+                              'assets/img/img_not_available.jpeg',
+                              width: 300.0,
+                              height: 300.0,
+                              fit: BoxFit.cover,
                             ),
-                            errorWidget: (context, url, error) => Material(
-                              child: Image.asset(
-                                'assets/img/img_not_available.jpeg',
-                                width: 300.0,
-                                height: 300.0,
-                                fit: BoxFit.cover,
-                              ),
-                              borderRadius: BorderRadius.all(
-                                Radius.circular(8.0),
-                              ),
-                              clipBehavior: Clip.hardEdge,
+                            borderRadius: BorderRadius.all(
+                              Radius.circular(8.0),
                             ),
-                            imageUrl: event.imagePhotos[index],
-                            fit: BoxFit.scaleDown,
-                          );
-                        }),
-                    Divider(),
-                    SizedBox(
-                      height: 25,
-                    ),
-                    Text(
-                      "Participants",
-                      style: Theme.of(context).textTheme.bodyText1.copyWith(
-                          color: Colors.black, fontWeight: FontWeight.w600),
-                    ),
-                    Container(
-                      height: 200,
-                      child: FutureBuilder<List<Future<MyUser>>>(
-                          future: participants,
-                          builder: (context, AsyncSnapshot snapshot) {
-                            if (snapshot.hasError) {
-                              return Center(
-                                child: Text('Erreur de connection'),
-                              );
-                            } else if (snapshot.connectionState ==
-                                ConnectionState.waiting) {
-                              return Center(
-                                child: CircularProgressIndicator(
-                                    valueColor: AlwaysStoppedAnimation<Color>(
-                                        Theme.of(context).colorScheme.secondary)),
-                              );
-                            }
-                            List<Future<MyUser>> participantsList = snapshot.data;
+                            clipBehavior: Clip.hardEdge,
+                          ),
+                          imageUrl: event.imagePhotos[index],
+                          fit: BoxFit.scaleDown,
+                        );
+                      }),
+                  Divider(),
+                  SizedBox(
+                    height: 25,
+                  ),
+                  Text("Participants",
+                      style: Theme.of(context).textTheme.headline5),
+                  Container(
+                    height: 100,
+                    child: FutureBuilder<List<Future<MyUser>>>(
+                        future: participants,
+                        builder: (context, AsyncSnapshot snapshot) {
+                          if (snapshot.hasError) {
+                            return Center(
+                              child: Text('Erreur de connection'),
+                            );
+                          } else if (snapshot.connectionState ==
+                              ConnectionState.waiting) {
+                            return Center(
+                              child: CircularProgressIndicator(
+                                  valueColor: AlwaysStoppedAnimation<Color>(
+                                      Theme.of(context).colorScheme.secondary)),
+                            );
+                          }
+                          List<Future<MyUser>> participantsList = snapshot.data;
 
-                            return participantsList.isNotEmpty
-                                ? ListView.builder(
-                                    scrollDirection: Axis.horizontal,
-                                    itemCount: participantsList.length,
-                                    itemBuilder: (context, index) {
-                                      return FutureBuilder<MyUser>(
-                                          future: participantsList.elementAt(index),
-                                          builder: (context, snapshot) {
-                                            if (snapshot.hasError) {
-                                              return Center(
-                                                child: Text('Erreur de connection'),
-                                              );
-                                            } else if (snapshot.connectionState ==
-                                                ConnectionState.waiting) {
-                                              return Center(
-                                                child: CircularProgressIndicator(
-                                                    valueColor:
-                                                        AlwaysStoppedAnimation<
-                                                                Color>(
-                                                            Theme.of(context)
-                                                                .colorScheme
-                                                                .secondary)),
-                                              );
-                                            }
+                          return participantsList.isNotEmpty
+                              ? ListView.builder(
+                            shrinkWrap: true,
+                                  scrollDirection: Axis.horizontal,
+                                  itemCount: participantsList.length,
+                                  itemBuilder: (context, index) {
+                                    return FutureBuilder<MyUser>(
+                                        future:
+                                            participantsList.elementAt(index),
+                                        builder: (context, snapshot) {
+                                          if (snapshot.hasError) {
+                                            return Center(
+                                              child:
+                                                  Text('Erreur de connection'),
+                                            );
+                                          } else if (snapshot.connectionState ==
+                                              ConnectionState.waiting) {
+                                            return Center(
+                                              child: CircularProgressIndicator(
+                                                  valueColor:
+                                                      AlwaysStoppedAnimation<
+                                                              Color>(
+                                                          Theme.of(context)
+                                                              .colorScheme
+                                                              .secondary)),
+                                            );
+                                          }
 
-                                            MyUser user = snapshot.data;
+                                          MyUser user = snapshot.data;
 
-                                            return Column(
-                                              mainAxisSize: MainAxisSize.min,
-                                              children: <Widget>[
-                                                Container(
-                                                  margin: EdgeInsets.all(6),
+                                          return Padding(
+                                            padding: const EdgeInsets.all(8.0),
+                                            child: InkWell(
+                                              onTap: () {
+                                                if(user?.imageUrl != null){
+                                                  return;
+                                                }
+                                                ExtendedNavigator.of(context).push(
+                                                    Routes.fullPhoto,
+                                                    arguments: FullPhotoArguments(
+                                                        url: user.imageUrl));
+                                              },
+                                              child: user?.imageUrl == null? CachedNetworkImage(
+                                                imageUrl: user?.imageUrl,
+                                                imageBuilder: (context, imageProvider) =>
+                                                    Container(
+                                                      height: 80,
+                                                      width: 80,
+                                                      decoration: BoxDecoration(
+                                                        borderRadius:
+                                                        BorderRadius.all(Radius.circular(80)),
+                                                        image: DecorationImage(
+                                                          image: imageProvider,
+                                                          fit: BoxFit.cover,
+                                                        ),
+                                                      ),
+                                                    ),
+                                                fit: BoxFit.cover,
+                                                placeholder: (context, url) => Shimmer.fromColors(
+                                                  baseColor: Colors.white,
+                                                  highlightColor:
+                                                  Theme.of(context).colorScheme.primary,
                                                   child: CircleAvatar(
-                                                    backgroundColor: Theme.of(context).colorScheme.primary,
-                                                    radius: 30,
-                                                    backgroundImage:
-                                                    user.imageUrl !=
-                                                        null
-                                                        ? NetworkImage(user.imageUrl)
-                                                        : AssetImage(
-                                                        'assets/img/normal_user_icon.png'),
+                                                    radius: 40,
                                                   ),
                                                 ),
-                                              ],
-                                            );
-                                          });
-                                    },
-                                  )
-                                : SizedBox();
-                          }),
-                    ),
-                  ],
-                ),
+                                                errorWidget: (context, url, error) =>
+                                                    Icon(Icons.error),
+                                              ):Center(
+                                                child: CircleAvatar(
+                                                  radius: 40,
+                                                  backgroundColor:
+                                                  Theme.of(context).colorScheme.primary,
+                                                  backgroundImage: AssetImage(
+                                                      'assets/img/normal_user_icon.png'),
+                                                ),
+                                              ),
+                                            ),
+                                          );
+                                        });
+                                  },
+                                )
+                              : SizedBox();
+                        }),
+                  ),
+                ],
               ),
             ),
-            floatingActionButton: RawMaterialButton(
-                elevation: 10,
-                child: Padding(
-                  padding: const EdgeInsets.all(12.0),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: const <Widget>[
-                      Icon(
-                        FontAwesomeIcons.cartArrowDown,
-                        color: Colors.white,
-                      ),
-                      SizedBox(
-                        width: 15,
-                      ),
-                      PulseAnimation(
-                        child: Text(
-                          "PARTICIPER",
-                          style: TextStyle(color: Colors.white, fontSize: 20),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                shape: StadiumBorder(),
-                fillColor: Theme.of(context).colorScheme.primary,
-                onPressed: () {
-                  db.getFormulasList(event.id).then((form) {
-
-                    ExtendedNavigator.of(context).push(Routes.formulaChoice,
-                        arguments: FormulaChoiceArguments(
-                            formulas: form,
-                            eventId: event.id,
-                            latLng: LatLng(
-                                event.position.latitude, event.position.longitude),
-                            stripeAccount: event.stripeAccount,
-                            imageUrl: event.imageFlyerUrl,
-                            dateDebut: event.dateDebut));
-                  });
-                }),
           ),
-        );
-      }
-    );
+          floatingActionButton: RaisedButton.icon(
+            onPressed: () {
+              db.getFormulasList(event.id).then((form) {
+                ExtendedNavigator.of(context).push(Routes.formulaChoice,
+                    arguments: FormulaChoiceArguments(
+                        formulas: form,
+                        eventId: event.id,
+                        latLng: LatLng(
+                            event.position.latitude, event.position.longitude),
+                        stripeAccount: event.stripeAccount,
+                        imageUrl: event.imageFlyerUrl,
+                        dateDebut: event.dateDebut));
+              });
+            },
+            icon: Icon(
+              FontAwesomeIcons.cartArrowDown,
+            ),
+            label: PulseAnimation(
+              child: Text(
+                "PARTICIPER",
+              ),
+            ),
+          ),
+          // floatingActionButton: RawMaterialButton(
+          //     elevation: 10,
+          //     child: Padding(
+          //       padding: const EdgeInsets.all(12.0),
+          //       child: Row(
+          //         mainAxisSize: MainAxisSize.min,
+          //         children: const <Widget>[
+          //           Icon(
+          //             FontAwesomeIcons.cartArrowDown,
+          //             color: Colors.white,
+          //           ),
+          //           SizedBox(
+          //             width: 15,
+          //           ),
+          //           PulseAnimation(
+          //             child: Text(
+          //               "PARTICIPER",
+          //               style: TextStyle(color: Colors.white, fontSize: 20),
+          //             ),
+          //           ),
+          //         ],
+          //       ),
+          //     ),
+          //     shape: StadiumBorder(),
+          //     fillColor: Theme.of(context).colorScheme.primary,
+          //     onPressed: () {
+          //       db.getFormulasList(event.id).then((form) {
+          //
+          //         ExtendedNavigator.of(context).push(Routes.formulaChoice,
+          //             arguments: FormulaChoiceArguments(
+          //                 formulas: form,
+          //                 eventId: event.id,
+          //                 latLng: LatLng(
+          //                     event.position.latitude, event.position.longitude),
+          //                 stripeAccount: event.stripeAccount,
+          //                 imageUrl: event.imageFlyerUrl,
+          //                 dateDebut: event.dateDebut));
+          //       });
+          //     }),
+        ),
+      );
+    });
   }
 }
 
 class PulseAnimation extends HookWidget {
-
   final Widget child;
 
   const PulseAnimation({Key key, this.child}) : super(key: key);

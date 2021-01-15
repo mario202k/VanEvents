@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:async/async.dart';
 import 'package:auto_route/auto_route.dart';
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:carousel_slider/carousel_slider.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
@@ -17,9 +18,12 @@ import 'package:van_events_project/domain/models/my_user.dart';
 import 'package:van_events_project/domain/repositories/my_event_repository.dart';
 import 'package:van_events_project/domain/repositories/my_user_repository.dart';
 import 'package:van_events_project/domain/routing/route.gr.dart';
+import 'package:van_events_project/presentation/widgets/appPageRoute.dart';
 import 'package:van_events_project/presentation/widgets/model_body.dart';
 import 'package:van_events_project/presentation/widgets/show.dart';
-import 'package:van_events_project/providers/toggle_bool_chat_room.dart';
+import 'package:van_events_project/providers/toggle_bool.dart';
+
+import 'details.dart';
 
 class HomeEvents extends HookWidget {
   @override
@@ -33,9 +37,7 @@ class HomeEvents extends HookWidget {
     // } else if (first is AsyncLoading || second is AsyncLoading) {
     //   return Text('loading');
     // }
-    if (context.read(boolToggleProvider).isEnableNotification == null) {
-      context.read(boolToggleProvider).initNotification();
-    }
+
     final streamMyUser = useProvider(streamMyUserProvider);
     final tabController = useTabController(initialLength: 3);
     final myEventRepo = context.read(myEventRepositoryProvider);
@@ -59,29 +61,27 @@ class HomeEvents extends HookWidget {
     //       user?.lieu ?? [], user?.quand ?? [], user?.geoPoint),
     // ]);
 
-    final size = MediaQuery.of(context).size;
-    final orientation = MediaQuery.of(context).orientation;
-
     return ModelBody(
       child: Column(
-        mainAxisSize: MainAxisSize.min,
-        mainAxisAlignment: MainAxisAlignment.start,
         children: <Widget>[
           Container(
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(25),
-              color: Colors.black,
+              color: Theme.of(context).colorScheme.secondary,
             ),
             child: Padding(
               padding: const EdgeInsets.all(8.0),
               child: Text(
                 'À l\'affiche',
-                style: Theme.of(context).textTheme.headline5.copyWith(
-                    color: Theme.of(context).colorScheme.secondary,
-                    fontWeight: FontWeight.bold),
+                style: Theme.of(context)
+                    .textTheme
+                    .headline3.copyWith(color: Theme.of(context).colorScheme.onSecondary)
+
               ),
             ),
           ),
+          SizedBox(height: 15,),
+
           StreamBuilder<List<MyEvent>>(
               stream: eventsAffiche,
               builder: (context, AsyncSnapshot snap) {
@@ -95,10 +95,10 @@ class HomeEvents extends HookWidget {
                   return Center(
                     child: Text(
                       'Erreur de connexion',
-                      style: Theme.of(context).textTheme.display1,
+                      style: Theme.of(context).textTheme.bodyText1,
                     ),
                   );
-                } else if (snap.data.length == 0) {
+                } else if (!snap.hasData) {
                   return Center(
                     child: Text(
                       'Pas d\'évenements',
@@ -111,81 +111,130 @@ class HomeEvents extends HookWidget {
                 events.removeWhere((element) =>
                     element.dateDebutAffiche.compareTo(DateTime.now()) > 0);
 
-                return events.length != 0
-                    ? SizedBox(
-                        height: orientation == Orientation.portrait
-                            ? size.height * 0.60
-                            : size.height * 0.60,
-                        child: Swiper(
-                          physics: ClampingScrollPhysics(),
-                          itemBuilder: (BuildContext context, int index) {
-                            return events[index].imageFlyerUrl != null
-                                ? CachedNetworkImage(
-                                    imageUrl: events[index].imageFlyerUrl,
-                                    imageBuilder: (context, imageProvider) =>
-                                        Container(
-                                      decoration: BoxDecoration(
-                                          image: DecorationImage(
-                                              image: imageProvider,
-                                              fit: BoxFit.fill),
-                                          borderRadius: BorderRadius.all(
-                                              Radius.circular(25)),
-                                          color: Colors.white),
+                return events.isNotEmpty? Container(
+                  height: 280,
+                  child: Swiper(
+                      itemCount: events.length,
+                      scrollDirection: Axis.horizontal,
+                      pagination: SwiperPagination(),
+                      control: SwiperControl(),
+                      autoplay: true,
+                      autoplayDelay: 5000,
+                      duration: 300,
+                      itemBuilder: (context, index){
+
+                        return FittedBox(
+
+                          child: CachedNetworkImage(
+                            imageUrl: events[index].imageFlyerUrl,
+                            imageBuilder: (context, imageProvider) {
+                              context.read(boolToggleProvider).addEventsPhotos(
+                                  imageProvider, events[index].imageFlyerUrl);
+                              return InkWell(
+                                onTap: () {
+                                  Navigator.of(context).push(MaterialPageRoute(
+                                      builder: (context) =>
+                                          Details(events[index])));
+
+                                  // return ExtendedNavigator.of(context).push(
+                                  //   Routes.details,
+                                  //   arguments: DetailsArguments(
+                                  //       event: events.elementAt(index)));
+                                },
+                                child: Container(
+                                    height: 280,
+                                    clipBehavior: Clip.hardEdge,
+                                    decoration: BoxDecoration(
+                                      color: Colors.amber,
+                                      borderRadius:
+                                      BorderRadius.all(Radius.circular(25)),
                                     ),
-                                    placeholder: (context, url) =>
-                                        Shimmer.fromColors(
-                                      baseColor: Colors.white,
-                                      highlightColor:
-                                          Theme.of(context).colorScheme.primary,
-                                      child: Container(
-                                        width:
-                                            orientation == Orientation.portrait
-                                                ? size.width
-                                                : 400,
-                                        height:
-                                            orientation == Orientation.portrait
-                                                ? size.height / 1.5
-                                                : size.height,
-                                        decoration: BoxDecoration(
-                                            borderRadius: BorderRadius.all(
-                                                Radius.circular(25)),
-                                            color: Colors.white),
-                                      ),
-                                    ),
-                                    errorWidget: (context, url, error) =>
-                                        Icon(Icons.error),
-                                  )
-                                : SizedBox();
-                          },
-                          itemCount: events.length,
-                          pagination: SwiperPagination(),
-                          control: SwiperControl(
-                            color: Theme.of(context).colorScheme.primary,
+                                    child: Image(
+                                      image: imageProvider,
+                                    )),
+                              );
+                            },
+                            placeholder: (context, url) => Shimmer.fromColors(
+                              baseColor: Colors.white,
+                              highlightColor: Theme.of(context).colorScheme.primary,
+                              child: Container(
+                                width: 172,
+                                height: 280,
+                                decoration: BoxDecoration(
+                                    borderRadius:
+                                    BorderRadius.all(Radius.circular(25)),
+                                    color: Colors.white),
+                              ),
+                            ),
+                            errorWidget: (context, url, error) => Icon(Icons.error),
                           ),
-                          onTap: (index) {
-                            ExtendedNavigator.of(context).push(Routes.details,
-                                arguments: DetailsArguments(
-                                    event: events.elementAt(index)));
-                          },
-                          itemWidth: orientation == Orientation.portrait
-                              ? size.height * 0.60 * 0.709 //0.709 format A6
-                              : size.height * 0.60 * 0.709,
-                          itemHeight: orientation == Orientation.portrait
-                              ? size.height
-                              : size.height,
-                          layout: SwiperLayout.TINDER,
-                          loop: true,
-                          outer: true,
-                          autoplay: true,
-                          autoplayDisableOnInteraction: false,
-                        ),
-                      )
-                    : Center(
-                        child: Text(
-                          'Pas d\'évenements',
-                          style: Theme.of(context).textTheme.bodyText1,
-                        ),
-                      );
+                        );
+                      }),
+                ) : Center(
+                  child: Text(
+                    'Pas d\'évenements',
+                    style: Theme.of(context).textTheme.bodyText1,
+                  ),
+                );
+
+                // return Container(
+                //   height: 280,
+                //   child: CarouselSlider.builder(
+                //     itemCount: events.length,
+                //     itemBuilder: (BuildContext context, int index) {
+                //       return CachedNetworkImage(
+                //         imageUrl: events[index].imageFlyerUrl,
+                //         imageBuilder: (context, imageProvider) {
+                //           context.read(boolToggleProvider).addEventsPhotos(
+                //               imageProvider, events[index].imageFlyerUrl);
+                //           return InkWell(
+                //             onTap: () {
+                //               Navigator.of(context).push(AppPageRoute(
+                //                   builder: (context) =>
+                //                       Details(events[index])));
+                //
+                //               // return ExtendedNavigator.of(context).push(
+                //               //   Routes.details,
+                //               //   arguments: DetailsArguments(
+                //               //       event: events.elementAt(index)));
+                //             },
+                //             child: Container(
+                //                 height: 280,
+                //                 clipBehavior: Clip.hardEdge,
+                //                 decoration: BoxDecoration(
+                //                   color: Colors.amber,
+                //                   borderRadius:
+                //                       BorderRadius.all(Radius.circular(25)),
+                //                 ),
+                //                 child: Hero(
+                //                     tag: events[index].id,
+                //                     child: Image(
+                //                       image: imageProvider,
+                //                     ))),
+                //           );
+                //         },
+                //         placeholder: (context, url) => Shimmer.fromColors(
+                //           baseColor: Colors.white,
+                //           highlightColor: Theme.of(context).colorScheme.primary,
+                //           child: Container(
+                //             width: 172,
+                //             height: 280,
+                //             decoration: BoxDecoration(
+                //                 borderRadius:
+                //                     BorderRadius.all(Radius.circular(25)),
+                //                 color: Colors.white),
+                //           ),
+                //         ),
+                //         errorWidget: (context, url, error) => Icon(Icons.error),
+                //       );
+                //     },
+                //     options: CarouselOptions(
+                //         autoPlay: true,
+                //         autoPlayInterval: Duration(seconds: 3),
+                //         autoPlayAnimationDuration: Duration(milliseconds: 800),
+                //         height: 250.0),
+                //   ),
+                // );
               }),
           Divider(),
           Row(
@@ -201,7 +250,7 @@ class HomeEvents extends HookWidget {
                         FontAwesomeIcons.search,
                         color: Theme.of(context).colorScheme.primary,
                       ),
-                      onPressed: () => Show.showDialogLieuQuandGenresEtTypes(
+                      onPressed: () => Show.showLieuQuandGenresEtTypes(
                           context,
                           user.genres != null ? user.genres.toList() : [],
                           user.types != null ? user.types.toList() : [],
@@ -368,16 +417,19 @@ class HomeEvents extends HookWidget {
                                     ? CachedNetworkImage(
                                         imageUrl: events[index].imageFlyerUrl,
                                         imageBuilder: (_, imageProvider) {
-                                          return Container(
-                                            width: 150,
-                                            height: 211,
-                                            decoration: BoxDecoration(
-                                                image: DecorationImage(
-                                                    image: imageProvider,
-                                                    fit: BoxFit.fill),
-                                                borderRadius: BorderRadius.all(
-                                                    Radius.circular(25)),
-                                                color: Colors.white),
+                                          return Hero(
+                                            tag: events[index].id,
+                                            child: Container(
+                                              width: 150,
+                                              height: 211,
+                                              decoration: BoxDecoration(
+                                                  image: DecorationImage(
+                                                      image: imageProvider,
+                                                      fit: BoxFit.fill),
+                                                  borderRadius: BorderRadius.all(
+                                                      Radius.circular(25)),
+                                                  color: Colors.white),
+                                            ),
                                           );
                                         },
                                         placeholder: (context, url) =>

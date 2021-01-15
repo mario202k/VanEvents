@@ -40,6 +40,8 @@ class ChatMessageListItem extends HookWidget {
 
   Widget build(BuildContext context) {
     final chatRoomRead = context.read(chatRoomProvider);
+    print('buildChatMessageListItem');
+    print(message.id);
     return Row(
       mainAxisAlignment: isMe ? MainAxisAlignment.end : MainAxisAlignment.start,
       crossAxisAlignment: CrossAxisAlignment.end,
@@ -143,8 +145,8 @@ class ChatMessageListItem extends HookWidget {
                 message.message,
                 textAlign: isMe ? TextAlign.end : TextAlign.start,
                 style: isMe
-                    ? Theme.of(context).textTheme.headline5
-                    : Theme.of(context).textTheme.headline6,
+                    ? Theme.of(context).textTheme.bodyText1
+                    : Theme.of(context).textTheme.bodyText2,
               ),
             ],
           ),
@@ -177,7 +179,7 @@ class ChatMessageListItem extends HookWidget {
           },
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.end,
-            mainAxisSize: MainAxisSize.min,
+            // mainAxisSize: MainAxisSize.min,
             children: <Widget>[
               Visibility(
                 visible: message.type != MyMessageType.reply,
@@ -195,13 +197,9 @@ class ChatMessageListItem extends HookWidget {
                           constraints: BoxConstraints(
                               maxWidth: MediaQuery.of(context).size.width * 0.7,
                               maxHeight: 220),
-                          child: FittedBox(
-                            fit: BoxFit.contain,
-                            alignment: isMe
-                                ? Alignment.centerRight
-                                : Alignment.centerLeft,
-                            child: Image(image: imageProvider),
-                          )),
+                          child: Image(
+                              fit: BoxFit.fitHeight,
+                              image: imageProvider)),
                       errorWidget: (context, url, error) => Material(
                         child: Image.asset(
                           'assets/img/img_not_available.jpeg',
@@ -221,16 +219,12 @@ class ChatMessageListItem extends HookWidget {
                       constraints: BoxConstraints(
                           maxWidth: MediaQuery.of(context).size.width * 0.7,
                           maxHeight: 220),
-                      child: FittedBox(
-                        fit: BoxFit.contain,
-                        alignment:
-                            isMe ? Alignment.centerRight : Alignment.centerLeft,
-                        child: chatRoomRead.listPhoto[message.id] != null
-                            ? Image(
-                                image: FileImage(
-                                    chatRoomRead.listPhoto[message.id]))
-                            : SizedBox(),
-                      )),
+                      child: chatRoomRead.listPhoto[message.id] != null
+                          ? Image(
+                              fit: BoxFit.fitHeight,
+                              image: FileImage(
+                                  chatRoomRead.listPhoto[message.id]))
+                          : SizedBox()),
               Visibility(
                   visible: !isMe && message.type != MyMessageType.reply,
                   child: Text(
@@ -437,7 +431,6 @@ class ChatMessageListItem extends HookWidget {
                             style: Theme.of(context)
                                 .textTheme
                                 .caption
-                                .copyWith(color: Colors.black),
                           ),
                         ],
                       );

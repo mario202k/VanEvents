@@ -2,15 +2,15 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:geoflutterfire/geoflutterfire.dart';
 
 enum StatusTransport {
-  submitted,
-  cancelledByVTC,
-  accepted,
+  submitted,//Non Traiter
+  acceptedByVtc,
   invoiceSent,
-  cancelledByCustomer,
   holdOnCard,
-  scanOK,
-  refunded,
-  captureFunds
+  captureFunds,//Done
+  refunded,//Done
+  cancelledByVTC,//Done
+  cancelledByCustomer,//Done
+  Error//Done Capture too late etc...
 }
 
 class MyTransport {

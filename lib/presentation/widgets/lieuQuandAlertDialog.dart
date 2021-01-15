@@ -1,7 +1,6 @@
 import 'dart:async';
 
 import 'package:after_init/after_init.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_form_builder/flutter_form_builder.dart';
@@ -12,7 +11,7 @@ import 'package:intl/intl.dart';
 import 'package:van_events_project/constants/credentials.dart';
 import 'package:van_events_project/domain/models/my_user.dart';
 import 'package:van_events_project/domain/repositories/my_user_repository.dart';
-import 'package:van_events_project/providers/toggle_bool_chat_room.dart';
+import 'package:van_events_project/providers/toggle_bool.dart';
 
 enum Lieu { address, aroundMe }
 enum Quand { date, ceSoir, demain, avenir }
@@ -59,12 +58,13 @@ class _LieuQuandAlertDialogState extends State<LieuQuandAlertDialog>
       isAlwaysShown: true,
       controller: _scrollController,
       child: SingleChildScrollView(
+        physics: AlwaysScrollableScrollPhysics(),
         controller: _scrollController,
         child: Column(
           children: [
             Text(
               'Lieu',
-              style: Theme.of(context).textTheme.bodyText2,
+              style: Theme.of(context).textTheme.headline5,
             ),
             Consumer(builder: (context, watch, child) {
               return RadioListTile(
@@ -189,7 +189,7 @@ class _LieuQuandAlertDialogState extends State<LieuQuandAlertDialog>
                         decoration: BoxDecoration(
                             border: Border.all(
                               width: 2,
-                              color: Colors.black,
+                              color: Theme.of(context).colorScheme.onSurface,
                             ),
                             borderRadius: BorderRadius.circular(25)),
                         child: Padding(
@@ -199,7 +199,7 @@ class _LieuQuandAlertDialogState extends State<LieuQuandAlertDialog>
                             return Text(
                               watch(boolToggleProvider).selectedAdress ??
                                   'Recherche',
-                              style: Theme.of(context).textTheme.headline5,
+                              style: Theme.of(context).textTheme.bodyText1,
                               overflow: TextOverflow.ellipsis,
                             );
                           }),
@@ -231,7 +231,7 @@ class _LieuQuandAlertDialogState extends State<LieuQuandAlertDialog>
                 },
                 title: Text(
                   'Autour de moi',
-                  style: Theme.of(context).textTheme.headline5,
+                  style: Theme.of(context).textTheme.bodyText1,
                 ),
               );
             }),
@@ -255,7 +255,7 @@ class _LieuQuandAlertDialogState extends State<LieuQuandAlertDialog>
             }),
             Text(
               'Quand',
-              style: Theme.of(context).textTheme.bodyText2,
+              style: Theme.of(context).textTheme.headline5,
             ),
             Consumer(builder: (context, watch, child) {
               final toggle = watch(boolToggleProvider);
@@ -283,16 +283,12 @@ class _LieuQuandAlertDialogState extends State<LieuQuandAlertDialog>
 //                    });
                   },
                   style: TextStyle(
-                      color: Theme.of(context).colorScheme.onBackground),
-                  cursorColor: Theme.of(context).colorScheme.onBackground,
+                      color: Theme.of(context).colorScheme.onSurface),
+                  cursorColor: Theme.of(context).colorScheme.onSurface,
                   inputType: InputType.date,
                   format: DateFormat("dd/MM/yyyy"),
-                  decoration: InputDecoration(labelText: 'Date'),
-                  validator: (val) {
-                    FormBuilderValidators.required(context,
-                        errorText: "champs requis");
-                    return null;
-                  },
+                  decoration: InputDecoration(labelText: 'Date',labelStyle: Theme.of(context).textTheme.bodyText1),
+
                 ),
               );
             }),
@@ -303,7 +299,7 @@ class _LieuQuandAlertDialogState extends State<LieuQuandAlertDialog>
                 groupValue: toggle.quand,
                 title: Text(
                   'Ce soir',
-                  style: Theme.of(context).textTheme.headline5,
+                  style: Theme.of(context).textTheme.bodyText1,
                 ),
                 onChanged: (Quand value) {
                   context.read(boolToggleProvider).setQuand(value);
@@ -317,7 +313,7 @@ class _LieuQuandAlertDialogState extends State<LieuQuandAlertDialog>
                 groupValue: toggle.quand,
                 title: Text(
                   'Demain',
-                  style: Theme.of(context).textTheme.headline5,
+                  style: Theme.of(context).textTheme.bodyText1,
                 ),
                 onChanged: (Quand value) {
                   context.read(boolToggleProvider).setQuand(value);
@@ -331,7 +327,7 @@ class _LieuQuandAlertDialogState extends State<LieuQuandAlertDialog>
                 groupValue: toggle.quand,
                 title: Text(
                   'À venir',
-                  style: Theme.of(context).textTheme.headline5,
+                  style: Theme.of(context).textTheme.bodyText1,
                 ),
                 onChanged: (Quand value) {
                   context.read(boolToggleProvider).setQuand(value);

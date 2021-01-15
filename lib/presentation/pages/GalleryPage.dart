@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:photo_view/photo_view.dart';
 import 'package:photo_view/photo_view_gallery.dart';
+import 'package:van_events_project/providers/toggle_bool.dart';
 
 class GalleryPage extends StatelessWidget {
   final List imageList;
@@ -12,6 +14,7 @@ class GalleryPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Theme.of(context).colorScheme.background,
       appBar: AppBar(
         title: Text('Gallery'),
       ),
@@ -20,7 +23,7 @@ class GalleryPage extends StatelessWidget {
         scrollPhysics: const BouncingScrollPhysics(),
         builder: (BuildContext context, int index) {
           return PhotoViewGalleryPageOptions(
-            imageProvider: NetworkImage(imageList[index]),
+            imageProvider: context.read(boolToggleProvider).imageProviderDetail[index],
             initialScale: PhotoViewComputedScale.contained * 0.8,
             heroAttributes: PhotoViewHeroAttributes(
                 tag: imageList[index]
@@ -40,7 +43,7 @@ class GalleryPage extends StatelessWidget {
           ),
         ),
         backgroundDecoration: BoxDecoration(
-          color: Theme.of(context).canvasColor,
+          color: Theme.of(context).colorScheme.background,
         ),
 //        pageController: widget.pageController,
 //        onPageChanged: onPageChanged,

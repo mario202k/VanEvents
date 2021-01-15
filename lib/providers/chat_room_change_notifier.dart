@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -18,8 +19,8 @@ final chatRoomFutureProvider = FutureProvider.autoDispose<void>((ref) {
 });
 
 class ChatRoomChangeNotifier extends ChangeNotifier {
+  Timer _throttle;
   String chatId;
-  bool showEmojiPicker;
   bool showSendBotton = false;
   List<MyMessage> oldMessages = List<MyMessage>();
   GlobalKey<AnimatedListState> listKey;
@@ -41,7 +42,7 @@ class ChatRoomChangeNotifier extends ChangeNotifier {
   bool hasError = false;
   bool hasErrorOnFetchingOldMessage = false;
   MyMessage lastOldMessage;
-  List<MyMessage> messages;
+  List<MyMessage> messages = List<MyMessage>();
   BuildContext context;
   MyChatRepository myChatRepo;
   String replyName;
@@ -49,6 +50,8 @@ class ChatRoomChangeNotifier extends ChangeNotifier {
   String replyMessageId;
   MyMessageType replyMessagetype;
   Map<String, MyMessage> myRepliedMessage;
+
+  File tempImage;
 
   void setReplyToMessage(String name, String message,String messageId, MyMessageType replyType) {
     replyName = name;
@@ -74,7 +77,6 @@ class ChatRoomChangeNotifier extends ChangeNotifier {
     myChatRepo.setChatId(chatId);
     messages = List<MyMessage>();
     oldMessages = List<MyMessage>();
-    showEmojiPicker = false;
     showSendBotton = false;
     listKey = GlobalKey<AnimatedListState>();
     hasNext = true;
@@ -83,15 +85,12 @@ class ChatRoomChangeNotifier extends ChangeNotifier {
   }
 
   Future<void> fetchAllMessages() async {
-    print('fetchAllMessages');
+
     try {
       myChat = await getMyChat(chatId);
 
-
       myUsersList = await chatUsers(myChat);
-      print(myUsersList.length);
-      print('//');
-      print('//');
+
       oldMessages = await getChatMessages(chatId);
 
       if (oldMessages.isNotEmpty) {
@@ -130,7 +129,7 @@ class ChatRoomChangeNotifier extends ChangeNotifier {
     if (isFetchingOldMessage) {
       return;
     }
-    print('fetchOldMessage');
+
     isFetchingOldMessage = true;
 
     notifyListeners();
@@ -169,14 +168,18 @@ class ChatRoomChangeNotifier extends ChangeNotifier {
     notifyListeners();
   }
 
-  setShowEmojiPicker(bool b) {
-    showEmojiPicker = b;
-    notifyListeners();
-  }
-
   setShowSendBotton(bool b) {
+
     showSendBotton = b;
     notifyListeners();
+
+    myChatRepo.setIsWriting();
+    if (_throttle?.isActive ?? false) {
+      _throttle.cancel();
+    }
+    _throttle = Timer(const Duration(seconds: 2), (){
+      myChatRepo.setIsReading();
+    });
   }
 
   void addListPhoto(String path, File image) {
@@ -188,6 +191,8 @@ class ChatRoomChangeNotifier extends ChangeNotifier {
   }
 
   Future<List<MyMessage>> getChatMessages(String chatId) {
+
+
     return FirebaseFirestore.instance
         .collection('chats')
         .doc(chatId)
@@ -231,6 +236,7 @@ class ChatRoomChangeNotifier extends ChangeNotifier {
   }
 
   Future<MyChat> getMyChat(String chatId) {
+
     return FirebaseFirestore.instance
         .collection('chats')
         .doc(chatId)
@@ -250,25 +256,13 @@ class ChatRoomChangeNotifier extends ChangeNotifier {
 
   @override
   String toString() {
-    return 'ChatRoomChangeNotifier{chatId: $chatId, showEmojiPicker: $showEmojiPicker, showSendBotton: $showSendBotton, oldMessages: $oldMessages, listKey: $listKey, myChat: $myChat, myUsersList: $myUsersList, friend: $friend, imageUrl: $imageUrl, nomTitre: $nomTitre, streamUserFriend: $streamUserFriend, listPhoto: $listPhoto, listTempMessages: $listTempMessages, lastDocument: $lastDocument, documentLimit: $documentLimit, hasNext: $hasNext, isFetchingUsers: $isFetchingUsers, isFetchingOldMessage: $isFetchingOldMessage, isLoading: $isLoading, hasError: $hasError, hasErrorOnFetchingOldMessage: $hasErrorOnFetchingOldMessage, lastOldMessage: $lastOldMessage, messages: $messages, context: $context, db: $myChatRepo, replyName: $replyName, replyMessage: $replyMessage, replyMessagetype: $replyMessagetype, myRepliedMessage: $myRepliedMessage}';
+    return 'ChatRoomChangeNotifier{chatId: $chatId,  showSendBotton: $showSendBotton, oldMessages: $oldMessages, listKey: $listKey, myChat: $myChat, myUsersList: $myUsersList, friend: $friend, imageUrl: $imageUrl, nomTitre: $nomTitre, streamUserFriend: $streamUserFriend, listPhoto: $listPhoto, listTempMessages: $listTempMessages, lastDocument: $lastDocument, documentLimit: $documentLimit, hasNext: $hasNext, isFetchingUsers: $isFetchingUsers, isFetchingOldMessage: $isFetchingOldMessage, isLoading: $isLoading, hasError: $hasError, hasErrorOnFetchingOldMessage: $hasErrorOnFetchingOldMessage, lastOldMessage: $lastOldMessage, messages: $messages, context: $context, db: $myChatRepo, replyName: $replyName, replyMessage: $replyMessage, replyMessagetype: $replyMessagetype, myRepliedMessage: $myRepliedMessage}';
   }
 
   Future<MyMessage> getReplyMessage(String replyMessageId) async{
-    print(replyMessageId);
-    return await FirebaseFirestore.instance
-        .collection('chats')
-        .doc(chatId)
-        .collection('messages')
-        .where('id', isEqualTo: replyMessageId)
-        .get()
-        .then((value) {
-          print(value.docs);
 
-      return value.docs
-          .map((doc) => MyMessage.fromMap(doc.data()))
-          .toList()
-          .first;
-    });
+    return await myChatRepo.getMessage(chatId,replyMessageId);
+
   }
 
   void setAllNull() {
@@ -279,11 +273,16 @@ class ChatRoomChangeNotifier extends ChangeNotifier {
     myChatRepo = null;
     messages = null;
     oldMessages = null;
-    showEmojiPicker = null;
     showSendBotton = null;
     listKey = null;
     hasNext = null;
     isLoading = null;
 
+  }
+
+  void setNewTempImage(File file) {
+    this.tempImage = file;
+
+    notifyListeners();
   }
 }

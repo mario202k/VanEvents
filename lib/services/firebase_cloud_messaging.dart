@@ -11,6 +11,8 @@ import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:van_events_project/domain/models/message.dart';
 import 'package:van_events_project/domain/routing/route.gr.dart';
 import 'package:van_events_project/providers/chat_room_change_notifier.dart';
+import 'package:van_events_project/providers/settings_change_notifier.dart';
+import 'package:van_events_project/providers/toggle_bool.dart';
 Future<dynamic> myBackgroundMessageHandler(Map<String, dynamic> message) async {
   return NotificationHandler().showNotification(message);
 }
@@ -77,22 +79,26 @@ class NotificationHandler {
       onBackgroundMessage:
           Platform.isAndroid ? myBackgroundMessageHandler : null,
       onMessage: (Map<String, dynamic> message) async {
-        print(message);
-        MyMessage myMessage;
-        String chatId = '';
-        if (Platform.isAndroid) {
-          myMessage = MyMessage.fromAndroidFcm(message);
-          chatId = message['data']['chatId'];
-        } else {
-          myMessage = MyMessage.fromIosFcm(message);
-          chatId = message['chatId'];
+        if(message.containsKey('chatId') || message['data']['chatId'] != null ){
+          MyMessage myMessage;
+          String chatId = '';
+          if (Platform.isAndroid) {
+            myMessage = MyMessage.fromAndroidFcm(message);
+            chatId = message['data']['chatId'];
+          } else {
+            myMessage = MyMessage.fromIosFcm(message);
+            chatId = message['chatId'];
+          }
+          if ( myMessage.idFrom != uid ) {
+            showNotification(message);
+          }
+          if(myMessage.idFrom != uid && context.read(chatRoomProvider).chatId == chatId){
+            context.read(chatRoomProvider).myNewMessages(myMessage);
+          }
         }
-        if (myMessage.idFrom != uid ) {
-          showNotification(message);
-        }
-        if(myMessage.idFrom != uid && context.read(chatRoomProvider).chatId == chatId){
-          context.read(chatRoomProvider).myNewMessages(myMessage);
-        }
+
+
+
       },
       onLaunch: (Map<String, dynamic> message) async {
         String chatId = '';
@@ -132,11 +138,13 @@ class NotificationHandler {
   }
 
   void showNotification(Map<String, dynamic> message) async {
-    // if(context.read(boolToggleProvider).isEnableNotificationMessagerie != null &&
-    //     context.read(boolToggleProvider).isEnableNotificationMessagerie  == false){
-    //   return;
-    // }
 
+    if(!context.read(boolToggleProvider).isNextEvents && message.containsKey('newEventId')){
+      return;
+    }
+    if(!context.read(boolToggleProvider).isMessages && message.containsKey('chatId')){
+      return;
+    }
     String title, type, body, chatId;
 
     if (Platform.isIOS) {
@@ -156,9 +164,9 @@ class NotificationHandler {
     }
 
     var androidPlatformChannelSpecifics = AndroidNotificationDetails(
-        'com.vaninamario.crossroads_events',
-        'Crossroads Events',
-        'your channel description',
+        'com.vanevents.VanEvents',
+        'VanEvents',
+        'VanEvents notification',
         playSound: true,
         enableVibration: true,
         importance: Importance.max,

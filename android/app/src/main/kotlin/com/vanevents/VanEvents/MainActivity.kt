@@ -1,4 +1,4 @@
-package com.example.van_events_project
+package com.vanevents.VanEvents
 
 import androidx.annotation.NonNull
 import io.flutter.embedding.android.FlutterActivity;

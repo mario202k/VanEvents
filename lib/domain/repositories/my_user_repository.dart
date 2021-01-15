@@ -1,16 +1,15 @@
 import 'dart:async';
 import 'dart:io';
-import 'package:auto_route/auto_route.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_dynamic_links/firebase_dynamic_links.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/src/widgets/framework.dart';
-import 'package:flutter_phoenix/flutter_phoenix.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:hooks_riverpod/all.dart';
 import 'package:sign_in_with_apple/sign_in_with_apple.dart';
+import 'package:van_events_project/domain/models/about.dart';
 import 'package:van_events_project/domain/models/my_chat.dart';
 import 'package:van_events_project/domain/models/my_user.dart';
 import 'package:van_events_project/domain/routing/route.gr.dart';
@@ -26,6 +25,10 @@ final streamMyUserProvider = StreamProvider<MyUser>((ref) {
   return ref.read(myUserRepository).userStream();
 });
 
+final aboutFutureProvider = FutureProvider<List<About>>((ref) {
+  return ref.read(myUserRepository).aboutFuture();
+});
+
 class MyUserRepository {
   final FirebaseAuth _firebaseAuth = FirebaseAuth.instance;
   final GoogleSignIn _googleSignIn = GoogleSignIn();
@@ -33,6 +36,7 @@ class MyUserRepository {
 
   String uid;
   String email;
+  User user;
 
   MyUserRepository({String uid}) : this.uid = uid;
 
@@ -47,25 +51,43 @@ class MyUserRepository {
 
     return await _firebaseAuth.signInWithCredential(credential);
   }
-  
-  // Future<UserCredential> signInWithApple(String email, String fullName)async{
-  //
-  //   final credential = await  SignInWithApple.getAppleIDCredential(
-  //     scopes: [
-  //     AppleIDAuthorizationScopes.email,
-  //     AppleIDAuthorizationScopes.fullName,
-  //   ],);
-  //
-  //
-  // }
 
+  Future<UserCredential> signInWithApple() async {
+    final b = await SignInWithApple.isAvailable();
+    // 1. perform the sign-in request
+    final appleIdCredential = await SignInWithApple.getAppleIDCredential(
+      scopes: [
+        AppleIDAuthorizationScopes.email,
+        AppleIDAuthorizationScopes.fullName,
+      ],
+      webAuthenticationOptions: WebAuthenticationOptions(
+        // TODO: Set the `clientId` and `redirectUri` arguments to the values you entered in the Apple Developer portal during the setup
+        clientId: MyPath.serviceId(), //Le service identifier
+        redirectUri: Uri.parse(
+          MyPath.redirecUri(),
+        ),
+      ),
+    );
+
+    if (appleIdCredential == null) {
+      return null;
+    }
+
+    // 2. check the result
+    final oAuthProvider = OAuthProvider('apple.com');
+    final credential = oAuthProvider.credential(
+      idToken: appleIdCredential.identityToken,
+      accessToken: appleIdCredential.authorizationCode,
+    );
+    return await _firebaseAuth.signInWithCredential(credential);
+  }
 
   Future<UserCredential> checkDynamicLinkData(BuildContext context) async {
     UserCredential userCredential;
     //Returns the deep linked data
     FirebaseDynamicLinks.instance.onLink(
         onSuccess: (PendingDynamicLinkData dynamicLink) async {
-          print(dynamicLink.toString());
+      print(dynamicLink.toString());
       final Uri deepLink = dynamicLink?.link;
       print('FirebaseDynamicLinks');
       if (deepLink != null) {
@@ -94,17 +116,15 @@ class MyUserRepository {
     print(_firebaseAuth.isSignInWithEmailLink(link.toString()));
 
     UserCredential userCredential;
-    if (link != null &&
-        !_firebaseAuth.isSignInWithEmailLink(link.toString())){
+    if (link != null && !_firebaseAuth.isSignInWithEmailLink(link.toString())) {
       print('Reboot');
       Navigator.of(context).pushReplacementNamed(Routes.routeAuthentication);
       // Phoenix.rebirth(context);
     }
 
-    if (link != null &&
-        _firebaseAuth.isSignInWithEmailLink(link.toString()) ) {
+    if (link != null && _firebaseAuth.isSignInWithEmailLink(link.toString())) {
       print('coucou!!!!');
-      if(email == null){
+      if (email == null) {
         Uri uri = Uri.parse(link.queryParameters['continueUrl']);
         email = uri.queryParameters['email'];
       }
@@ -117,7 +137,6 @@ class MyUserRepository {
       if (userCredential != null) {
         this.uid = userCredential.user.uid;
         await createOrUpdateUserOnDatabase(userCredential.user);
-        print('/////////////////////////////');
         Navigator.of(context).pushReplacementNamed(Routes.routeAuthentication);
         // BlocProvider.of<AuthenticationCubit>(context).authenticationLoggedIn(myUserRepo);
       }
@@ -184,7 +203,7 @@ class MyUserRepository {
 
   Stream<List<MyUser>> chatMyUsersStream(MyChat myChat) {
     return _service.collectionStream(
-        path: Path.users(),
+        path: MyPath.users(),
         queryBuilder: (query) =>
             query.where('id', whereIn: myChat.membres.keys.toList()),
         builder: (map) => MyUser.fromMap(map));
@@ -193,20 +212,20 @@ class MyUserRepository {
   Future setInactive() {
     print('setInactive');
     print(uid);
-    if(uid == null){
+    if (uid == null) {
       return null;
     }
     return _service.setData(
-        path: Path.user(uid),
+        path: MyPath.user(uid),
         data: {'lastActivity': FieldValue.serverTimestamp(), 'isLogin': false});
   }
 
   Future setOnline() {
-    if(uid == null){
+    if (uid == null) {
       return null;
     }
     return _service.setData(
-        path: Path.user(uid),
+        path: MyPath.user(uid),
         data: {'lastActivity': FieldValue.serverTimestamp(), 'isLogin': true});
   }
 
@@ -225,6 +244,7 @@ class MyUserRepository {
         .then((list) async {
       if (list.isEmpty) {
         //création du user
+
         await _firebaseAuth
             .createUserWithEmailAndPassword(email: email, password: password)
             .then((user) async {
@@ -239,7 +259,7 @@ class MyUserRepository {
             await _service
                 .uploadImg(
                     file: image,
-                    path: Path.profilImage(uid, path),
+                    path: MyPath.profilImage(uid, path),
                     contentType: 'image/jpeg')
                 .then((url) async {
               //création du user dans la _db
@@ -258,13 +278,13 @@ class MyUserRepository {
                   person: person);
 
               await _service
-                  .setData(path: Path.user(uid), data: myUser.toMap())
+                  .setData(path: MyPath.user(uid), data: myUser.toMap())
                   .then((_) async {
-
                 //envoi de l'email de vérification
                 await sendSignInLinkToEmail(
                         email: user.user.email,
-                        actionCodeSettings: Path.actionCodeSettingsSignIn(email))
+                        actionCodeSettings:
+                            MyPath.actionCodeSettingsSignIn(email))
                     .then((value) {
                   rep = 'Un email de validation a été envoyé';
                   return 'Un email de validation a été envoyé';
@@ -292,13 +312,12 @@ class MyUserRepository {
                 person: person);
 
             await _service
-                .setData(path: Path.user(uid), data: myUser.toMap())
+                .setData(path: MyPath.user(uid), data: myUser.toMap())
                 .then((_) async {
-
               //envoi de l'email de vérification
               await sendSignInLinkToEmail(
                       email: user.user.email,
-                      actionCodeSettings: Path.actionCodeSettingsSignIn(email))
+                      actionCodeSettings: MyPath.actionCodeSettingsSignIn(email))
                   .then((value) {
                 rep = 'Un email de validation a été envoyé';
                 return 'Un email de validation a été envoyé';
@@ -357,111 +376,84 @@ class MyUserRepository {
 
   Future<bool> isSignedIn() async {
     final currentUser = _firebaseAuth.currentUser;
-
-    print("isSignedIn");
     if (currentUser != null) {
-      print(currentUser.metadata.lastSignInTime);
-      print(currentUser.metadata.creationTime);
-      print(currentUser.metadata.toString());
-      print(_firebaseAuth.currentUser.metadata.creationTime
-          .compareTo(_firebaseAuth.currentUser.metadata.lastSignInTime));
-      this.uid = _firebaseAuth.currentUser.uid;
-      print(_firebaseAuth.currentUser.uid);
+      await createOrUpdateUserOnDatabase(currentUser);
     }
 
-    return currentUser != null && _firebaseAuth.currentUser.emailVerified ||
-        currentUser != null &&
-            _firebaseAuth.currentUser.metadata.creationTime.compareTo(
-                    _firebaseAuth.currentUser.metadata.lastSignInTime) <
-                0;
+    return currentUser != null && _firebaseAuth.currentUser.emailVerified;
   }
 
-  Future<User> getFireBaseUser() async {
-    return _firebaseAuth.currentUser;
+  User getFireBaseUser() {
+    return user;
   }
 
   Future<bool> createOrUpdateUserOnDatabase(User user) async {
-    print(user.uid);
-    print(user.metadata.creationTime);
-    print(user.metadata.lastSignInTime);
-    print('//////////');
-    if (user == null) {
-      return false;
-    }
+    this.user = user;
+    setUid(user.uid);
     bool isAcceptedCGUCGV = false;
 
     if (user.isAnonymous) {
-      await _service.setData(path: Path.user(user.uid), data: {
+      await _service.setData(path: MyPath.user(user.uid), data: {
         "id": user.uid,
         'lastActivity': FieldValue.serverTimestamp(),
         'provider': user.providerData,
       });
       return isAcceptedCGUCGV;
     }
-    final myUser = await _service.getDoc(
-        path: Path.user(user.uid), builder: (data) => MyUser.fromMap(data));
+    MyUser fromDb = await _service.getDoc(
+        path: MyPath.user(user.uid), builder: (map) => MyUser.fromMap(map));
 
-    if (myUser == null) {
-      MyUser myUser = MyUser(
-          id: user.uid,
-          nom: user.displayName,
-          email: user.email,
-          lastActivity: DateTime.now(),
-          isLogin: false,
-          typeDeCompte: TypeOfAccount.userNormal,
-          hasAcceptedCGUCGV: false);
+    await _service.setData(path: MyPath.user(user.uid), data: {
+      'id':user.uid,
+      'lastActivity': FieldValue.serverTimestamp(),
+      'nom': fromDb.nom ?? user?.displayName,
+      'imageUrl': fromDb.imageUrl ?? user?.photoURL,
+      'hasAcceptedCGUCGV': fromDb.hasAcceptedCGUCGV ?? false,
+      'isLogin': true
+    });
 
-      await _service.setData(path: Path.user(user.uid), data: myUser.toMap());
-    } else {
-      if (myUser.hasAcceptedCGUCGV) {
-        isAcceptedCGUCGV = true;
-      }
-      await _service.setData(path: Path.user(user.uid), data: {
-        'lastActivity': FieldValue.serverTimestamp(),
-        'isLogin': true,
-      });
-    }
-    return isAcceptedCGUCGV;
+
+    return fromDb.hasAcceptedCGUCGV ?? false;
   }
 
   Future<MyUser> getMyUser(String uid) async {
     return await _service.getDoc(
-        path: Path.user(uid), builder: (data) => MyUser.fromMap(data));
+        path: MyPath.user(uid), builder: (data) => MyUser.fromMap(data));
   }
 
   Future setIsAcceptCGUCGV(String uid) async {
-    return await _service.setData(path: Path.user(uid), data: {
+    return await _service.setData(path: MyPath.user(uid), data: {
       'hasAcceptedCGUCGV': true,
     });
   }
 
   Future<void> setMyUser(MyUser user) async => await _service.setData(
-        path: Path.user(uid),
+        path: MyPath.user(uid),
         data: user.toMap(),
       );
 
   Future<MyUser> userFuture() async => await _service.getDoc(
-      path: Path.user(uid), builder: (data) => MyUser.fromMap(data));
+      path: MyPath.user(uid), builder: (data) => MyUser.fromMap(data));
 
   Stream<MyUser> userStream() => _service.documentStream(
-        path: Path.user(uid),
+        path: MyPath.user(uid),
         builder: (data) => MyUser.fromMap(data),
       );
 
   Stream<List<MyUser>> usersStream() => _service.collectionStream(
-        path: Path.users(),
+        path: MyPath.users(),
         builder: (data) => MyUser.fromMap(data),
       );
 
   Future updateMyUserImageProfil(String urlFlyer) {
-    return _service.updateData(path: Path.user(uid), data: {
+    return _service.updateData(path: MyPath.user(uid), data: {
       'imageUrl': urlFlyer,
     });
   }
 
   void updateMyUserGenre(Map genre) {
     genre.forEach((key, value) {
-      _service.updateData(path: Path.user(uid), data: {
+      _service.updateData(path: MyPath.user(uid), data: {
         'genres':
             value ? FieldValue.arrayUnion([key]) : FieldValue.arrayRemove([key])
       });
@@ -470,7 +462,7 @@ class MyUserRepository {
 
   void updateMyUserType(Map<String, bool> type) {
     type.forEach((key, value) {
-      _service.updateData(path: Path.user(uid), data: {
+      _service.updateData(path: MyPath.user(uid), data: {
         'types':
             value ? FieldValue.arrayUnion([key]) : FieldValue.arrayRemove([key])
       });
@@ -481,12 +473,12 @@ class MyUserRepository {
       Lieu lieu, String address, int aroundMe, Quand quand, DateTime date) {
     switch (lieu) {
       case Lieu.address:
-        _service.updateData(path: Path.user(uid), data: {
+        _service.updateData(path: MyPath.user(uid), data: {
           'lieu': ['address', address]
         });
         break;
       case Lieu.aroundMe:
-        _service.updateData(path: Path.user(uid), data: {
+        _service.updateData(path: MyPath.user(uid), data: {
           'lieu': ['aroundMe', aroundMe]
         });
 
@@ -495,23 +487,23 @@ class MyUserRepository {
 
     switch (quand) {
       case Quand.date:
-        _service.updateData(path: Path.user(uid), data: {
+        _service.updateData(path: MyPath.user(uid), data: {
           'quand': ['date', date]
         });
         break;
       case Quand.ceSoir:
-        _service.updateData(path: Path.user(uid), data: {
+        _service.updateData(path: MyPath.user(uid), data: {
           'quand': ['ceSoir']
         });
 
         break;
       case Quand.demain:
-        _service.updateData(path: Path.user(uid), data: {
+        _service.updateData(path: MyPath.user(uid), data: {
           'quand': ['demain']
         });
         break;
       case Quand.avenir:
-        _service.updateData(path: Path.user(uid), data: {
+        _service.updateData(path: MyPath.user(uid), data: {
           'quand': ['avenir']
         });
         break;
@@ -524,7 +516,7 @@ class MyUserRepository {
 
   Future setUserPosition(Position position) async {
     return await _service.updateData(
-        path: Path.user(uid),
+        path: MyPath.user(uid),
         data: {'geoPoint': GeoPoint(position.latitude, position.longitude)});
   }
 
@@ -535,30 +527,44 @@ class MyUserRepository {
 
     String urlFlyer = await _service.uploadImg(
         file: imageProfil,
-        path: Path.profilImage(uid, pathprofil),
+        path: MyPath.profilImage(uid, pathprofil),
         contentType: 'image/jpeg');
 
     return await updateUserImageProfil(urlFlyer);
   }
 
   Future updateUserImageProfil(String urlFlyer) async {
-    return await _service.updateData(path: Path.user(uid), data: {
+    return await _service.updateData(path: MyPath.user(uid), data: {
       'imageUrl': urlFlyer,
     });
   }
 
   Future uploadLogo(File file) async {
-
-    String pathlogo =
-    file.path.substring(file.path.lastIndexOf('/') + 1);
+    String pathlogo = file.path.substring(file.path.lastIndexOf('/') + 1);
 
     print(pathlogo);
 
     String urlFlyer = await _service.uploadImg(
-        file: file,
-        path: Path.logoImage(pathlogo),
-        contentType: 'image/jpeg');
+        file: file, path: MyPath.logoImage(pathlogo), contentType: 'image/jpeg');
     print(urlFlyer);
+  }
 
+  Future<void> changePassword() async {
+    return await _firebaseAuth.sendPasswordResetEmail(
+        email: _firebaseAuth.currentUser.email);
+  }
+
+  Future<void> supprimerCompte() async {
+    return await _firebaseAuth.currentUser.delete();
+  }
+
+  Future<List<About>> aboutFuture() async {
+    return _service.collectionFuture(
+        path: MyPath.abouts(), builder: (data) => About.fromMap(data));
+  }
+
+  Future<List<MyUser>>getMyUserFromStripeAccount(String stripeAccount) {
+    return _service.collectionFuture(path: MyPath.users(), builder: (map)=>MyUser.fromMap(map),
+    queryBuilder: (query)=>query.where('stripeAccount',isEqualTo:stripeAccount));
   }
 }

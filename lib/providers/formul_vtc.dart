@@ -5,7 +5,9 @@ import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:google_maps_webservice/places.dart';
 import 'package:hooks_riverpod/all.dart';
 import 'package:van_events_project/domain/models/formule.dart';
+import 'package:van_events_project/domain/repositories/stripe_repository.dart';
 import 'package:van_events_project/presentation/pages/formula_choice.dart';
+import 'package:van_events_project/presentation/widgets/show.dart';
 
 final formuleVTCProvider = ChangeNotifierProvider<FormuleVTC>((ref) {
   return FormuleVTC();
@@ -14,6 +16,12 @@ final formuleVTCProvider = ChangeNotifierProvider<FormuleVTC>((ref) {
 class FormuleVTC extends ChangeNotifier {
   bool showSpinner;
   bool isNotDisplay;
+  bool showSpinnerAppliquer;
+  TextEditingController codePromo;
+  String promotionCodeId;
+  int percentOff;
+  int amountOff;
+  double totalCostDiscounted;
   Map<CardFormula, CardFormIntParticipant> formuleParticipant ;
   Map<Formule, List<GlobalKey<FormBuilderState>>> listFbKey ;
   List<Formule> formules ;
@@ -42,6 +50,8 @@ class FormuleVTC extends ChangeNotifier {
   init() {
     showSpinner = false;
     isNotDisplay = true;
+    showSpinnerAppliquer = false;
+    codePromo = TextEditingController();
     formuleParticipant = Map<CardFormula, CardFormIntParticipant>();
     listFbKey = Map<Formule, List<GlobalKey<FormBuilderState>>>();
 
@@ -166,11 +176,14 @@ class FormuleVTC extends ChangeNotifier {
   }
 
   settotalDistance(double value) {
+    print('settotalDistance');
     totalDistance = value;
     notifyListeners();
   }
 
   settotalDistancePlus(double value) {
+    print('settotalDistancePlus');
+    print(value);
     totalDistance += value;
     notifyListeners();
   }
@@ -272,5 +285,68 @@ class FormuleVTC extends ChangeNotifier {
     }
 
     return myList;
+  }
+
+  Future findCodePromo(BuildContext context) async {
+    showSpinnerAppliquer = true;
+    notifyListeners();
+
+    await context.read(stripeRepositoryProvider).
+    retrievePromotionCode(codePromo.text.trim()).then((rep) {
+      if (rep?.data != null) {
+        print(rep.data);
+        Map promotionCode = rep.data['data'][0];
+        //check restriction
+        int minimumAmount = promotionCode['restrictions']['minimum_amount'];
+        if (minimumAmount != null) {
+          double min = minimumAmount / 100;
+          if (totalCost >= min) {
+            applyPercentOff(promotionCode, context);
+          } else {
+            setTotalCostDiscounted(null);
+            promotionCodeId = null;
+            Show.showDialogToDismiss(
+                context, 'OOps!', 'Montant minimum : $min €', 'Ok');
+          }
+        } else {
+          applyPercentOff(promotionCode, context);
+        }
+      } else {
+        setTotalCostDiscounted(null);
+        promotionCodeId = null;
+        Show.showDialogToDismiss(context, 'OOps!', 'Code invalide', 'Ok');
+      }
+    });
+    showSpinnerAppliquer = false;
+    notifyListeners();
+  }
+
+  void applyPercentOff(Map promotionCode, BuildContext context) {
+    if (promotionCodeId != promotionCode['id']) {
+      promotionCodeId = promotionCode['id'];
+      percentOff = promotionCode['coupon']['percent_off'];
+      amountOff = promotionCode['coupon']['amount_off'];
+
+      if (percentOff != null) {
+        setTotalCostDiscounted(totalCost - totalCost * (percentOff / 100));
+      } else if (amountOff != null) {
+        setTotalCostDiscounted(totalCost - amountOff);
+      }
+      Show.showDialogToDismiss(context, 'Yes!', 'Code bon', 'Ok');
+    } else {
+      Show.showDialogToDismiss(context, 'OOps!', 'Déjà utilisé', 'Ok');
+    }
+  }
+
+  void setTotalCostDiscounted(double cost) {
+    totalCostDiscounted = cost;
+    notifyListeners();
+  }
+
+  clearPromoCode() {
+    codePromo.clear();
+    amountOff = null;
+    percentOff = null;
+    promotionCodeId = null;
   }
 }

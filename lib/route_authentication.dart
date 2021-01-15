@@ -25,8 +25,6 @@ class RouteAuthentication extends HookWidget {
       BlocProvider.of<AuthenticationCubit>(context).authenticationStarted(myUserRepo,context);
     }
 
-
-
     return ModelScreen(
       child: BlocListener<AuthenticationCubit, AuthenticationState>(
         listener: (context, state) {
@@ -46,6 +44,7 @@ class RouteAuthentication extends HookWidget {
             if (state is AuthenticationSuccess) {
               myUserRepo.setUid(state.firebaseUser.uid);
               myUser.setUser(state.myUser);
+
               return CustomDrawer( state.firebaseUser.uid,child: BaseScreens());
             }
             return Center(

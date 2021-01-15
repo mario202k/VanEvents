@@ -20,12 +20,12 @@ import 'package:van_events_project/domain/models/my_transport.dart';
 import 'package:van_events_project/domain/models/my_user.dart';
 import 'package:van_events_project/domain/repositories/my_billet_repository.dart';
 import 'package:van_events_project/domain/repositories/my_transport_repository.dart';
+import 'package:van_events_project/domain/repositories/my_user_repository.dart';
 import 'package:van_events_project/domain/repositories/stripe_repository.dart';
-import 'package:van_events_project/presentation/widgets/model_body.dart';
 import 'package:van_events_project/presentation/widgets/model_screen.dart';
 import 'package:van_events_project/presentation/widgets/show.dart';
 import 'package:van_events_project/providers/formul_vtc.dart';
-
+import 'package:van_events_project/services/firestore_service.dart';
 
 class FormulaChoice extends StatefulWidget {
   final List<Formule> formulas;
@@ -43,6 +43,7 @@ class FormulaChoice extends StatefulWidget {
 }
 
 class _FormulaChoiceState extends State<FormulaChoice> {
+  final ScrollController scrollController = ScrollController();
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
 
   final GlobalKey<AnimatedListState> _listKey = GlobalKey<AnimatedListState>();
@@ -84,6 +85,7 @@ class _FormulaChoiceState extends State<FormulaChoice> {
 
   Future _createPolylines(
       LatLng start, LatLng destination, BuildContext context) async {
+    print('_createPolylines');
     final formuleVtc = context.read(formuleVTCProvider);
 
     formuleVtc.polylines.clear();
@@ -166,7 +168,7 @@ class _FormulaChoiceState extends State<FormulaChoice> {
                         decoration: InputDecoration(labelText: 'Rue'),
                         onTap: () async {
                           final placesDetailsResponse =
-                              await Show.showAddress(context,'FormulaChoice');
+                              await Show.showAddress(context, 'FormulaChoice');
 
                           if (placesDetailsResponse == null) {
                             return;
@@ -178,7 +180,6 @@ class _FormulaChoiceState extends State<FormulaChoice> {
                               placesDetailsResponse, formuleVTC, context);
                         },
                         validator: FormBuilderValidators.required(context),
-
                       ),
                       SizedBox(
                         height: 8,
@@ -190,7 +191,7 @@ class _FormulaChoiceState extends State<FormulaChoice> {
                         decoration: InputDecoration(labelText: 'Code postal'),
                         onTap: () async {
                           final placesDetailsResponse =
-                              await Show.showAddress(context,'FormulaChoice');
+                              await Show.showAddress(context, 'FormulaChoice');
 
                           if (placesDetailsResponse == null) {
                             return;
@@ -201,20 +202,22 @@ class _FormulaChoiceState extends State<FormulaChoice> {
                           buildAddress(
                               placesDetailsResponse, formuleVTC, context);
                         },
-                        validator:
-                          FormBuilderValidators.required(
-                              context),
-
+                        validator: FormBuilderValidators.required(context),
                       ),
                     ],
                   )
                 ],
               ),
             ),
-            Visibility(
-                visible: formulewatch.totalDistance == 0 ? false : true,
-                child: Text(
-                    'Distance : ${formulewatch.totalDistance.toStringAsFixed(2)} km')),
+            Padding(
+              padding: const EdgeInsets.all(8.0),
+              child: Visibility(
+                  visible: formulewatch.totalDistance == 0 ? false : true,
+                  child: Text(
+                    'Distance : ${formulewatch.totalDistance.toStringAsFixed(2)} km',
+                    style: Theme.of(context).textTheme.bodyText1,
+                  )),
+            ),
             SizedBox(
               height: 200,
               child: GoogleMap(
@@ -237,33 +240,42 @@ class _FormulaChoiceState extends State<FormulaChoice> {
                 ),
               ),
             ),
-            SizedBox(
-              height: 8,
-            ),
-            Visibility(
-              visible:
-                  formulewatch.placesDetailsResponse == null ? false : true,
-              child: FormBuilderDateTimePicker(
-                inputType: InputType.both,
-                format: DateFormat("dd/MM/yyyy 'à' HH:mm"),
-                name: 'Date et heure',
-                decoration: InputDecoration(labelText: 'Date et heure'),
-                initialDate: widget.dateDebut,
-                validator: FormBuilderValidators.required(context),
+            Card(
+              child: Column(
+                children: [
+                  SizedBox(
+                    height: 8,
+                  ),
+                  Visibility(
+                    visible: formulewatch.placesDetailsResponse == null
+                        ? false
+                        : true,
+                    child: FormBuilderDateTimePicker(
+                      inputType: InputType.both,
+                      format: DateFormat("dd/MM/yyyy 'à' HH:mm"),
+                      name: 'Date et heure',
+                      decoration: InputDecoration(labelText: 'Date et heure'),
+                      initialDate: widget.dateDebut,
+                      validator: FormBuilderValidators.required(context),
+                    ),
+                  ),
+                  SizedBox(
+                    height: 8,
+                  ),
+                  Visibility(
+                      visible: formulewatch.placesDetailsResponse == null
+                          ? false
+                          : true,
+                      child: FormBuilderTextField(
+                        keyboardType: TextInputType.number,
+                        name: 'Nombre de personne',
+                        decoration:
+                            InputDecoration(labelText: 'Nombre de personne'),
+                        validator: FormBuilderValidators.required(context),
+                      ))
+                ],
               ),
             ),
-            SizedBox(
-              height: 8,
-            ),
-            Visibility(
-                visible:
-                    formulewatch.placesDetailsResponse == null ? false : true,
-                child: FormBuilderTextField(
-                  keyboardType: TextInputType.number,
-                  name: 'Nombre de personne',
-                  decoration: InputDecoration(labelText: 'Nombre de personne'),
-                  validator: FormBuilderValidators.required(context),
-                ))
           ],
         );
       }),
@@ -349,11 +361,13 @@ class _FormulaChoiceState extends State<FormulaChoice> {
       });
     });
 
-    formuleVTC.controller.animateCamera(CameraUpdate.newLatLngBounds(
+    await formuleVTC.controller.animateCamera(CameraUpdate.newLatLngBounds(
         LatLngBounds(
             southwest: LatLng(minLat, minLong),
             northeast: LatLng(maxLat, maxLong)),
         20));
+    await scrollController.animateTo(scrollController.position.maxScrollExtent,
+        duration: Duration(milliseconds: 300), curve: Curves.fastOutSlowIn);
   }
 
   Marker makeMarker(LatLng latLng, String nom) {
@@ -378,127 +392,184 @@ class _FormulaChoiceState extends State<FormulaChoice> {
           value: (form) => CardFormIntParticipant(0, List<CardParticipant>())));
     }
 
-
-    return Consumer(builder: (context, watch, child) {
-      return ModelScreen(
-        child: Scaffold(
-          backgroundColor: Theme.of(context).colorScheme.background,
-          key: _scaffoldKey,
-          appBar: AppBar(
-              title: Text(
-            "Formules",
-            style: Theme.of(context).textTheme.headline1,
-          )),
-          body: ModelBody(
-            child: Padding(
-              padding: const EdgeInsets.only(bottom: 20),
-              child: Column(
-                children: [
-                  Text('Billets'),
-                  ListView.builder(
-                      physics: ClampingScrollPhysics(),
-                      itemCount: widget.formulas.length,
-                      shrinkWrap: true,
-                      itemBuilder: (context, index) {
-                        return CardFormula(widget.formulas[index]);
-                      }),
-                  Divider(),
-                  Text('Transport'),
-                  Text(
-                    'Choix du véhicule',
-                    style: Theme.of(context).textTheme.headline5,
-                  ),
-                  InkWell(
-                    onTap: () {
-                      if (formuleVtc.isNotDisplay) {
-                        _listKey.currentState.insertItem(0);
-
-                        formuleVtc.setautoPlay(false);
-                      } else {
-                        _listKey.currentState.removeItem(
-                          0,
-                          (BuildContext context, Animation<double> animation) {
-                            return FadeTransition(
-                              opacity: CurvedAnimation(
-                                  parent: animation, curve: Interval(0.5, 1.0)),
-                              child: SizeTransition(
-                                sizeFactor: CurvedAnimation(
-                                    parent: animation,
-                                    curve: Interval(0.0, 1.0)),
-                                axisAlignment: 0.0,
-                                child: _buildRemovedItem(context),
-                              ),
-                            );
-                          },
-                          duration: Duration(milliseconds: 600),
-                        );
-                        formuleVtc.setautoPlay(true);
-                      }
-
-                      formuleVtc.setisNotDisplay();
-                    },
-                    child: Consumer(builder: (context, watch, child) {
-                      return CarouselSlider.builder(
-                        itemCount: mercedes.length,
-                        itemBuilder: (BuildContext context, int itemIndex) {
-                          return Image(
-                            image: AssetImage(mercedes.elementAt(itemIndex)),
+    return ModelScreen(
+      child: Scaffold(
+        backgroundColor: Theme.of(context).colorScheme.background,
+        key: _scaffoldKey,
+        appBar: AppBar(
+            title: Text(
+          "Formules",
+        )),
+        body: SingleChildScrollView(
+          physics: ClampingScrollPhysics(),
+          controller: scrollController,
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(10, 15, 10, 80),
+            child: Column(
+              children: [
+                Row(
+                  children: [
+                    Expanded(
+                      child: FormBuilderTextField(
+                        controller: formuleVtc.codePromo,
+                        name: 'CodePromo',
+                        onEditingComplete: () async {
+                          //SystemChannels.textInput.invokeMethod('TextInput.hide');
+                          await formuleVtc.findCodePromo(context);
+                        },
+                        decoration: InputDecoration(
+                            labelText: 'Code promo',
+                            suffixIcon: IconButton(
+                                icon: Icon(Icons.clear),
+                                onPressed: () =>
+                                    formuleVtc.clearPromoCode())),
+                      ),
+                    ),
+                    Expanded(
+                      child: AnimatedSwitcher(
+                        duration: Duration(milliseconds: 400),
+                        transitionBuilder:
+                            (Widget child, Animation<double> animation) {
+                          return ScaleTransition(
+                            scale: animation,
+                            child: child,
                           );
                         },
-                        options: CarouselOptions(
-                            onPageChanged: (index, raison) {
-                              String e = mercedes.elementAt(index);
-                              formuleVtc.setonGoingCar(e.substring(
-                                  e.lastIndexOf('/') + 1, e.indexOf('.')));
+                        child: Consumer(builder: (context, watch, child) {
+                          return !watch(formuleVTCProvider).showSpinnerAppliquer
+                              ? RaisedButton(
+                            child: Text(
+                              "Appliquer",
+                            ),
+                            onPressed: () async {
+                              await formuleVtc.findCodePromo(context);
                             },
-                            autoPlay: watch(formuleVTCProvider).autoPlay,
-                            autoPlayInterval: Duration(seconds: 3),
-                            autoPlayAnimationDuration:
-                                Duration(milliseconds: 800),
-                            height: 250.0),
-                      );
-                    }),
-                  ),
-                  AnimatedList(
-                    shrinkWrap: true,
+                          )
+                              : Center(
+                            child: CircularProgressIndicator(
+                                valueColor: AlwaysStoppedAnimation<Color>(
+                                    Theme.of(context)
+                                        .colorScheme
+                                        .secondary)),
+                          );
+                        }),
+                      ),
+                    ),
+                  ],
+                ),
+                Text('Billets',
+                    style: Theme.of(context)
+                        .textTheme
+                        .headline5
+                        .copyWith(fontSize: 40)),
+                ListView.builder(
                     physics: ClampingScrollPhysics(),
-                    key: _listKey,
-                    itemBuilder: (BuildContext context, int index,
-                        Animation<double> animation) {
-                      print(index);
-                      return SizeTransition(
-                        axis: Axis.vertical,
-                        sizeFactor: animation,
-                        child: _buildItem(context, formuleVtc),
+                    itemCount: widget.formulas.length,
+                    shrinkWrap: true,
+                    itemBuilder: (context, index) {
+                      return CardFormula(widget.formulas[index]);
+                    }),
+                Divider(),
+                SizedBox(
+                  height: 100,
+                ),
+                Text('Transport', style: Theme.of(context).textTheme.headline5),
+                Text(
+                  'Choix du véhicule',
+                  style: Theme.of(context).textTheme.overline,
+                ),
+                InkWell(
+                  onTap: () async {
+                    if (formuleVtc.isNotDisplay) {
+                      _listKey.currentState.insertItem(0);
+                      await Future.delayed(Duration(milliseconds: 300));
+                      await scrollController.animateTo(
+                          scrollController.position.maxScrollExtent,
+                          duration: Duration(milliseconds: 300),
+                          curve: Curves.fastOutSlowIn);
+
+                      formuleVtc.setautoPlay(false);
+                    } else {
+                      _listKey.currentState.removeItem(
+                        0,
+                        (BuildContext context, Animation<double> animation) {
+                          return FadeTransition(
+                            opacity: CurvedAnimation(
+                                parent: animation, curve: Interval(0.5, 1.0)),
+                            child: SizeTransition(
+                              sizeFactor: CurvedAnimation(
+                                  parent: animation, curve: Interval(0.0, 1.0)),
+                              axisAlignment: 0.0,
+                              child: _buildRemovedItem(context),
+                            ),
+                          );
+                        },
+                        duration: Duration(milliseconds: 600),
                       );
-                    },
-                  ),
+                      formuleVtc.setautoPlay(true);
+                    }
 
-
-                ],
-              ),
+                    formuleVtc.setisNotDisplay();
+                  },
+                  child: Consumer(builder: (context, watch, child) {
+                    return CarouselSlider.builder(
+                      itemCount: mercedes.length,
+                      itemBuilder: (BuildContext context, int itemIndex) {
+                        return Image(
+                          image: AssetImage(mercedes.elementAt(itemIndex)),
+                        );
+                      },
+                      options: CarouselOptions(
+                          onPageChanged: (index, raison) {
+                            String e = mercedes.elementAt(index);
+                            formuleVtc.setonGoingCar(e.substring(
+                                e.lastIndexOf('/') + 1, e.indexOf('.')));
+                          },
+                          autoPlay: watch(formuleVTCProvider).autoPlay,
+                          autoPlayInterval: Duration(seconds: 3),
+                          autoPlayAnimationDuration:
+                              Duration(milliseconds: 800),
+                          height: 250.0),
+                    );
+                  }),
+                ),
+                AnimatedList(
+                  shrinkWrap: true,
+                  physics: ClampingScrollPhysics(),
+                  key: _listKey,
+                  itemBuilder: (BuildContext context, int index,
+                      Animation<double> animation) {
+                    print(index);
+                    return SizeTransition(
+                      axis: Axis.vertical,
+                      sizeFactor: animation,
+                      child: _buildItem(context, formuleVtc),
+                    );
+                  },
+                ),
+              ],
             ),
           ),
-          bottomSheet: Consumer(builder: (context, watch, child) {
-            return Container(
-              height: 80,
-              decoration: BoxDecoration(
-                color: Theme.of(context).colorScheme.secondary,
-                borderRadius: BorderRadius.only(
-                  topLeft: Radius.circular(40.0),
-                  topRight: Radius.circular(40.0),
-                ),
-              ),
-              child: _buildTotalContent(context, formuleVtc),
-            );
-          }),
         ),
-      );
-    });
+        bottomSheet: Consumer(builder: (context, watch, child) {
+          return Container(
+            clipBehavior: Clip.hardEdge,
+            height: 80,
+            decoration: BoxDecoration(
+              color: Theme.of(context).colorScheme.primary,
+              borderRadius: BorderRadius.only(
+                topLeft: Radius.circular(40.0),
+                topRight: Radius.circular(40.0),
+              ),
+            ),
+            child: _buildTotalContent(context, formuleVtc),
+          );
+        }),
+      ),
+    );
   }
 
-  _buildTotalContent(
-      BuildContext context, FormuleVTC readFormuleVtc) {
+  _buildTotalContent(BuildContext context, FormuleVTC readFormuleVtc) {
     print('_buildTotalContent');
     return Container(
       width: MediaQuery.of(context).size.width,
@@ -508,9 +579,14 @@ class _FormulaChoiceState extends State<FormulaChoice> {
         return Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Text(
-              '   ${formuleVTC.totalCost.toStringAsFixed(formuleVTC.totalCost.truncateToDouble() == formuleVTC.totalCost ? 0 : 2)} €',
-              textAlign: TextAlign.center,
+            Visibility(
+              visible:formuleVTC.totalCostDiscounted == null ,
+              replacement: SizedBox(),
+              child: Text(
+                '   ${formuleVTC.totalCost.toStringAsFixed(formuleVTC.totalCost.truncateToDouble() == formuleVTC.totalCost ? 0 : 2)} €',
+                textAlign: TextAlign.center,
+                style: Theme.of(context).textTheme.headline4,
+              ),
             ),
             AnimatedSwitcher(
               duration: Duration(milliseconds: 500),
@@ -522,7 +598,6 @@ class _FormulaChoiceState extends State<FormulaChoice> {
               },
               child: !formuleVTC.showSpinner
                   ? FloatingActionButton.extended(
-                      backgroundColor: Theme.of(context).colorScheme.primary,
                       icon: Text(
                         'Continuer',
                         style: Theme.of(context).textTheme.button,
@@ -539,7 +614,7 @@ class _FormulaChoiceState extends State<FormulaChoice> {
                       })
                   : CircularProgressIndicator(
                       valueColor: AlwaysStoppedAnimation<Color>(
-                          Theme.of(context).colorScheme.primary)),
+                          Theme.of(context).colorScheme.secondary)),
             ),
           ],
         );
@@ -547,8 +622,10 @@ class _FormulaChoiceState extends State<FormulaChoice> {
     );
   }
 
-  Future process(FormuleVTC readFormuleVtc, BuildContext context,
-      ) async {
+  Future process(
+    FormuleVTC readFormuleVtc,
+    BuildContext context,
+  ) async {
     if (_fbKey.currentState != null && _fbKey.currentState.validate()) {
       await uploadTransport(context, readFormuleVtc).then((value) async {
         await Show.showDialogToDismiss(
@@ -585,9 +662,10 @@ class _FormulaChoiceState extends State<FormulaChoice> {
         });
       });
 
-      await context.read(stripeRepositoryProvider)
-          .paymentIntentBillet(readFormuleVtc.totalCost * 100, widget.stripeAccount,
-              description, nb)
+      await context
+          .read(stripeRepositoryProvider)
+          .paymentIntentBillet(readFormuleVtc.totalCost * 100,
+              widget.stripeAccount, description, nb)
           .then((value) async {
         if (value is String) {
           Show.showDialogToDismiss(context, 'Oups!',
@@ -643,11 +721,9 @@ class _FormulaChoiceState extends State<FormulaChoice> {
             position: GeoPoint(formuleVTC.latLngDepart.latitude,
                 formuleVTC.latLngDepart.longitude),
             paymentIntentId: null,
-            nbPersonne: _fbKey
-                .currentState.fields['Nombre de personne'].value,
+            nbPersonne: _fbKey.currentState.fields['Nombre de personne'].value,
             distance: formuleVTC.totalDistance,
-            dateTime:
-                _fbKey.currentState.fields['Date et heure'].value,
+            dateTime: _fbKey.currentState.fields['Date et heure'].value,
             amount: null,
             adresseRue: List<String>.generate(
                 rue.length, (index) => rue[index].longName),
@@ -655,14 +731,11 @@ class _FormulaChoiceState extends State<FormulaChoice> {
                 adresse.length, (index) => adresse[index].longName),
             userId: context.read(myUserProvider).id,
             eventId: widget.eventId))
-        .then((value) =>
-        Show.showDialogToDismiss(context,
-            '', 'Demande de transport effectuée', 'Ok')
-    )
+        .then((value) => Show.showDialogToDismiss(
+            context, '', 'Demande de transport effectuée', 'Ok'))
         .catchError((e) {
       print(e);
-      Show.showDialogToDismiss(context,
-          'Erreur', 'Erreur $e', 'Ok');
+      Show.showDialogToDismiss(context, 'Erreur', 'Erreur $e', 'Ok');
     });
   }
 
@@ -674,23 +747,26 @@ class _FormulaChoiceState extends State<FormulaChoice> {
         participant.addAll({
           element.currentState.fields['prenom'].value +
               ' ' +
-              element.currentState.fields['nom'].value: [
-            key.title,
-            false
-          ]
+              element.currentState.fields['nom'].value: [key.title, false]
         });
       });
     });
 
+    final organizateur = await context
+        .read(myUserRepository)
+        .getMyUserFromStripeAccount(widget.stripeAccount);
+
     Billet billet = Billet(
-      id: paymentIntentX['id'],
-      status: 'En attente',
+      id: FirestoreService.instance.getDocId(path: 'billets'),
+      status: BilletStatus.up_coming,
+      paymentIntentId: paymentIntentX['id'],
       uid: context.read(myUserProvider).id,
       eventId: widget.eventId,
       imageUrl: widget.imageUrl,
       participants: participant,
+      organisateurId: organizateur.first.id,
       amount: paymentIntentX['amount'],
-      dateTime: DateTime.now(),
+      dateTime: widget.dateDebut,
     );
 
     await context.read(myBilletRepositoryProvider).addNewBillet(billet);
@@ -779,7 +855,7 @@ class _CardParticipantState extends State<CardParticipant>
               children: <Widget>[
                 Text(
                   'Participant',
-                  style: Theme.of(context).textTheme.button,
+                  style: Theme.of(context).textTheme.subtitle2,
                 ),
                 FormBuilder(
                   key: _fbKey,
@@ -807,7 +883,7 @@ class _CardParticipantState extends State<CardParticipant>
                                   style: BorderStyle.solid,
                                   width: 2),
                               borderRadius: BorderRadius.circular(25.0)),
-                          labelStyle: Theme.of(context).textTheme.button,
+                          labelStyle: Theme.of(context).textTheme.bodyText2,
                           counterStyle: TextStyle(color: Colors.white),
                         ),
                         onChanged: (val) {
@@ -821,14 +897,16 @@ class _CardParticipantState extends State<CardParticipant>
                         },
                         focusNode: _prenom,
                         onEditingComplete: () {
-                          if (_fbKey.currentState.fields['prenom']
-                              .validate()) {
+                          if (_fbKey.currentState.fields['prenom'].validate()) {
                             _prenom.unfocus();
                             FocusScope.of(context).requestFocus(_nom);
                           }
                         },
-                        validator: FormBuilderValidators.compose([FormBuilderValidators.required(context),
-                          FormBuilderValidators.match(context, r'^[a-zA-ZáàâäãåçéèêëíìîïñóòôöõúùûüýÿæœÁÀÂÄÃÅÇÉÈÊËÍÌÎÏÑÓÒÔÖÕÚÙÛÜÝŸÆŒ ]{2,30}$')]),
+                        validator: FormBuilderValidators.compose([
+                          FormBuilderValidators.required(context),
+                          FormBuilderValidators.match(context,
+                              r'^[a-zA-ZáàâäãåçéèêëíìîïñóòôöõúùûüýÿæœÁÀÂÄÃÅÇÉÈÊËÍÌÎÏÑÓÒÔÖÕÚÙÛÜÝŸÆŒ ]{2,30}$')
+                        ]),
                       ),
                       SizedBox(
                         height: 8,
@@ -855,12 +933,11 @@ class _CardParticipantState extends State<CardParticipant>
                                     width: 2),
                                 borderRadius: BorderRadius.circular(25.0)),
                             labelText: 'Nom',
-                            labelStyle: Theme.of(context).textTheme.button,
+                            labelStyle: Theme.of(context).textTheme.bodyText2,
                             counterStyle: TextStyle(color: Colors.white)),
                         focusNode: _nom,
                         onEditingComplete: () {
-                          if (_fbKey.currentState.fields['nom']
-                              .validate()) {
+                          if (_fbKey.currentState.fields['nom'].validate()) {
                             _nom.unfocus();
                           }
                         },
@@ -873,8 +950,11 @@ class _CardParticipantState extends State<CardParticipant>
                               widget.isToDestroy,
                               false);
                         },
-                        validator: FormBuilderValidators.compose([FormBuilderValidators.required(context),
-                          FormBuilderValidators.match(context, r'^[a-zA-ZáàâäãåçéèêëíìîïñóòôöõúùûüýÿæœÁÀÂÄÃÅÇÉÈÊËÍÌÎÏÑÓÒÔÖÕÚÙÛÜÝŸÆŒ ]{2,30}$')]),
+                        validator: FormBuilderValidators.compose([
+                          FormBuilderValidators.required(context),
+                          FormBuilderValidators.match(context,
+                              r'^[a-zA-ZáàâäãåçéèêëíìîïñóòôöõúùûüýÿæœÁÀÂÄÃÅÇÉÈÊËÍÌÎÏÑÓÒÔÖÕÚÙÛÜÝŸÆŒ ]{2,30}$')
+                        ]),
                       ),
                     ],
                   ),
@@ -925,10 +1005,7 @@ class _CardFormulaState extends State<CardFormula>
                       Flexible(
                           child: Text(
                         '${widget.formule.title} : ${toNormalPrice(widget.formule.prix)} €',
-                        style: Theme.of(context)
-                            .textTheme
-                            .bodyText1
-                            .copyWith(color: Colors.black, fontSize: 20),
+                        style: Theme.of(context).textTheme.headline6,
                         textAlign: TextAlign.center,
                       )),
                       Row(
@@ -998,14 +1075,16 @@ class _CardFormulaState extends State<CardFormula>
                           ),
                           Consumer(builder: (context, watch, child) {
                             final formulVtc = watch(formuleVTCProvider);
-                            return Text(formulVtc
-                                .formuleParticipant[formulVtc
-                                    .formuleParticipant.keys
-                                    .firstWhere((element) =>
-                                        element.formule.id ==
-                                        widget.formule.id)]
-                                .nb
-                                .toString());
+                            return Text(
+                                formulVtc
+                                    .formuleParticipant[formulVtc
+                                        .formuleParticipant.keys
+                                        .firstWhere((element) =>
+                                            element.formule.id ==
+                                            widget.formule.id)]
+                                    .nb
+                                    .toString(),
+                                style: Theme.of(context).textTheme.subtitle1);
                           }),
                           RawMaterialButton(
                             onPressed: () {

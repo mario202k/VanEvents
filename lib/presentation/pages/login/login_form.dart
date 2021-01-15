@@ -7,6 +7,7 @@ import 'package:flutter_form_builder/flutter_form_builder.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
+import 'package:sign_in_with_apple/sign_in_with_apple.dart';
 import 'package:van_events_project/domain/repositories/my_user_repository.dart';
 import 'package:van_events_project/domain/routing/route.gr.dart';
 import 'package:van_events_project/presentation/pages/login/bloc/bloc.dart';
@@ -16,9 +17,8 @@ import 'package:van_events_project/presentation/widgets/create_account_button.da
 import 'package:van_events_project/presentation/widgets/google_login_button.dart';
 import 'package:van_events_project/presentation/widgets/login_button.dart';
 import 'package:van_events_project/providers/authentication_cubit/authentication_cubit.dart';
-import 'package:van_events_project/providers/toggle_bool_chat_room.dart';
-
-
+import 'package:van_events_project/providers/settings_change_notifier.dart';
+import 'package:van_events_project/providers/toggle_bool.dart';
 
 class LoginForm extends HookWidget {
   final GlobalKey<FormBuilderState> _fbKey = GlobalKey<FormBuilderState>();
@@ -49,7 +49,9 @@ class LoginForm extends HookWidget {
                   children: [
                     Text(
                       state.rep,
-                      style: Theme.of(context).textTheme.button,
+                      style: Theme.of(context).textTheme.button.copyWith(
+                            color: Theme.of(context).colorScheme.onError,
+                          ),
                     ),
                     Icon(
                       Icons.error,
@@ -62,10 +64,11 @@ class LoginForm extends HookWidget {
             );
         }
         if (state.isSuccess) {
-          Navigator.of(context).pushReplacementNamed(Routes.routeAuthentication);
+          Navigator.of(context)
+              .pushReplacementNamed(Routes.routeAuthentication);
 
-          BlocProvider.of<AuthenticationCubit>(context).authenticationLoggedIn(myUserRepo);
-
+          BlocProvider.of<AuthenticationCubit>(context)
+              .authenticationLoggedIn(myUserRepo);
         }
       },
       child: BlocBuilder<LoginBloc, LoginState>(
@@ -73,236 +76,267 @@ class LoginForm extends HookWidget {
           print('BlocBuilder');
 
           return SingleChildScrollView(
-            child: LayoutBuilder(
-                builder: (context, constraints) {
-
-                  return LimitedBox(
-                    maxHeight: 800,
-                    maxWidth: constraints.maxWidth ,
-                    child: Stack(
-                      fit: StackFit.loose,
-                      overflow: Overflow.visible,
-                      children: [
-                        Positioned(
-                          top: -210,
-                          child: Hero(
-                            tag: 'logo',
-                            child: LimitedBox(
-                              maxHeight: 800,
-                              maxWidth: constraints.maxWidth ,
-                              child: FlareActor(
-                                'assets/animations/logo.flr',
-                                alignment: Alignment.center,
-                                animation: 'disparaitre',
-                                fit: BoxFit.fitHeight,
-                                callback: (str){
-                                  print(str);
-                                  print('//');
-                                  flareControl.play('dance');
-                                },
-                                controller: flareControl,
-
-
+            child: LayoutBuilder(builder: (context, constraints) {
+              return LimitedBox(
+                maxHeight: 800,
+                maxWidth: constraints.maxWidth,
+                child: Stack(
+                  fit: StackFit.loose,
+                  overflow: Overflow.visible,
+                  children: [
+                    Positioned(
+                      top: -210,
+                      child: Hero(
+                        tag: 'logo',
+                        child: LimitedBox(
+                          maxHeight: 800,
+                          maxWidth: constraints.maxWidth,
+                          child: FlareActor(
+                            'assets/animations/logo.flr',
+                            alignment: Alignment.center,
+                            animation: 'disparaitre',
+                            fit: BoxFit.fitHeight,
+                            callback: (str) {
+                              print(str);
+                              print('//');
+                              flareControl.play('dance');
+                            },
+                            controller: flareControl,
+                          ),
+                        ),
+                      ),
+                    ),
+                    Positioned(
+                      top: 190,
+                      child: LimitedBox(
+                        maxHeight: 800,
+                        maxWidth: constraints.maxWidth,
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: <Widget>[
+                            FormBuilder(
+                              key: _fbKey,
+                              //autovalidate: false,
+                              child: Column(
+                                children: <Widget>[
+                                  Padding(
+                                    padding: const EdgeInsets.all(8.0),
+                                    child: FormBuilderTextField(
+                                      keyboardType: TextInputType.emailAddress,
+                                      style: TextStyle(
+                                          color: Theme.of(context)
+                                              .colorScheme
+                                              .onBackground),
+                                      cursorColor: Theme.of(context)
+                                          .colorScheme
+                                          .onBackground,
+                                      name: 'Email',
+                                      maxLines: 1,
+                                      decoration: InputDecoration(
+                                        labelText: 'Email',
+                                        icon: Icon(
+                                          FontAwesomeIcons.at,
+                                          size: 22.0,
+                                          color: Theme.of(context)
+                                              .colorScheme
+                                              .onBackground,
+                                        ),
+                                      ),
+                                      focusNode: _nodesEmail,
+                                      onEditingComplete: () {
+                                        if (_fbKey.currentState.fields['Email']
+                                            .validate()) {
+                                          _nodesEmail.unfocus();
+                                          FocusScope.of(context)
+                                              .requestFocus(_nodePassword);
+                                        }
+                                      },
+                                      controller: _emailController,
+                                      onChanged: (val) {
+                                        if (_emailController.text.length == 0) {
+                                          _emailController.clear();
+                                        }
+                                      },
+                                      validator: FormBuilderValidators.compose([
+                                        FormBuilderValidators.required(context,
+                                            errorText: 'Champs requis'),
+                                        FormBuilderValidators.email(context,
+                                            errorText: 'email non valide')
+                                      ]),
+                                    ),
+                                  ),
+                                  Padding(
+                                    padding: const EdgeInsets.all(8.0),
+                                    child: Consumer(
+                                        builder: (context, watch, child) {
+                                      return FormBuilderTextField(
+                                        keyboardType: TextInputType.text,
+                                        style: TextStyle(
+                                            color: Theme.of(context)
+                                                .colorScheme
+                                                .onBackground),
+                                        cursorColor: Theme.of(context)
+                                            .colorScheme
+                                            .onBackground,
+                                        name: 'Mot de passe',
+                                        maxLines: 1,
+                                        obscureText: watch(boolToggleProvider)
+                                            .obscureTextLogin,
+                                        decoration: InputDecoration(
+                                          labelText: 'Mot de passe',
+                                          icon: Icon(
+                                            FontAwesomeIcons.key,
+                                            size: 22.0,
+                                            color: Theme.of(context)
+                                                .colorScheme
+                                                .onBackground,
+                                          ),
+                                          suffixIcon: IconButton(
+                                            onPressed: () => boolToggle
+                                                .setObscureTextLogin(),
+                                            color: Theme.of(context)
+                                                .colorScheme
+                                                .onBackground,
+                                            iconSize: 20,
+                                            icon: Icon(FontAwesomeIcons.eye),
+                                          ),
+                                        ),
+                                        focusNode: _nodePassword,
+                                        onEditingComplete: () {
+                                          if (_fbKey.currentState.validate()) {
+                                            _nodePassword.unfocus();
+                                            _onFormSubmitted(
+                                                context, myUserRepo);
+                                          }
+                                        },
+                                        controller: _passwordController,
+                                        onChanged: (val) {
+                                          if (_passwordController.text.length ==
+                                              0) {
+                                            _passwordController.clear();
+                                          }
+                                        },
+                                        validator:
+                                            FormBuilderValidators.compose([
+                                          FormBuilderValidators.required(
+                                              context,
+                                              errorText: 'Champs requis'),
+                                          FormBuilderValidators.match(context,
+                                              r'^(?=.*[a-z])(?=.*[A-Z])(?=.*\d.*)[a-zA-Z0-9\S]{8,15}$',
+                                              errorText:
+                                                  '1 majuscule, 1 chiffre, 8 caractères')
+                                        ]),
+                                      );
+                                    }),
+                                  )
+                                ],
                               ),
                             ),
-                          ),
-                        ),
-
-                        Positioned(
-                          top: 190,
-                          child: LimitedBox(
-                            maxHeight: 800,
-                            maxWidth: constraints.maxWidth ,
-                            child: Column(
-                              mainAxisSize: MainAxisSize.min,
-                              crossAxisAlignment: CrossAxisAlignment.stretch,
-                              children: <Widget>[
-
-                                FormBuilder(
-                                  key: _fbKey,
-                                  //autovalidate: false,
-                                  child: Column(
-                                    children: <Widget>[
-                                      Padding(
-                                        padding: const EdgeInsets.all(8.0),
-                                        child: FormBuilderTextField(
-                                          keyboardType: TextInputType.emailAddress,
-                                          style: TextStyle(
-                                              color:
-                                              Theme.of(context).colorScheme.onBackground),
-                                          cursorColor:
-                                          Theme.of(context).colorScheme.onBackground,
-                                          name: 'Email',
-                                          maxLines: 1,
-                                          decoration: InputDecoration(
-                                            labelText: 'Email',
-                                            icon: Icon(
-                                              FontAwesomeIcons.at,
-                                              size: 22.0,
-                                              color: Theme.of(context).colorScheme.onBackground,
-                                            ),
-                                          ),
-                                          focusNode: _nodesEmail,
-                                          onEditingComplete: () {
-                                            if (_fbKey.currentState.fields['Email']
-                                                .validate()) {
-                                              _nodesEmail.unfocus();
-                                              FocusScope.of(context)
-                                                  .requestFocus(_nodePassword);
-                                            }
-                                          },
-                                          controller: _emailController,
-                                          onChanged: (val) {
-                                            if (_emailController.text.length == 0) {
-                                              _emailController.clear();
-                                            }
-                                          },
-
-                                          validator: FormBuilderValidators.compose([FormBuilderValidators.required(context,errorText: 'Champs requis'),
-                                            FormBuilderValidators.email(context,errorText: 'email non valide')]),
-
+                            Padding(
+                              padding: EdgeInsets.symmetric(vertical: 20),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.stretch,
+                                mainAxisSize: MainAxisSize.min,
+                                children: <Widget>[
+                                  !state.isSubmitting
+                                      ? LoginButton(
+                                          onPressed: () => _onFormSubmitted(
+                                              context, myUserRepo),
+                                        )
+                                      : Center(
+                                          child: CircularProgressIndicator(
+                                              valueColor:
+                                                  AlwaysStoppedAnimation<Color>(
+                                                      Theme.of(context)
+                                                          .colorScheme
+                                                          .primary)),
                                         ),
-                                      ),
-                                      Padding(
-                                        padding: const EdgeInsets.all(8.0),
-                                        child: Consumer(builder: (context, watch, child) {
-                                          return FormBuilderTextField(
-                                            keyboardType: TextInputType.text,
-                                            style: TextStyle(
-                                                color:
-                                                Theme.of(context).colorScheme.onBackground),
-                                            cursorColor:
-                                            Theme.of(context).colorScheme.onBackground,
-                                            name: 'Mot de passe',
-                                            maxLines: 1,
-                                            obscureText:
-                                            watch(boolToggleProvider).obscureTextLogin,
-                                            decoration: InputDecoration(
-                                              labelText: 'Mot de passe',
-                                              icon: Icon(
-                                                FontAwesomeIcons.key,
-                                                size: 22.0,
-                                                color:
-                                                Theme.of(context).colorScheme.onBackground,
-                                              ),
-                                              suffixIcon: IconButton(
-                                                onPressed: () =>
-                                                    boolToggle.setObscureTextLogin(),
-                                                color:
-                                                Theme.of(context).colorScheme.onBackground,
-                                                iconSize: 20,
-                                                icon: Icon(FontAwesomeIcons.eye),
-                                              ),
-                                            ),
-                                            focusNode: _nodePassword,
-                                            onEditingComplete: () {
-                                              if (_fbKey.currentState.validate()) {
-                                                _nodePassword.unfocus();
-                                                _onFormSubmitted(context,myUserRepo);
-                                              }
-                                            },
-                                            controller: _passwordController,
-                                            onChanged: (val) {
-                                              if (_passwordController.text.length == 0) {
-                                                _passwordController.clear();
-                                              }
-                                            },
-
-                                            validator: FormBuilderValidators.compose([FormBuilderValidators.required(context,errorText: 'Champs requis'),
-                                              FormBuilderValidators.match(context, r'^(?=.*[a-z])(?=.*[A-Z])(?=.*\d.*)[a-zA-Z0-9\S]{8,15}$',errorText: '1 majuscule, 1 chiffre, 8 caractères')]),
-
-                                          );
+                                  GoogleLoginButton(),
+                                  Consumer(builder: (context, watch, child) {
+                                    return SignInWithAppleButton(
+                                      borderRadius:
+                                          BorderRadius.all(Radius.circular(25)),
+                                      text: 'avec Apple',
+                                      style: watch(settingsProvider)
+                                                  .onGoingTheme ==
+                                              MyThemes.Dracula
+                                          ? SignInWithAppleButtonStyle.white
+                                          : SignInWithAppleButtonStyle.black,
+                                      onPressed: () {
+                                        BlocProvider.of<LoginBloc>(context).add(
+                                          LoginWithApplePressed(myUserRepo),
+                                        );
+                                      },
+                                    );
+                                  }),
+                                  CreateAccountButton(),
+                                  RaisedButton(
+                                    onPressed: () {
+                                      BlocProvider.of<LoginBloc>(context)
+                                          .add(LoginWithAnonymous(myUserRepo));
+                                    },
+                                    child: Text('Anonyme'),
+                                  ),
+                                  FlatButton(
+                                    child: Text(
+                                      'Mot de passe oublié',
+                                      style:
+                                          Theme.of(context).textTheme.headline5,
+                                    ),
+                                    onPressed: () {
+                                      Navigator.of(context).push(
+                                        MaterialPageRoute(builder: (context) {
+                                          return ResetPassword();
                                         }),
-                                      )
-                                    ],
+                                      );
+                                    },
                                   ),
-                                ),
-                                Padding(
-                                  padding: EdgeInsets.symmetric(vertical: 20),
-                                  child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                                    mainAxisSize: MainAxisSize.min,
-                                    children: <Widget>[
-                                      !state.isSubmitting?LoginButton(
-                                        onPressed: () => _onFormSubmitted(context,myUserRepo),
-                                      ):Center(
-                                        child: CircularProgressIndicator(
-                                            valueColor: AlwaysStoppedAnimation<Color>(
-                                                Theme.of(context).colorScheme.primary)),
-                                      ),
-                                      GoogleLoginButton(),
-                                      CreateAccountButton(),
-                                      RaisedButton(
-                                        onPressed: () {
-                                          BlocProvider.of<LoginBloc>(context)
-                                              .add(LoginWithAnonymous(myUserRepo));
-                                        },
-                                        child: Text('Anonyme'),
-
-                                      ),
-                                      FlatButton(
-                                        child: Text(
-                                          'Mot de passe oublié',
-                                        ),
-                                        onPressed: () {
-                                          Navigator.of(context).push(
-                                            MaterialPageRoute(builder: (context) {
-                                              return ResetPassword();
-                                            }),
-                                          );
-                                        },
-                                      ),
-                                      RaisedButton(
-                                        color: Colors.redAccent,
-                                        onPressed: () {
-                                          Navigator.of(context).push(
-                                            MaterialPageRoute(builder: (context) {
-                                              return RegisterScreenOrganisateur();
-                                            }),
-                                          );
-                                        },
-                                        child: Text('J\'organise'),
-                                      ),
-                                      Hero(
-                                        tag: 'vanevents',
-                                        child: Text(
-                                          'Van e.vents',
-                                          textAlign: TextAlign.center,
-                                          style: Theme.of(context)
-                                              .textTheme
-                                              .caption
-                                              .copyWith(
-                                              color: Colors.black, fontSize: 15),
-                                        ),
-                                      )
-                                    ],
+                                  RaisedButton(
+                                    onPressed: () {
+                                      Navigator.of(context).push(
+                                        MaterialPageRoute(builder: (context) {
+                                          return RegisterScreenOrganisateur();
+                                        }),
+                                      );
+                                    },
+                                    child: Text('J\'organise'),
                                   ),
-                                ),
-                              ],
+                                  Hero(
+                                    tag: 'vanevents',
+                                    child: Text(
+                                      'Van e.vents',
+                                      textAlign: TextAlign.center,
+                                      style:
+                                          Theme.of(context).textTheme.caption,
+                                    ),
+                                  )
+                                ],
+                              ),
                             ),
-                          ),
+                          ],
                         ),
-                      ],
+                      ),
                     ),
-                  );
-              }
-            ),
+                  ],
+                ),
+              );
+            }),
           );
         },
       ),
     );
   }
 
-
-  void _onFormSubmitted(BuildContext context,MyUserRepository myUserRepository) {
+  void _onFormSubmitted(
+      BuildContext context, MyUserRepository myUserRepository) {
     if (_fbKey.currentState.validate()) {
       BlocProvider.of<LoginBloc>(context).add(
-            LoginWithCredentialsPressed(
-              email: _emailController.text,
-              password: _passwordController.text,
-              myUserRepository: myUserRepository
-            ),
-          );
+        LoginWithCredentialsPressed(
+            email: _emailController.text.trim(),
+            password: _passwordController.text.trim(),
+            myUserRepository: myUserRepository),
+      );
     }
   }
 }

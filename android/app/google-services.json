@@ -7,17 +7,17 @@
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:273524316243:android:b05824f31ea0d645374ea6",
+        "mobilesdk_app_id": "1:273524316243:android:080689066496ee6f374ea6",
         "android_client_info": {
-          "package_name": "com.example.van_events_project"
+          "package_name": "com.vanevents.VanEvents"
         }
       },
       "oauth_client": [
         {
-          "client_id": "273524316243-rc09nc40vd5hdh1v9a543uu1cqalb1i1.apps.googleusercontent.com",
+          "client_id": "273524316243-2fo58opg938aau90japtjj35po6qu3sk.apps.googleusercontent.com",
           "client_type": 1,
           "android_info": {
-            "package_name": "com.example.van_events_project",
+            "package_name": "com.vanevents.VanEvents",
             "certificate_hash": "7ccc4c31dc123cbc881cac18cf13b867404c4677"
           }
         },
@@ -37,6 +37,13 @@
             {
               "client_id": "273524316243-m0b620nd1gr87326p332l3rc6rboni3l.apps.googleusercontent.com",
               "client_type": 3
+            },
+            {
+              "client_id": "273524316243-iug93t3fddpnkghmf5fuadkf68jg978s.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.example.vanEventsProject"
+              }
             }
           ]
         }

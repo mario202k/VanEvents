@@ -3,8 +3,6 @@ import * as admin from 'firebase-admin';
 import {assert, assertUID} from './helpers';
 import {getOrCreateCustomer, getUser} from './customers';
 import {storage, db, fcm} from './config';
-
-
 import Stripe from 'stripe';
 
 
@@ -139,15 +137,15 @@ exports.paymentIntentAuthorize = functions.region('europe-west1').https.onCall(a
 exports.paymentIntentCaptureFunds = functions.region('europe-west1').https.onCall(async (data, context) => {
     const amount = data['amount'];
 
-    const paymentMethodId = assert(data, 'paymentMethodId');
+    const paymentIntentId = assert(data, 'paymentIntentId');
 
     if (amount != null) {
-        return await stripe.paymentIntents.capture(paymentMethodId, {
+        return await stripe.paymentIntents.capture(paymentIntentId, {
             amount_to_capture: amount
         });
 
     } else {
-        return await stripe.paymentIntents.capture(paymentMethodId, {});
+        return await stripe.paymentIntents.capture(paymentIntentId, {});
     }
 
 
@@ -156,26 +154,31 @@ exports.paymentIntentCaptureFunds = functions.region('europe-west1').https.onCal
 
 exports.uploadFileToStripe = functions.region('europe-west1').https.onCall(async (data, context) => {
 
-    const bucket = storage.bucket('van-event.appspot.com');
+    const bucket = storage.bucket('myvanevents.appspot.com');
     const path = require('path');
     const os = require('os');
     const fs = require('fs');
-    const fileName: string = assert(data, 'fileName');
+    const filePath: string = assert(data, 'filePath');
+    const fileName = filePath.substring(filePath.lastIndexOf("/") + 1)
+    console.log('File path', filePath);
     const stripeAccount = assert(data, 'stripeAccount');
     const person = assert(data, 'person');
     const tempFilePath = path.join(os.tmpdir(), fileName);
-    await bucket.file(fileName).download({destination: tempFilePath});
+    await bucket.file(filePath).download({destination: tempFilePath});
 
     console.log('File created at', tempFilePath);
 
+    console.log('File type', fileName);
+
     const fileUpload = await stripe.files.create({
-        purpose: 'identity_document',
+        purpose: fileName.startsWith('justificatifDomicile') ? 'additional_verification' : 'identity_document',
         file: {
             data: fs.readFileSync(tempFilePath),
-            name: 'fileUploadDoc.png',
+            name: fileName + '.png',
             type: 'application/octet-stream',
         },
     });
+
 
     fileName.startsWith('back') ?
         await stripe.accounts.updatePerson(
@@ -353,7 +356,9 @@ exports.createStripeAccount = functions.region('europe-west1').https.onCall(asyn
 
 exports.allStripeAccounts = functions.region('europe-west1').https.onCall(async (data, context) => {
 
-    return stripe.accounts.list();
+    return stripe.accounts.list(
+        {limit: 100}
+    );
 
 });
 
@@ -542,6 +547,74 @@ exports.sendTransport = functions.region('europe-west1').firestore
 
     });
 
+exports.notificationTransport = functions.region('europe-west1').firestore
+    .document('transports/{transportId}')
+    .onWrite(async (snap, context) => {
+        console.log(`----------------start function--------------------`)
+
+        const transportId = context.params.transportId;
+
+        console.log(`Le chatId : ${transportId}`)
+
+        const doc = snap.after.data();
+
+        const status = doc!.statusTransport
+        const id = doc!.userId;
+
+        console.log(`status : ${status}`)
+
+
+        //Pour le client
+        if (status === 'acceptedByVtc' ||
+            status === 'invoiceSent' ||
+            status === 'captureFunds' ||
+            status === 'refunded' ||
+            status === 'cancelledByVTC' ||
+            status === 'Error') {
+
+            const querySnapshot = await db.collection('users').doc(id).collection('tokens').get();
+
+            const tokens = querySnapshot.docs.map((snap: { id: any; }) => snap.id);
+
+            const payload: admin.messaging.MessagingPayload = {
+                notification: {
+                    title: `Transport`,
+                    body: `Votre transport est : ${status}`,
+                    badge: '1',
+                    tag: transportId,
+                    click_action: 'FLUTTER_NOTIFICATION_CLICK' // required only for onResume or onLaunch callbacks
+                }
+            };
+
+            return fcm.sendToDevice(tokens, payload);
+
+        }
+
+        //Pour le l'admin
+        if (status === 'submitted' ||
+            status === 'holdOnCard' ||
+            status === 'cancelledByCustomer') {
+
+            const payload: admin.messaging.MessagingPayload = {
+                notification: {
+                    title: `Transport`,
+                    body: `Votre transport est : ${status}`,
+                    badge: '1',
+                    tag: transportId,
+                    click_action: 'FLUTTER_NOTIFICATION_CLICK' // required only for onResume or onLaunch callbacks
+                }
+            };
+
+            return fcm.sendToTopic('admin', payload);
+
+        }
+
+        console.log(`----------------function end--------------------`)
+
+        return null;
+
+
+    });
 
 exports.sendMessages = functions.region('europe-west1').firestore
     .document('chats/{chatId}/messages/{message}')
@@ -582,6 +655,7 @@ exports.sendMessages = functions.region('europe-west1').firestore
                 },
                 data: {
                     chatId: chatId,
+                    id: doc!.id,
                     type: type.toString(),
                     idFrom: idFrom,
                     idTo: idTo,
@@ -608,6 +682,7 @@ exports.sendMessages = functions.region('europe-west1').firestore
                 },
                 data: {
                     chatId: chatId,
+                    id: doc!.id,
                     type: type.toString(),
                     idFrom: idFrom,
                     date: date.toJSON().toString(),
@@ -621,3 +696,57 @@ exports.sendMessages = functions.region('europe-west1').firestore
         }
 
     });
+
+exports.refundTransport = functions.region('europe-west1').https.onCall(async (data, context) => {
+
+    const paymentIntentId = assert(data, 'paymentIntentId');
+    const reason = assert(data, 'reason');
+    const amount = data['amount'];
+
+    console.log(amount);
+
+
+    return amount != null? stripe.refunds.create({
+        payment_intent: paymentIntentId,
+        amount: amount,
+        reason: reason,
+
+    }) : stripe.refunds.create({
+        payment_intent: paymentIntentId,
+        reason: reason,
+    });
+
+});
+
+exports.refundBillet = functions.region('europe-west1').https.onCall(async (data, context) => {
+
+    const paymentIntentId = assert(data, 'paymentIntentId');
+    const reason = assert(data, 'reason');
+    const amount = data['amount'];
+
+    console.log(amount);
+
+
+    return amount != null? stripe.refunds.create({
+        payment_intent: paymentIntentId,
+        amount: amount,
+        reason: reason,
+        refund_application_fee:true,
+        reverse_transfer : true
+
+    }) : stripe.refunds.create({
+        payment_intent: paymentIntentId,
+        reason: reason,
+        refund_application_fee:true,
+        reverse_transfer : true
+    });
+
+});
+
+exports.refundList = functions.region('europe-west1').https.onCall(async (data, context) => {
+
+    return stripe.refunds.list({
+        limit : 100,
+    });
+
+});

@@ -4,14 +4,13 @@ import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:van_events_project/domain/routing/route.gr.dart';
 
-
 class Walkthrough extends StatefulWidget {
   @override
   _WalkthroughState createState() => _WalkthroughState();
 }
 
 class _WalkthroughState extends State<Walkthrough> {
-  final int _numPages = 3;
+  final int _numPages = 4;
   final PageController _pageController = PageController(initialPage: 0);
   int _currentPage = 0;
 
@@ -39,8 +38,8 @@ class _WalkthroughState extends State<Walkthrough> {
       width: isActive ? 24.0 : 16.0,
       decoration: BoxDecoration(
         color: isActive
-            ? Theme.of(context).colorScheme.primary
-            : Theme.of(context).colorScheme.onBackground,
+            ? Theme.of(context).colorScheme.secondary
+            : Theme.of(context).colorScheme.onPrimary,
         borderRadius: BorderRadius.all(Radius.circular(12)),
       ),
     );
@@ -54,6 +53,7 @@ class _WalkthroughState extends State<Walkthrough> {
         body: LayoutBuilder(
           builder: (BuildContext context, BoxConstraints viewportConstraints) {
             return SingleChildScrollView(
+              physics: ClampingScrollPhysics(),
               child: ConstrainedBox(
                 constraints: BoxConstraints(
                   minWidth: viewportConstraints.maxWidth,
@@ -104,9 +104,8 @@ class _WalkthroughState extends State<Walkthrough> {
                                   Text(
                                     'Achetez vos billets simplement.',
                                     style:
-                                        Theme.of(context).textTheme.bodyText2,
+                                        Theme.of(context).textTheme.bodyText1,
                                   ),
-
                                 ],
                               ),
                             ),
@@ -126,9 +125,29 @@ class _WalkthroughState extends State<Walkthrough> {
                                   Text(
                                     'Ne faîtes plus la queue!',
                                     style:
-                                        Theme.of(context).textTheme.bodyText2,
+                                        Theme.of(context).textTheme.bodyText1,
                                   ),
-
+                                ],
+                              ),
+                            ),
+                            Padding(
+                              padding: EdgeInsets.all(40.0),
+                              child: Wrap(
+                                children: <Widget>[
+                                  Center(
+                                      child: AspectRatio(
+                                          aspectRatio: 1,
+                                          child: FlareActor(
+                                            'assets/animations/VTC.flr',
+                                            alignment: Alignment.center,
+                                            animation: 'door open',
+                                          ))),
+                                  SizedBox(height: 30.0),
+                                  Text(
+                                    'Réserver votre chauffeur privé.',
+                                    style:
+                                    Theme.of(context).textTheme.bodyText1,
+                                  ),
                                 ],
                               ),
                             ),
@@ -146,9 +165,9 @@ class _WalkthroughState extends State<Walkthrough> {
                                           ))),
                                   SizedBox(height: 30.0),
                                   Text(
-                                    'Restez en contact avec\nvos rencontres',
+                                    'Restez en contact avec\nles participants',
                                     style:
-                                        Theme.of(context).textTheme.bodyText2,
+                                        Theme.of(context).textTheme.bodyText1,
                                   ),
                                 ],
                               ),
@@ -156,47 +175,6 @@ class _WalkthroughState extends State<Walkthrough> {
                           ],
                         ),
                       ),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: _buildPageIndicator(),
-                      ),
-                      _currentPage != _numPages - 1
-                          ? Align(
-                              alignment: FractionalOffset.bottomRight,
-                              child: FlatButton(
-                                onPressed: () {
-                                  _pageController.nextPage(
-                                    duration: Duration(milliseconds: 500),
-                                    curve: Curves.ease,
-                                  );
-                                },
-                                child: Row(
-                                  mainAxisAlignment: MainAxisAlignment.center,
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: <Widget>[
-                                    Text(
-                                      'Suivant',
-                                      style: Theme.of(context)
-                                          .textTheme
-                                          .button
-                                          .copyWith(
-                                              color: Theme.of(context)
-                                                  .colorScheme
-                                                  .onBackground),
-                                    ),
-                                    SizedBox(width: 10.0),
-                                    Icon(
-                                      Icons.arrow_forward,
-                                      color: Theme.of(context)
-                                          .colorScheme
-                                          .onBackground,
-                                      size: 30.0,
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            )
-                          : Text(''),
                     ],
                   ),
                 ),
@@ -229,7 +207,58 @@ class _WalkthroughState extends State<Walkthrough> {
                   ),
                 ),
               )
-            : Text(''),
+            : Container(
+                clipBehavior: Clip.hardEdge,
+                height: 80,
+                decoration: BoxDecoration(
+                  color: Theme.of(context).colorScheme.primary,
+                  borderRadius: BorderRadius.only(
+                    topLeft: Radius.circular(40.0),
+                    topRight: Radius.circular(40.0),
+                  ),
+                ),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: _buildPageIndicator(),
+                    ),
+                    _currentPage != _numPages - 1
+                        ? Align(
+                            alignment: FractionalOffset.bottomRight,
+                            child: FlatButton(
+                              onPressed: () {
+                                _pageController.nextPage(
+                                  duration: Duration(milliseconds: 500),
+                                  curve: Curves.ease,
+                                );
+                              },
+                              child: Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                mainAxisSize: MainAxisSize.min,
+                                children: <Widget>[
+                                  Text(
+                                    'Suivant',
+                                    style:
+                                        Theme.of(context).textTheme.bodyText2,
+                                  ),
+                                  SizedBox(width: 10.0),
+                                  Icon(
+                                    Icons.arrow_forward,
+                                    color: Theme.of(context)
+                                        .colorScheme
+                                        .onPrimary,
+                                    size: 30.0,
+                                  ),
+                                ],
+                              ),
+                            ),
+                          )
+                        : SizedBox(),
+                  ],
+                ),
+              ),
       ),
     );
   }

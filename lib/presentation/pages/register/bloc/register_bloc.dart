@@ -6,7 +6,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:van_events_project/domain/models/my_user.dart';
 import 'package:van_events_project/domain/repositories/my_user_repository.dart';
 import 'package:van_events_project/presentation/pages/register/bloc/bloc.dart';
-import 'package:van_events_project/providers/toggle_bool_chat_room.dart';
+import 'package:van_events_project/providers/toggle_bool.dart';
 
 
 class RegisterBloc extends Bloc<RegisterEvent, RegisterState> {

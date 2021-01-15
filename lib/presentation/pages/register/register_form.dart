@@ -12,7 +12,7 @@ import 'package:van_events_project/domain/repositories/my_user_repository.dart';
 import 'package:van_events_project/presentation/pages/register/bloc/bloc.dart';
 import 'package:van_events_project/presentation/pages/register/register_button.dart';
 import 'package:van_events_project/presentation/widgets/show.dart';
-import 'package:van_events_project/providers/toggle_bool_chat_room.dart';
+import 'package:van_events_project/providers/toggle_bool.dart';
 
 class RegisterForm extends HookWidget {
   final GlobalKey<FormBuilderState> _fbKey = GlobalKey<FormBuilderState>();
@@ -78,7 +78,7 @@ class RegisterForm extends HookWidget {
                     Icon(Icons.error),
                   ],
                 ),
-                backgroundColor: Colors.red,
+                backgroundColor: Theme.of(context).colorScheme.error,
               ),
             );
         }
@@ -383,10 +383,10 @@ class RegisterForm extends HookWidget {
 
       BlocProvider.of<RegisterBloc>(context).add(
         RegisterSubmitted(
-          email: _fbKey.currentState.fields['Email'].value,
-          password: _fbKey.currentState.fields['Mot de passe'].value,
+          email: _fbKey.currentState.fields['Email'].value.toString().trim(),
+          password: _fbKey.currentState.fields['Mot de passe'].value.toString().trim(),
           prenomNom: _fbKey.currentState.fields['Prénom'].value+' '+
-              _fbKey.currentState.fields['Nom'].value,
+              _fbKey.currentState.fields['Nom'].value.toString().trim(),
             boolToggleRead:boolToggleRead,
           myUserRepository: myUserRepository
         ),

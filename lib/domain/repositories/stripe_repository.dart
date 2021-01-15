@@ -3,11 +3,20 @@ import 'package:flutter_stripe_payment/flutter_stripe_payment.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:van_events_project/constants/credentials.dart';
 import 'package:van_events_project/domain/models/my_user.dart';
+import 'package:van_events_project/domain/models/refund.dart';
 import 'package:van_events_project/services/firestore_path.dart';
 import 'package:van_events_project/services/firestore_service.dart';
 
 final stripeRepositoryProvider = Provider<StripeRepository>((ref) {
   return StripeRepository(ref.watch(myUserProvider).id);
+});
+
+final newRefundStreamProvider = StreamProvider<List<Refund>>((ref) {
+  return ref.read(stripeRepositoryProvider).getNewRefund();
+});
+
+final refusedRefundStreamProvider = StreamProvider<List<Refund>>((ref) {
+  return ref.read(stripeRepositoryProvider).getRefusedRefund();
 });
 
 class StripeRepository {
@@ -69,11 +78,11 @@ class StripeRepository {
     if (paymentResponse.status == PaymentResponseStatus.succeeded) {
       HttpsCallableResult intentResponse;
       try {
-        final HttpsCallable callablePaymentIntent =
+        final HttpsCallable callable =
             FirebaseFunctions.instanceFor(region: 'europe-west1').httpsCallable(
           'paymentIntent',
         );
-        intentResponse = await callablePaymentIntent.call(
+        intentResponse = await callable.call(
           <String, dynamic>{
             'amount': (amount).toInt(),
             'stripeAccount': stripeAccount,
@@ -118,7 +127,8 @@ class StripeRepository {
     }
   }
 
-  Future<dynamic> paymentIntentVtc(double amount, String description) async {
+  Future<dynamic> paymentIntentAuthorize(
+      double amount, String description) async {
     final stripePayment = FlutterStripePayment();
 
     stripePayment.onCancel = () {
@@ -133,13 +143,13 @@ class StripeRepository {
     if (paymentResponse.status == PaymentResponseStatus.succeeded) {
       HttpsCallableResult intentResponse;
       try {
-        final HttpsCallable callablePaymentIntent =
+        final HttpsCallable callable =
             FirebaseFunctions.instanceFor(region: 'europe-west1').httpsCallable(
-          'paymentIntent',
+          'paymentIntentAuthorize',
         );
-        intentResponse = await callablePaymentIntent.call(
+        intentResponse = await callable.call(
           <String, dynamic>{
-            'amount': (amount).toInt(),
+            'amount': (amount * 100).toInt(),
             'description': description,
             'paymentMethodId': paymentMethodId,
           },
@@ -153,15 +163,15 @@ class StripeRepository {
 
         return 'Paiement refusé';
       }
+
       final paymentIntentX = intentResponse.data;
       final status = paymentIntentX['status'];
 
-      if (status == 'succeeded') {
+      if (status == 'requires_capture') {
         return paymentIntentX;
       } else {
         //step 4: there is a need to authenticate
         //StripePayment.setStripeAccount(strAccount);
-
         var intentResponse = await stripePayment.confirmPaymentIntent(
             paymentIntentX['client_secret'],
             paymentResponse.paymentMethodId,
@@ -195,11 +205,11 @@ class StripeRepository {
     if (paymentResponse.status == PaymentResponseStatus.succeeded) {
       HttpsCallableResult intentResponse;
       try {
-        final HttpsCallable callablePaymentIntent =
+        final HttpsCallable callable =
             FirebaseFunctions.instanceFor(region: 'europe-west1').httpsCallable(
           'paymentIntentUploadEvents',
         );
-        intentResponse = await callablePaymentIntent.call(
+        intentResponse = await callable.call(
           <String, dynamic>{
             'amount': (amount * 100).toInt(),
             'idPromotionCode': idPromotionCode,
@@ -243,7 +253,7 @@ class StripeRepository {
   }
 
   Future<HttpsCallableResult> uploadFileToStripe(
-      String fileName, String stripeAccount, String person) async {
+      String filePath, String stripeAccount, String person) async {
     HttpsCallableResult stripeResponse;
     try {
       final HttpsCallable callable =
@@ -252,7 +262,7 @@ class StripeRepository {
       );
       stripeResponse = await callable.call(
         <String, dynamic>{
-          'fileName': fileName,
+          'filePath': filePath,
           'stripeAccount': stripeAccount,
           'person': person
         },
@@ -346,11 +356,11 @@ class StripeRepository {
       String dateOfBirth) async {
     HttpsCallableResult stripeResponse;
     try {
-      final HttpsCallable callablePaymentIntent =
+      final HttpsCallable callable =
           FirebaseFunctions.instanceFor(region: 'europe-west1').httpsCallable(
         'createStripeAccount',
       );
-      stripeResponse = await callablePaymentIntent.call(
+      stripeResponse = await callable.call(
         <String, dynamic>{
           'nomSociete': nomSociete,
           'email': email,
@@ -465,16 +475,105 @@ class StripeRepository {
     return stripeResponse;
   }
 
+  Future<HttpsCallableResult> refundBillet(
+      String paymentIntentId, String reason, int amount) async {
+    HttpsCallableResult stripeResponse;
+    try {
+      final HttpsCallable callable =
+      FirebaseFunctions.instanceFor(region: 'europe-west1').httpsCallable(
+        'refundBillet',
+      );
+      stripeResponse = await callable.call(
+        <String, dynamic>{
+          'paymentIntentId': paymentIntentId,
+          'reason':reason,
+          'amount':amount
+        },
+      );
+    } on FirebaseFunctionsException catch (e) {
+      print(e);
+      print('llllll');
+
+      return null;
+    } catch (e) {
+      print(e);
+
+      return null;
+    }
+    return stripeResponse;
+  }
+
+
   Future setUrlFront(String url) async {
-    return _service.updateData(path: Path.user(uid), data: {'idRectoUrl': url});
+    return _service
+        .updateData(path: MyPath.user(uid), data: {'idRectoUrl': url});
   }
 
   Future setUrlBack(String url) async {
-    return _service.updateData(path: Path.user(uid), data: {'idVersoUrl': url});
+    return _service
+        .updateData(path: MyPath.user(uid), data: {'idVersoUrl': url});
   }
 
   Future setUrljustificatifDomicile(String url) {
     return _service
-        .updateData(path: Path.user(uid), data: {'proofOfAddress': url});
+        .updateData(path: MyPath.user(uid), data: {'proofOfAddress': url});
+  }
+
+  Future<HttpsCallableResult> refundList() async {
+    HttpsCallableResult intentResponse;
+    try {
+      final HttpsCallable callable =
+          FirebaseFunctions.instanceFor(region: 'europe-west1').httpsCallable(
+        'refundList',
+      );
+      intentResponse = await callable.call();
+    } on FirebaseFunctionsException catch (e) {
+      print(e);
+
+      return null;
+    } catch (e) {
+      print(e);
+
+      return null;
+    }
+    return intentResponse;
+  }
+
+
+  Stream<List<Refund>> getNewRefund() {
+    return _service.collectionStream(
+        path: MyPath.refunds(uid),
+        builder: (map) => Refund.fromMap(map),
+        queryBuilder: (query) =>
+            query.where('status', isEqualTo: 'new_demand'));
+  }
+
+  Future<void> setNewRefund(Refund refund, String organisateur) async {
+    return await _service.setData(
+        path: MyPath.refund(organisateur, refund.id), data: refund.toMap());
+  }
+
+  Stream<List<Refund>> getRefusedRefund() {
+    return _service.collectionStream(
+        path: MyPath.refunds(uid),
+        builder: (map) => Refund.fromMap(map),
+        queryBuilder: (query) => query.where('status', isEqualTo: 'refused'));
+  }
+
+  Future<void> setRefundRefused(Refund refund) async {
+    return await _service.updateData(
+        path: MyPath.refund(uid, refund.id), data: {'status': 'refused'});
+  }
+
+  Future<List<Refund>> refundListFromFirestore() async {
+    return await _service.collectionFuture(
+        path: MyPath.refunds(uid),
+        queryBuilder: (query)=>query.where('stripeId',isGreaterThan: ''),
+        builder: (map) => Refund.fromMap(map));
+  }
+
+  Future<void> setRefundFromStripe(Refund myRefund, String id) async {
+    return await _service.setData(
+        path: MyPath.refund(uid, id), data: myRefund.toMap());
   }
 }

@@ -25,11 +25,9 @@
 		<dict>
 			<key>CFBundleTypeRole</key>
 			<string>Editor</string>
-			<key>CFBundleURLName</key>
-			<string>Bundle ID</string>
 			<key>CFBundleURLSchemes</key>
 			<array>
-				<string>vanevents.page.link</string>
+				<string>com.googleusercontent.apps.273524316243-pa3bltuom6v5fhddoekr9o94ubk7t7ph</string>
 			</array>
 		</dict>
 	</array>
@@ -37,6 +35,21 @@
 	<string>$(FLUTTER_BUILD_NUMBER)</string>
 	<key>FirebaseAppDelegateProxyEnabled</key>
 	<false/>
+	<key>FirebaseDynamicLinksCustomDomains</key>
+	<array>
+		<string>https://vanevents.page.link/SignIn</string>
+		<string>https://vanevents.page.link</string>
+	</array>
+	<key>LSApplicationQueriesSchemes</key>
+	<array>
+		<string>googlegmail</string>
+		<string>x-dispatch</string>
+		<string>readdle-spark</string>
+		<string>airmail</string>
+		<string>ms-outlook</string>
+		<string>ymail</string>
+		<string>fastmail</string>
+	</array>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
 	<key>NSCalendarsUsageDescription</key>
@@ -81,36 +94,5 @@
 	</array>
 	<key>UIViewControllerBasedStatusBarAppearance</key>
 	<false/>
-    <key>FirebaseDynamicLinksCustomDomains</key>
-    <array>
-      <string>https://vanevents.page.link/SignIn</string>
-      <string>https://vanevents.page.link</string>
-    </array>
-    <key>LSApplicationQueriesSchemes</key>
-    <array>
-        <string>googlegmail</string>
-        <string>x-dispatch</string>
-        <string>readdle-spark</string>
-        <string>airmail</string>
-        <string>ms-outlook</string>
-        <string>ymail</string>
-        <string>fastmail</string>
-    </array>
-    <!-- Put me in the [my_project]/ios/Runner/Info.plist file -->
-    <!-- Google Sign-in Section -->
-    <key>CFBundleURLTypes</key>
-    <array>
-        <dict>
-            <key>CFBundleTypeRole</key>
-            <string>Editor</string>
-            <key>CFBundleURLSchemes</key>
-            <array>
-                <!-- TODO Replace this value: -->
-                <!-- Copied from GoogleService-Info.plist key REVERSED_CLIENT_ID -->
-                <string>com.googleusercontent.apps.273524316243-iug93t3fddpnkghmf5fuadkf68jg978s</string>
-            </array>
-        </dict>
-    </array>
-    <!-- End of the Google Sign-in Section -->
 </dict>
 </plist>

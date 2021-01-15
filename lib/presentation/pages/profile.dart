@@ -1,7 +1,7 @@
 import 'dart:io';
 
+import 'package:auto_route/auto_route.dart';
 import 'package:cached_network_image/cached_network_image.dart';
-import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
@@ -13,20 +13,11 @@ import 'package:van_events_project/domain/models/billet.dart';
 import 'package:van_events_project/domain/models/my_user.dart';
 import 'package:van_events_project/domain/repositories/my_billet_repository.dart';
 import 'package:van_events_project/domain/repositories/my_user_repository.dart';
-import 'package:van_events_project/providers/toggle_bool_chat_room.dart';
-
+import 'package:van_events_project/domain/routing/route.gr.dart';
+import 'package:van_events_project/presentation/widgets/model_body.dart';
+import 'package:van_events_project/providers/toggle_bool.dart';
 
 class Profil extends HookWidget {
-  final FirebaseMessaging firebaseMessaging = new FirebaseMessaging();
-
-  void fcmSubscribe() {
-    firebaseMessaging.subscribeToTopic('VanEvent');
-  }
-
-  void fcmUnSubscribe() {
-    firebaseMessaging.unsubscribeFromTopic('VanEvent');
-  }
-
   void showDialogGenresEtTypes(BuildContext context, List userGenres,
       List userTypes, int indexStart, TabController tabController) {
     List<Widget> containersAlertDialog = [
@@ -303,256 +294,222 @@ class Profil extends HookWidget {
     final db = useProvider(myUserRepository);
     final tabController = useTabController(initialLength: 2);
 
-    return Column(
-      children: <Widget>[
-        SizedBox(
-          width: 200,
-          height: 100,
-          child: Stack(
-            overflow: Overflow.visible,
-            alignment: Alignment.center,
-            children: [
-              Positioned.fill(
-                child: Align(
-                  alignment: Alignment.center,
-                  child: streamMyUser.when(
-                      data: (data) => Visibility(
-                            visible: data.imageUrl.isNotEmpty,
-                            child: CachedNetworkImage(
-                              imageUrl: data.imageUrl,
-                              imageBuilder: (context, imageProvider) =>
-                                  Container(
-                                height: 100,
-                                width: 100,
-                                decoration: BoxDecoration(
-                                  borderRadius:
-                                      BorderRadius.all(Radius.circular(100)),
-                                  image: DecorationImage(
-                                    image: imageProvider,
-                                    fit: BoxFit.cover,
+    return ModelBody(
+      child: Column(
+        children: <Widget>[
+          SizedBox(
+            width: 200,
+            height: 100,
+            child: Stack(
+              overflow: Overflow.visible,
+              alignment: Alignment.center,
+              children: [
+                Positioned.fill(
+                  child: Align(
+                    alignment: Alignment.center,
+                    child: streamMyUser.when(
+                        data: (data) => Visibility(
+                              visible: data.imageUrl.isNotEmpty,
+                              child: InkWell(
+                                onTap: () {
+                                  ExtendedNavigator.of(context).push(
+                                      Routes.fullPhoto,
+                                      arguments: FullPhotoArguments(
+                                          url: data.imageUrl));
+                                },
+                                child: CachedNetworkImage(
+                                  imageUrl: data.imageUrl,
+                                  imageBuilder: (context, imageProvider) =>
+                                      Container(
+                                    height: 100,
+                                    width: 100,
+                                    decoration: BoxDecoration(
+                                      borderRadius: BorderRadius.all(
+                                          Radius.circular(100)),
+                                      image: DecorationImage(
+                                        image: imageProvider,
+                                        fit: BoxFit.cover,
+                                      ),
+                                    ),
                                   ),
+                                  fit: BoxFit.cover,
+                                  placeholder: (context, url) =>
+                                      Shimmer.fromColors(
+                                    baseColor: Colors.white,
+                                    highlightColor:
+                                        Theme.of(context).colorScheme.primary,
+                                    child: CircleAvatar(
+                                      radius: 50,
+                                    ),
+                                  ),
+                                  errorWidget: (context, url, error) =>
+                                      Icon(Icons.error),
                                 ),
                               ),
-                              fit: BoxFit.cover,
-                              placeholder: (context, url) => Shimmer.fromColors(
-                                baseColor: Colors.white,
-                                highlightColor:
-                                    Theme.of(context).colorScheme.primary,
+                              replacement: Center(
                                 child: CircleAvatar(
                                   radius: 50,
+                                  backgroundColor:
+                                      Theme.of(context).colorScheme.primary,
+                                  backgroundImage: AssetImage(
+                                      'assets/img/normal_user_icon.png'),
                                 ),
                               ),
-                              errorWidget: (context, url, error) =>
-                                  Icon(Icons.error),
                             ),
-                            replacement: Center(
-                              child: CircleAvatar(
-                                radius: 50,
-                                backgroundColor:
-                                    Theme.of(context).colorScheme.primary,
-                                backgroundImage: AssetImage(
-                                    'assets/img/normal_user_icon.png'),
-                              ),
+                        loading: () => Center(
+                              child: CircularProgressIndicator(
+                                  valueColor: AlwaysStoppedAnimation<Color>(
+                                      Theme.of(context).colorScheme.primary)),
                             ),
-                          ),
-                      loading: () => Center(
-                            child: CircularProgressIndicator(
-                                valueColor: AlwaysStoppedAnimation<Color>(
-                                    Theme.of(context).colorScheme.primary)),
-                          ),
-                      error: (err, stack) => Icon(Icons.error)),
+                        error: (err, stack) => Icon(Icons.error)),
+                  ),
                 ),
-              ),
-              Positioned(
-                  bottom: -15,
-                  right: 10,
-                  child: IconButton(
-                      icon: Icon(
-                        FontAwesomeIcons.pencilAlt,
-                        color: Theme.of(context).colorScheme.primary,
-                      ),
-                      onPressed: () {
-                        showDialogSource(context, db);
-                      })),
-            ],
+                Positioned(
+                    bottom: -15,
+                    right: 10,
+                    child: IconButton(
+                        icon: Icon(
+                          FontAwesomeIcons.pencilAlt,
+                          color: Theme.of(context).colorScheme.primary,
+                        ),
+                        onPressed: () {
+                          showDialogSource(context, db);
+                        })),
+              ],
+            ),
           ),
-        ),
-        Center(
-          child: Text(
-            user.nom ?? 'Anonymous',
-            style: Theme.of(context).textTheme.subtitle2,
-          ),
-        ),
-        SizedBox(
-          height: 20,
-        ),
-        Divider(),
-        SizedBox(
-          height: 20,
-        ),
-        Padding(
-          padding: const EdgeInsets.only(left: 16),
-          child: Align(
-            alignment: Alignment.centerLeft,
+          Center(
             child: Text(
-              'Participations:',
+              user.nom ?? 'Anonymous',
               style: Theme.of(context).textTheme.bodyText1,
             ),
           ),
-        ),
-        FutureBuilder(
-          future: context.read(myBilletRepositoryProvider).futureBilletParticipation(),
-          builder: (context, async) {
-            if (async.hasError) {
-              print(async.error);
-              return Center(
-                child: Text(
-                  'Erreur de connexion',
-                  style: Theme.of(context).textTheme.subtitle2,
-                ),
-              );
-            } else if (async.connectionState == ConnectionState.waiting) {
-              return Center(
-                child: CircularProgressIndicator(
-                    valueColor: AlwaysStoppedAnimation<Color>(
-                        Theme.of(context).colorScheme.secondary)),
-              );
-            }
-
-            List<Billet> tickets = List<Billet>();
-
-            tickets.addAll(async.data);
-
-            return tickets.isNotEmpty
-                ? SizedBox(
-                    height: 100,
-                    child: ListView.separated(
-                      separatorBuilder: (context, index) => SizedBox(
-                        width: 12,
-                      ),
-                      scrollDirection: Axis.horizontal,
-                      itemCount: tickets.length,
-                      itemBuilder: (context, index) {
-                        return Padding(
-                          padding: const EdgeInsets.all(8.0),
-                          child: CachedNetworkImage(
-                            imageUrl: tickets[index].imageUrl,
-                            imageBuilder: (context, imageProvider) => Container(
-                              height: 84,
-                              width: 84,
-                              decoration: BoxDecoration(
-                                borderRadius:
-                                    BorderRadius.all(Radius.circular(84)),
-                                image: DecorationImage(
-                                  image: imageProvider,
-                                  fit: BoxFit.cover,
-                                ),
-                              ),
-                            ),
-                            fit: BoxFit.cover,
-                            placeholder: (context, url) => Shimmer.fromColors(
-                              baseColor: Colors.white,
-                              highlightColor:
-                                  Theme.of(context).colorScheme.primary,
-                              child: CircleAvatar(
-                                radius: 42,
-                              ),
-                            ),
-                            errorWidget: (context, url, error) =>
-                                Icon(Icons.error),
-                          ),
-                        );
-                      },
-                    ),
-                  )
-                : SizedBox();
-          },
-        ),
-        Divider(),
-        ListTile(
-          leading: Text(
-            'Genres:',
-            style: Theme.of(context).textTheme.bodyText1,
+          SizedBox(
+            height: 20,
           ),
-          trailing: streamMyUser.when(
-              data: (user) => IconButton(
-                  icon: Icon(FontAwesomeIcons.pencilAlt,
-                      color: Theme.of(context).colorScheme.primary),
-                  onPressed: () => showDialogGenresEtTypes(
-                      context,
-                      user.genres != null ? user.genres.toList() : [],
-                      user.types != null ? user.types.toList() : [],
-                      0,
-                      tabController)),
-              loading: () => Center(
-                    child: CircularProgressIndicator(
-                        valueColor: AlwaysStoppedAnimation<Color>(
-                            Theme.of(context).colorScheme.primary)),
+          Divider(),
+          SizedBox(
+            height: 20,
+          ),
+          Padding(
+            padding: const EdgeInsets.only(left: 16),
+            child: Align(
+              alignment: Alignment.centerLeft,
+              child: Text(
+                'Participations:',
+                style: Theme.of(context).textTheme.headline5,
+              ),
+            ),
+          ),
+          FutureBuilder(
+            future: context
+                .read(myBilletRepositoryProvider)
+                .futureBilletParticipation(),
+            builder: (context, async) {
+              if (async.hasError) {
+                print(async.error);
+                return Center(
+                  child: Text(
+                    'Erreur de connexion',
                   ),
-              error: (err, stack) => Icon(Icons.error)),
-        ),
-        streamMyUser.when(
-            data: (user) {
-              print(user.genres);
-              print('genres');
-              return Column(
-                children: user.genres
-                    .map((e) => ListTile(
-                          title: Text(
-                            e ?? '',
-                            style: Theme.of(context)
-                                .textTheme
-                                .button
-                                .copyWith(color: Colors.black),
-                          ),
-                          trailing: IconButton(
-                            onPressed: null,
-                            icon: Icon(FontAwesomeIcons.solidHeart,
-                                color: Theme.of(context).colorScheme.primary),
-                          ),
-                        ))
-                    .toList(),
-              );
-            },
-            loading: () => Center(
+                );
+              } else if (async.connectionState == ConnectionState.waiting) {
+                return Center(
                   child: CircularProgressIndicator(
                       valueColor: AlwaysStoppedAnimation<Color>(
-                          Theme.of(context).colorScheme.primary)),
-                ),
-            error: (err, stack) => Icon(Icons.error)),
-        Divider(),
-        ListTile(
-          leading: Text(
-            'Types:',
-            style: Theme.of(context).textTheme.bodyText1,
+                          Theme.of(context).colorScheme.secondary)),
+                );
+              }
+
+              List<Billet> tickets = List<Billet>();
+
+              tickets.addAll(async.data);
+
+              return tickets.isNotEmpty
+                  ? SizedBox(
+                      height: 100,
+                      child: ListView.separated(
+                        separatorBuilder: (context, index) => SizedBox(
+                          width: 12,
+                        ),
+                        scrollDirection: Axis.horizontal,
+                        itemCount: tickets.length,
+                        itemBuilder: (context, index) {
+                          return Padding(
+                            padding: const EdgeInsets.all(8.0),
+                            child: InkWell(
+                              onTap: () {
+                                ExtendedNavigator.of(context).push(
+                                    Routes.fullPhoto,
+                                    arguments: FullPhotoArguments(
+                                        url: tickets[index].imageUrl));
+                              },
+                              child: CachedNetworkImage(
+                                imageUrl: tickets[index].imageUrl,
+                                imageBuilder: (context, imageProvider) =>
+                                    Container(
+                                  height: 84,
+                                  width: 84,
+                                  decoration: BoxDecoration(
+                                    borderRadius:
+                                        BorderRadius.all(Radius.circular(84)),
+                                    image: DecorationImage(
+                                      image: imageProvider,
+                                      fit: BoxFit.cover,
+                                    ),
+                                  ),
+                                ),
+                                fit: BoxFit.cover,
+                                placeholder: (context, url) => Shimmer.fromColors(
+                                  baseColor: Colors.white,
+                                  highlightColor:
+                                      Theme.of(context).colorScheme.primary,
+                                  child: CircleAvatar(
+                                    radius: 42,
+                                  ),
+                                ),
+                                errorWidget: (context, url, error) =>
+                                    Icon(Icons.error),
+                              ),
+                            ),
+                          );
+                        },
+                      ),
+                    )
+                  : SizedBox();
+            },
           ),
-          trailing: streamMyUser.when(
-              data: (user) => IconButton(
-                  icon: Icon(FontAwesomeIcons.pencilAlt,
-                      color: Theme.of(context).colorScheme.primary),
-                  onPressed: () => showDialogGenresEtTypes(
-                      context,
-                      user.genres != null ? user.genres.toList() : [],
-                      user.types != null ? user.types.toList() : [],
-                      1,
-                      tabController)),
-              loading: () => Center(
-                    child: CircularProgressIndicator(
-                        valueColor: AlwaysStoppedAnimation<Color>(
-                            Theme.of(context).colorScheme.primary)),
-                  ),
-              error: (err, stack) => Icon(Icons.error)),
-        ),
-        streamMyUser.when(
-            data: (user) => Column(
-                  children: user.types
+          Divider(),
+          ListTile(
+            leading: Text(
+              'Genres:',
+              style: Theme.of(context).textTheme.headline5,
+            ),
+            trailing: streamMyUser.when(
+                data: (user) => IconButton(
+                    icon: Icon(FontAwesomeIcons.pencilAlt,
+                        color: Theme.of(context).colorScheme.primary),
+                    onPressed: () => showDialogGenresEtTypes(
+                        context,
+                        user.genres != null ? user.genres.toList() : [],
+                        user.types != null ? user.types.toList() : [],
+                        0,
+                        tabController)),
+                loading: () => Center(
+                      child: CircularProgressIndicator(
+                          valueColor: AlwaysStoppedAnimation<Color>(
+                              Theme.of(context).colorScheme.primary)),
+                    ),
+                error: (err, stack) => Icon(Icons.error)),
+          ),
+          streamMyUser.when(
+              data: (user) {
+                return Column(
+                  children: user.genres
                       .map((e) => ListTile(
                             title: Text(
                               e ?? '',
-                              style: Theme.of(context)
-                                  .textTheme
-                                  .button
-                                  .copyWith(color: Colors.black),
+                              style: Theme.of(context).textTheme.bodyText1,
                             ),
                             trailing: IconButton(
                               onPressed: null,
@@ -561,41 +518,71 @@ class Profil extends HookWidget {
                             ),
                           ))
                       .toList(),
-                ),
-            loading: () => Center(
-                  child: CircularProgressIndicator(
-                      valueColor: AlwaysStoppedAnimation<Color>(
-                          Theme.of(context).colorScheme.primary)),
-                ),
-            error: (err, stack) => Icon(Icons.error)),
-        Divider(),
-        ListTile(
-          leading: Icon(FontAwesomeIcons.envelope,
-              color: Theme.of(context).colorScheme.onBackground),
-          title: Text(
-            user.email ?? 'Anonymous@van-Event.fr',
-            style: Theme.of(context).textTheme.subtitle2,
-          ),
-        ),
-        Consumer(builder: (context, watch, child) {
-          return SwitchListTile(
-            title: Text(
-              'Notifications de Van e.vents',
+                );
+              },
+              loading: () => Center(
+                    child: CircularProgressIndicator(
+                        valueColor: AlwaysStoppedAnimation<Color>(
+                            Theme.of(context).colorScheme.primary)),
+                  ),
+              error: (err, stack) => Icon(Icons.error)),
+          Divider(),
+          ListTile(
+            leading: Text(
+              'Types:',
               style: Theme.of(context).textTheme.headline5,
             ),
-            value: watch(boolToggleProvider).isEnableNotification,
-            onChanged: (b) {
-              context.read(boolToggleProvider).setIsEnableNotification(b);
-
-              if (b) {
-                fcmSubscribe();
-              } else {
-                fcmUnSubscribe();
-              }
-            },
-          );
-        }),
-      ],
+            trailing: streamMyUser.when(
+                data: (user) => IconButton(
+                    icon: Icon(FontAwesomeIcons.pencilAlt,
+                        color: Theme.of(context).colorScheme.primary),
+                    onPressed: () => showDialogGenresEtTypes(
+                        context,
+                        user.genres != null ? user.genres.toList() : [],
+                        user.types != null ? user.types.toList() : [],
+                        1,
+                        tabController)),
+                loading: () => Center(
+                      child: CircularProgressIndicator(
+                          valueColor: AlwaysStoppedAnimation<Color>(
+                              Theme.of(context).colorScheme.primary)),
+                    ),
+                error: (err, stack) => Icon(Icons.error)),
+          ),
+          streamMyUser.when(
+              data: (user) => Column(
+                    children: user.types
+                        .map((e) => ListTile(
+                              title: Text(
+                                e ?? '',
+                                style: Theme.of(context).textTheme.bodyText1,
+                              ),
+                              trailing: IconButton(
+                                onPressed: null,
+                                icon: Icon(FontAwesomeIcons.solidHeart,
+                                    color:
+                                        Theme.of(context).colorScheme.primary),
+                              ),
+                            ))
+                        .toList(),
+                  ),
+              loading: () => Center(
+                    child: CircularProgressIndicator(
+                        valueColor: AlwaysStoppedAnimation<Color>(
+                            Theme.of(context).colorScheme.primary)),
+                  ),
+              error: (err, stack) => Icon(Icons.error)),
+          Divider(),
+          ListTile(
+            leading: Icon(FontAwesomeIcons.envelope,
+                color: Theme.of(context).colorScheme.onBackground),
+            title: Text(
+              user.email ?? 'Anonymous@van-Event.fr',
+              style: Theme.of(context).textTheme.bodyText1,
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

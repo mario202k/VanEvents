@@ -11,14 +11,15 @@ class ModelScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     SystemChrome.setSystemUIOverlayStyle(SystemUiOverlayStyle(
-      statusBarColor: Theme.of(context).colorScheme.primary,
-      statusBarIconBrightness: Theme.of(context).colorScheme.brightness,
-      systemNavigationBarColor: Theme.of(context).colorScheme.primary,
-      systemNavigationBarIconBrightness:
-          Theme.of(context).colorScheme.brightness,
-    ));
+        statusBarColor: Theme.of(context).colorScheme.primaryVariant,
+        statusBarIconBrightness: Theme.of(context).colorScheme.brightness,
+        systemNavigationBarColor: Theme.of(context).colorScheme.primaryVariant,
+        systemNavigationBarIconBrightness:
+            Theme.of(context).colorScheme.brightness,
+        statusBarBrightness: Theme.of(context).colorScheme.brightness));
 
     return Container(
-        color: Theme.of(context).colorScheme.primary, child: SafeArea(child: child));
+        color: Theme.of(context).colorScheme.primary,
+        child: SafeArea(child: child));
   }
 }

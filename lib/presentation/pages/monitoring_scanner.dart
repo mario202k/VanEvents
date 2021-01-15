@@ -9,7 +9,6 @@ import 'package:van_events_project/domain/repositories/my_billet_repository.dart
 import 'package:van_events_project/presentation/widgets/model_screen.dart';
 import 'package:van_events_project/presentation/widgets/show.dart';
 
-
 class MonitoringScanner extends StatefulWidget {
   final String eventId;
 
@@ -23,15 +22,18 @@ class _MonitoringScannerState extends State<MonitoringScanner> {
   GlobalKey qrKey = GlobalKey();
   final GlobalKey<AnimatedCircularChartState> _chartKey =
       new GlobalKey<AnimatedCircularChartState>();
-  int nbAttendu = 0;
-  int nbPresent = 0;
+  int nbAttendu;
+  int nbPresent;
   Map participants;
   String qrResult;
-  List<Billet> tickets = List<Billet>();
+  List<Billet> billets;
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey();
 
   @override
   void initState() {
+    nbAttendu = 0;
+    nbPresent = 0;
+    billets = List<Billet>();
     super.initState();
   }
 
@@ -74,22 +76,23 @@ class _MonitoringScannerState extends State<MonitoringScanner> {
                       );
                     }
 
-                    tickets = snapshot.data;
+                    billets = snapshot.data;
                     int expected = 0, present = 0;
 
                     Billet ongoingBillet;
-                    for (int i = 0; i < tickets.length; i++) {
-                      if (tickets[i].id == qrResult) {
-                        ongoingBillet = tickets[i];
+                    for (int i = 0; i < billets.length; i++) {
+                      if (billets[i].id == qrResult) {
+                        ongoingBillet = billets[i];
                       }
 
-                      if (tickets[i].status != 'Annulé') {
+                      if (billets[i].status == BilletStatus.up_coming ||
+                          billets[i].status == BilletStatus.check) {
                         for (int j = 0;
-                            j < tickets[i].participants.length;
+                            j < billets[i].participants.length;
                             j++) {
                           expected++;
 
-                          if (tickets[i].participants.values.toList()[j][1]) {
+                          if (billets[i].participants.values.toList()[j][1]) {
                             present++;
                           }
                         }
@@ -118,7 +121,7 @@ class _MonitoringScannerState extends State<MonitoringScanner> {
 
                     int total = totalAttendu.toInt();
 
-                    return tickets.isNotEmpty
+                    return billets.isNotEmpty
                         ? Column(
                             children: <Widget>[
                               Row(
@@ -168,11 +171,14 @@ class _MonitoringScannerState extends State<MonitoringScanner> {
                                           return SizedBox(
                                             width: 250,
                                             child: GestureDetector(
-                                              onTap: () => context.read(myBilletRepositoryProvider)
+                                              onTap: () => context
+                                                  .read(
+                                                      myBilletRepositoryProvider)
                                                   .setToggleisHere(
-                                                  ongoingBillet.participants,
-                                                  qrResult,
-                                                  index),
+                                                      ongoingBillet
+                                                          .participants,
+                                                      qrResult,
+                                                      index),
                                               child: Card(
                                                 color: isHere
                                                     ? Theme.of(context)
@@ -211,8 +217,9 @@ class _MonitoringScannerState extends State<MonitoringScanner> {
                                   : SizedBox(),
                               ongoingBillet != null
                                   ? RaisedButton(
-                                      onPressed: () =>
-                                          context.read(myBilletRepositoryProvider).toutValider(ongoingBillet),
+                                      onPressed: () => context
+                                          .read(myBilletRepositoryProvider)
+                                          .toutValider(ongoingBillet),
                                       child: Text(
                                         'Tout le monde',
                                         style:
@@ -252,15 +259,14 @@ class _MonitoringScannerState extends State<MonitoringScanner> {
 
   isValide(String data) {
     bool rep = false;
-    for (int i = 0; i < tickets.length; i++) {
-      if (tickets[i].id == data) {
+    for (int i = 0; i < billets.length; i++) {
+      if (billets[i].paymentIntentId == data) {
         rep = true;
         break;
       }
     }
     return rep;
   }
-
 
   Future _scanQR(MyBilletRepository db, BuildContext context) async {
     try {
@@ -273,49 +279,44 @@ class _MonitoringScannerState extends State<MonitoringScanner> {
       bool rep = false;
       int j = 0;
 
-      for (int i = 0; i < tickets.length; i++) {
+      for (int i = 0; i < billets.length; i++) {
         j = i;
-        if (tickets[i].id == qrResult) {
+        if (billets[i].paymentIntentId == qrResult) {
           rep = true;
           break;
         }
       }
 
       if (rep) {
-        if (tickets[j].participants.length == 1) {
-          Show.showDialogToDismiss(context,'Validé!',"Ok pour : 1 participant", 'ok');
+        if (billets[j].participants.length == 1) {
+          Show.showDialogToDismiss(
+              context, 'Validé!', "Ok pour : 1 participant", 'ok');
         } else {
-          Show.showDialogToDismiss(context,'Validé!',
-              "Ok pour : ${tickets[j].participants.length} participants", 'ok');
+          Show.showDialogToDismiss(context, 'Validé!',
+              "Ok pour : ${billets[j].participants.length} participants", 'ok');
         }
-
-        db.billetValidated(tickets[j].id);
+        db.billetValidated(billets[j].id);
       } else {
-        Show.showDialogToDismiss(context,'OOps!',
-            "Billet inconnu", 'ok');
-
+        Show.showDialogToDismiss(context, 'OOps!', "Billet inconnu", 'ok');
       }
     } on PlatformException catch (ex) {
       if (ex.code == MajaScan.CameraAccessDenied) {
-        Show.showDialogToDismiss(context,'OOps!',
-            "Pas de permission pour la caméra", 'ok');
+        Show.showDialogToDismiss(
+            context, 'OOps!', "Pas de permission pour la caméra", 'ok');
         //db.showSnackBar("Camera permission was denied", context);
 
       } else {
-        Show.showDialogToDismiss(context,'OOps!',
-            "Erreur inconnue", 'ok');
+        Show.showDialogToDismiss(context, 'OOps!', "Erreur inconnue", 'ok');
         //db.showSnackBar("Unknown Error $ex", context);
 
       }
     } on FormatException {
-      Show.showDialogToDismiss(context,'OOps!',
-          "Aucun billet scanné", 'ok');
+      Show.showDialogToDismiss(context, 'OOps!', "Aucun billet scanné", 'ok');
       //db.showSnackBar("You pressed the back button before scanning anything", context);
 
     } catch (ex) {
       print(ex);
-      Show.showDialogToDismiss(context,'OOps!',
-          "Erreur inconnue", 'ok');
+      Show.showDialogToDismiss(context, 'OOps!', "Erreur inconnue", 'ok');
       //db.showSnackBar("Unknown Error $ex", context);
     }
   }

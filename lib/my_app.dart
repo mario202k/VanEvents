@@ -3,11 +3,15 @@ import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:firebase_analytics/observer.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:hooks_riverpod/hooks_riverpod.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:van_events_project/app_life_cycle_manager.dart';
 import 'package:van_events_project/domain/routing/route.gr.dart';
 import 'package:van_events_project/providers/authentication_cubit/authentication_cubit.dart';
+import 'package:van_events_project/providers/settings_change_notifier.dart';
 import 'package:van_events_project/route_authentication.dart';
 import 'package:van_events_project/services/firebase_cloud_messaging.dart';
 
@@ -15,29 +19,18 @@ Future<dynamic> myBackgroundMessageHandler(Map<String, dynamic> message) async {
   return NotificationHandler().showNotification(message);
 }
 
-class MyApp extends StatelessWidget {
-  final ColorScheme colorScheme = ColorScheme(
-      primary: const Color(0xFFaf0b0b),
-      primaryVariant: const Color(0xFFdf78ef),
-      secondary: const Color(0xFFffcccb),
-      secondaryVariant: const Color(0xFF039be5),
-      background: const Color(0xFFFFFFFF),
-      surface: const Color(0xFF039be5),
-//      secondary: const Color(0xFF218b0e),
-//      secondaryVariant: const Color(0xFF00600f),
-//      background: const Color(0xFF790e8b),
-//      surface: const Color(0xFF00600f),
-      onBackground: const Color(0xFF000000),
-      error: const Color(0xFF039be5),
-      onError: const Color(0xFFFFFFFF),
-      onPrimary: const Color(0xFFFFFFFF),
-      onSecondary: const Color(0xFFFFFFFF),
-      onSurface: const Color(0xFF000000),
-      brightness: Brightness.light);
+class MyApp extends HookWidget {
+
   final FirebaseAnalytics analytics = FirebaseAnalytics();
+  final SharedPreferences sharePref;
+  MyApp(this.sharePref);
 
   @override
   Widget build(BuildContext context) {
+    print('buildMyApp');
+    final settings = useProvider(settingsProvider);
+    settings.initial(sharePref);
+    final colorScheme = settings.onGoingcolorScheme;
     return MultiBlocProvider(
       providers: [
         BlocProvider(
@@ -46,11 +39,11 @@ class MyApp extends StatelessWidget {
         ),
       ],
       child: Material(
-          color: Colors.white,
+          color: colorScheme.surface,
           child: AppLifeCycleManager(
             child: MaterialApp(
               debugShowCheckedModeBanner: false,
-              color: Colors.white,
+              color: colorScheme.background,
               localizationsDelegates: [
                 // ... app-specific localization delegate[s] here
                 GlobalMaterialLocalizations.delegate,
@@ -65,54 +58,90 @@ class MyApp extends StatelessWidget {
                 primaryColor: colorScheme.primary,
                 accentColor: colorScheme.primary,
                 backgroundColor: colorScheme.background,
+                toggleableActiveColor: colorScheme.primary,
+                unselectedWidgetColor: colorScheme.onSurface,
+                dialogTheme: DialogTheme(
+                  backgroundColor: colorScheme.surface,
+                  contentTextStyle: GoogleFonts.poiretOne(
+                    fontSize: 18.0,
+                    fontWeight: FontWeight.w600,
+                    color: colorScheme.onSurface,
+                  ),
+                  titleTextStyle: GoogleFonts.poiretOne(
+                    fontSize: 18.0,
+                    fontWeight: FontWeight.w600,
+                    color: colorScheme.onSurface,
+                  ),
+                  elevation: 10,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(25.0),
+                  ),
+                ),
+                shadowColor: colorScheme.background,
                 textTheme: TextTheme(
-                  bodyText1: GoogleFonts.poiretOne(
-                    fontSize: 25.0,
+                  headline1: GoogleFonts.poiretOne(
+                    fontSize: 96.0,
+                    fontWeight: FontWeight.w600,
+                    color: colorScheme.onPrimary,
+                  ),
+                  headline2: GoogleFonts.poiretOne(
+                    fontSize: 60.0,
                     fontWeight: FontWeight.w600,
                     color: colorScheme.onBackground,
                   ),
-                  bodyText2: GoogleFonts.poiretOne(
-                    fontSize: 32.0,
+                  headline3: GoogleFonts.poiretOne(//Menu drawer
+                    fontSize: 24.0,
+                    fontWeight: FontWeight.w600,
+                    color: colorScheme.onPrimary,
+                  ),
+                  headline4: GoogleFonts.poiretOne(//App bar
+                    fontSize: 34.0,
+                    fontWeight: FontWeight.w600,
+                    color: colorScheme.onPrimary,
+                  ),
+                  headline5: GoogleFonts.poiretOne(
+                    fontSize: 24.0,
+                    fontWeight: FontWeight.w600,
+                    color: colorScheme.primary,
+                  ),
+                  headline6: GoogleFonts.poiretOne(//Card Fourmula
+                    //App Bar alertdialog.title
+                    fontSize: 20.0,
+                    fontWeight: FontWeight.w600,
+                    color: colorScheme.onSurface,
+                  ),
+                  subtitle1: GoogleFonts.poiretOne(
+                    fontSize: 18.0,
                     fontWeight: FontWeight.w600,
                     color: colorScheme.onBackground,
+                  ),
+                  subtitle2: GoogleFonts.poiretOne(//cardParticipant
+                    fontSize: 16.0,
+                    fontWeight: FontWeight.w600,
+                    color: colorScheme.onPrimary,
+                  ),
+                  bodyText1: GoogleFonts.poiretOne(
+                    fontSize: 18.0,
+                    fontWeight: FontWeight.w600,
+                    color: colorScheme.onBackground,
+                  ),
+                  bodyText2: GoogleFonts.poiretOne(//onPrimary
+                    fontSize: 18.0,
+                    fontWeight: FontWeight.w600,
+                    color: colorScheme.onPrimary,
+                  ),
+                  button: GoogleFonts.poiretOne(
+                    fontSize: 17.0,
+                    fontWeight: FontWeight.w600,
+                    color: colorScheme.onSecondary,
                   ),
                   caption: GoogleFonts.poiretOne(
                     fontSize: 12.0,
                     fontWeight: FontWeight.w600,
                     color: colorScheme.onBackground,
                   ),
-                  headline6: GoogleFonts.poiretOne(
-                    //App Bar alertdialog.title
-                    fontSize: 18.0,
-                    fontWeight: FontWeight.w600,
-                    color: colorScheme.onPrimary,
-                  ),
-                  headline5: GoogleFonts.poiretOne(
-                    fontSize: 18.0,
-                    fontWeight: FontWeight.w600,
-                    color: colorScheme.onBackground,
-                  ),
-
-                  headline4: GoogleFonts.poiretOne(
-                    fontSize: 29.0,
-                    color: colorScheme.onBackground,
-                  ),
-                  headline1: GoogleFonts.poiretOne(
-                    fontSize: 30.0,
-                    fontWeight: FontWeight.w600,
-                    color: colorScheme.onPrimary,
-                  ),
                   overline: GoogleFonts.poiretOne(
-                    fontSize: 11.0,
-                    color: colorScheme.onPrimary,
-                  ),
-                  button: GoogleFonts.poiretOne(
-                    fontSize: 17.0,
-                    color: colorScheme.onPrimary,
-                  ),
-                  subtitle2: GoogleFonts.poiretOne(
-                    fontSize: 18.0,
-                    fontWeight: FontWeight.w600,
+                    fontSize: 14.0,
                     color: colorScheme.onBackground,
                   ),
                 ),
@@ -121,25 +150,28 @@ class MyApp extends StatelessWidget {
                     textTheme: TextTheme(
                         headline6: GoogleFonts.poiretOne(
                           //App Bar alertdialog.title
-                          fontSize: 31.0,
-
+                          fontSize: 34.0,
                           fontWeight: FontWeight.w600,
                           color: colorScheme.onPrimary,
-                        ))),
+                        )),),
                 iconTheme: IconThemeData(
-                  color: Theme.of(context).colorScheme.onPrimary,
+                  color: colorScheme.onBackground,
                 ),
                 buttonTheme: ButtonThemeData(
                     textTheme: ButtonTextTheme.primary,
-                    splashColor: colorScheme.primary,
+                    splashColor: colorScheme.secondaryVariant,
                     colorScheme: colorScheme,
-                    buttonColor: colorScheme.primary,
+                    buttonColor: colorScheme.secondary,
+                    height: 40,
+
                     shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(20))),
+                bottomSheetTheme: BottomSheetThemeData(backgroundColor: Colors.transparent),
                 cursorColor: colorScheme.onBackground,
                 floatingActionButtonTheme: FloatingActionButtonThemeData(
-                    backgroundColor: colorScheme.primary,
-                    foregroundColor: colorScheme.primary),
+                    backgroundColor: colorScheme.secondary,
+                    splashColor: colorScheme.secondaryVariant,
+                    foregroundColor: colorScheme.onSecondary),
                 inputDecorationTheme: InputDecorationTheme(
 //                  filled: true,
 //                  fillColor: Color(0xFFF2F2F2),
@@ -197,10 +229,12 @@ class MyApp extends StatelessWidget {
                   shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(25)),
                   elevation: 20,
-                  //color: colorScheme.secondary,
+                  color: colorScheme.surface,
+                  shadowColor: colorScheme.onBackground,
+
                 ),
                 dividerTheme: DividerThemeData(
-                    color: colorScheme.primary,
+                    color: colorScheme.secondary,
                     thickness: 1,
                     indent: 30,
                     endIndent: 30),

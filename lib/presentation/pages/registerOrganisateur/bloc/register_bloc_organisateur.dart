@@ -9,7 +9,7 @@ import 'package:van_events_project/domain/repositories/my_user_repository.dart';
 import 'package:van_events_project/domain/repositories/stripe_repository.dart';
 import 'package:van_events_project/presentation/pages/registerOrganisateur/bloc/register_event_organisateur.dart';
 import 'package:van_events_project/presentation/pages/registerOrganisateur/bloc/register_state_organisateur.dart';
-import 'package:van_events_project/providers/toggle_bool_chat_room.dart';
+import 'package:van_events_project/providers/toggle_bool.dart';
 
 
 class RegisterBlocOrganisateur
@@ -94,6 +94,7 @@ class RegisterBlocOrganisateur
                 date_of_birth);
 
     if (stripeRep != null) {
+      print("!!!!!!!!!!!!!");
       print(stripeRep.data['stripeAccount']);
 
       String rep = await myUserRepository.signUp(

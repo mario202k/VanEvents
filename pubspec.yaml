@@ -49,7 +49,7 @@ dependencies:
   flutter_form_builder: ^4.0.2
   intl: ^0.16.1
   platform_alert_dialog: ^1.0.0+2
-  cached_network_image: ^2.4.1
+  cached_network_image: ^2.5.0
   photo_view: ^0.10.3
   giphy_picker: ^1.0.8
   badges: ^1.1.6
@@ -62,12 +62,10 @@ dependencies:
   flutter_slidable: ^0.5.7
   screen: ^0.0.5
   majascan: ^0.3.7
-  pdf: ^1.12.0
+  pdf: ^1.13.0
   path_provider: ^1.6.24
-  share_extend: ^1.1.9
   add_2_calendar: ^1.4.0
-  map_launcher: ^1.0.0
-  emoji_picker: ^0.1.0
+  map_launcher: ^1.1.1
   shimmer: ^1.1.2
   dio: ^3.0.10
   equatable: ^1.2.5
@@ -89,8 +87,7 @@ dependencies:
   flutter_bloc: ^6.1.1
   bloc: ^6.1.1
   firebase_dynamic_links: ^0.6.3
-  open_mail_app: ^0.0.3
-  flutter_phoenix: ^0.1.0
+  open_mail_app: ^0.0.5
   sign_in_with_apple: ^2.5.4
 
 

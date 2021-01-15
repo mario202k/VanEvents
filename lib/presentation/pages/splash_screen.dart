@@ -54,8 +54,8 @@ class MySplashScreen extends StatelessWidget {
                     textAlign: TextAlign.center,
                     style: Theme.of(context)
                         .textTheme
-                        .bodyText2
-                        .copyWith(fontSize: 45),
+                        .headline4
+                        .copyWith(fontSize: 45,color: Theme.of(context).colorScheme.onBackground),
                   ),
                 ),
                 Text(

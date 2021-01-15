@@ -32,7 +32,7 @@ class MyDrawer extends HookWidget {
         width: 300,
         height: double.infinity,
         child: Material(
-          color: Theme.of(context).colorScheme.secondary,
+          color: Theme.of(context).colorScheme.background,
           child: LayoutBuilder(builder: (context, constraints) {
             return SingleChildScrollView(
               child: ConstrainedBox(
@@ -76,7 +76,7 @@ class MyDrawer extends HookWidget {
                                             myUser.nom ?? '',
                                             style: Theme.of(context)
                                                 .textTheme
-                                                .headline6,
+                                                .headline3,
                                           ));
                                         },
                                         loading: () => Shimmer.fromColors(
@@ -93,7 +93,9 @@ class MyDrawer extends HookWidget {
                                                         BorderRadius.all(
                                                             Radius.circular(
                                                                 25)),
-                                                    color: Colors.white),
+                                                    color: Theme.of(context)
+                                                        .colorScheme
+                                                        .onPrimary),
                                               ),
                                             ),
                                         error: (err, stack) => SizedBox())),
@@ -105,7 +107,7 @@ class MyDrawer extends HookWidget {
                               child: CircleAvatar(
                                 radius: 59,
                                 backgroundColor:
-                                Theme.of(context).colorScheme.secondary,
+                                Theme.of(context).colorScheme.background,
                                 child: myUserStream.when(
                                     data: (myUser) => CircleAvatar(
                                           backgroundImage: myUser
@@ -155,222 +157,191 @@ class MyDrawer extends HookWidget {
                     Padding(
                       padding: const EdgeInsets.only(
                           bottom: 60, left: 15, right: 15),
-                      child: SizedBox(
-                        height: 340,
-                        child: Column(
-                          mainAxisSize: MainAxisSize.max,
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: <Widget>[
-                            Container(
-                              decoration: BoxDecoration(
-                                borderRadius: BorderRadius.circular(25),
-                                color: Theme.of(context).colorScheme.primary,
-                              ),
-                              child: ListTile(
-                                title: Text(
-                                  'Chat',
-                                  style: Theme.of(context).textTheme.headline6,
-                                ),
-                                leading: Icon(
-                                  FontAwesomeIcons.comments,
-                                  color: Colors.white,
-                                  size: 22,
-                                ),
-                                onTap: () {
-
-                                  nav.state = 'Chat';
-                                  CustomDrawer.of(context).close();
-                                },
-                              ),
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: <Widget>[
+                          Container(
+                            decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(25),
+                              color: Theme.of(context).colorScheme.primary,
                             ),
-                            Container(
-                              decoration: BoxDecoration(
-                                borderRadius: BorderRadius.circular(25),
-                                color: Theme.of(context).colorScheme.primary,
+                            child: ListTile(
+                              title: Text(
+                                'Chat',
+                                style: Theme.of(context).textTheme.headline3,
                               ),
-                              child: ListTile(
-                                title: Text(
-                                  'Mes billets',
-                                  style: Theme.of(context).textTheme.headline6,
-                                ),
-                                leading: Icon(
-                                  FontAwesomeIcons.ticketAlt,
-                                  color: Colors.white,
-                                  size: 22,
-                                ),
-                                onTap: () {
-                                  nav.state = 'Billets';
-                                  CustomDrawer.of(context).close();
-                                },
+                              leading: Icon(
+                                FontAwesomeIcons.comments,
+                                color: Colors.white,
+                                size: 22,
                               ),
+                              onTap: () {
+
+                                nav.state = 'Chat';
+                                CustomDrawer.of(context).close();
+                              },
                             ),
-                            Container(
-                              decoration: BoxDecoration(
-                                borderRadius: BorderRadius.circular(25),
-                                color: Theme.of(context).colorScheme.primary,
+                          ),
+                          Container(
+                            decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(25),
+                              color: Theme.of(context).colorScheme.primary,
+                            ),
+                            child: ListTile(
+                              title: Text(
+                                'Mes billets',
+                                style: Theme.of(context).textTheme.headline3,
                               ),
-                              child: ListTile(
-                                title: Text(
-                                  'Inviter un ami',
-                                  style: Theme.of(context).textTheme.headline6,
+                              leading: Icon(
+                                FontAwesomeIcons.ticketAlt,
+                                color: Colors.white,
+                                size: 22,
+                              ),
+                              onTap: () {
+                                nav.state = 'Billets';
+                                CustomDrawer.of(context).close();
+                              },
+                            ),
+                          ),
+                          Container(
+                            decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(25),
+                              color: Theme.of(context).colorScheme.primary,
+                            ),
+                            child: ListTile(
+                              title: Text(
+                                'Inviter un ami',
+                                style: Theme.of(context).textTheme.headline3,
+                              ),
+                              leading: Icon(
+                                FontAwesomeIcons.shareAlt,
+                                color: Colors.white,
+                                size: 22,
+                              ),
+                              onTap: ()async{
+                                // final file = await getImageFileFromAssets('assets/img/vanEventsIconRouge.png');
+
+                                //myUserRepo.uploadLogo(file);
+
+                                Share.share('https://myvanevents.page.link/qh74');
+
+                                },
+                            ),
+                          ),
+                          Container(
+                            decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(25),
+                              color: Theme.of(context).colorScheme.primary,
+                            ),
+                            child: ListTile(
+                              title: Text(
+                                'Paramètres',
+                                style: Theme.of(context).textTheme.headline3,
+                              ),
+                              leading: Icon(
+                                FontAwesomeIcons.cog,
+                                color: Colors.white,
+                                size: 22,
+                              ),
+                              onTap: () {
+                                ExtendedNavigator.of(context)
+                                    .push(Routes.settings);
+                              },
+                            ),
+                          ),
+                          myUser.typeDeCompte ==
+                              TypeOfAccount.organizer //organisateur
+                              ? Column(
+                            children: [
+                              Container(
+                                decoration: BoxDecoration(
+                                  borderRadius:
+                                  BorderRadius.circular(25),
+                                  color: Theme.of(context)
+                                      .colorScheme
+                                      .primary,
                                 ),
-                                leading: Icon(
-                                  FontAwesomeIcons.shareAlt,
-                                  color: Colors.white,
-                                  size: 22,
-                                ),
-                                onTap: ()async{
-                                  // final file = await getImageFileFromAssets('assets/img/vanEventsIconRouge.png');
-
-                                  //myUserRepo.uploadLogo(file);
-
-                                  Share.share('https://myvanevents.page.link/qh74');
-
+                                child: ListTile(
+                                  title: Text(
+                                    'Profil Stripe',
+                                    style: Theme.of(context)
+                                        .textTheme
+                                        .headline3,
+                                  ),
+                                  leading: Icon(
+                                    FontAwesomeIcons.funnelDollar,
+                                    color: Colors.white,
+                                    size: 22,
+                                  ),
+                                  onTap: () {
+                                    ExtendedNavigator.of(context)
+                                        .push(Routes.stripeProfile);
                                   },
+                                ),
                               ),
-                            ),
-                            Container(
-                              decoration: BoxDecoration(
-                                borderRadius: BorderRadius.circular(25),
-                                color: Theme.of(context).colorScheme.primary,
+                              SizedBox(
+                                height: 1,
                               ),
-                              child: ListTile(
-                                title: Text(
-                                  'Paramètres',
-                                  style: Theme.of(context).textTheme.headline6,
+                              Container(
+                                decoration: BoxDecoration(
+                                  borderRadius:
+                                  BorderRadius.circular(25),
+                                  color: Theme.of(context)
+                                      .colorScheme
+                                      .primary,
                                 ),
-                                leading: Icon(
-                                  FontAwesomeIcons.cog,
-                                  color: Colors.white,
-                                  size: 22,
+                                child: ListTile(
+                                  title: Text(
+                                    'Admin Events',
+                                    style: Theme.of(context)
+                                        .textTheme
+                                        .headline3,
+                                  ),
+                                  leading: Icon(
+                                    FontAwesomeIcons.userCog,
+                                    color: Colors.white,
+                                    size: 22,
+                                  ),
+                                  onTap: () {
+                                    ExtendedNavigator.of(context)
+                                        .push(Routes.adminEvents);
+                                  },
                                 ),
-                                onTap: () {
-                                  // ExtendedNavigator.of(context)
-                                  //     .push(Routes.stripeProfile);
-                                },
                               ),
-                            ),
-                            myUser.typeDeCompte ==
-                                TypeOfAccount.organizer //organisateur
-                                ? Column(
-                              children: [
-                                Container(
-                                  decoration: BoxDecoration(
-                                    borderRadius:
-                                    BorderRadius.circular(25),
-                                    color: Theme.of(context)
-                                        .colorScheme
-                                        .primary,
-                                  ),
-                                  child: ListTile(
-                                    title: Text(
-                                      'Profil Stripe',
-                                      style: Theme.of(context)
-                                          .textTheme
-                                          .headline6,
-                                    ),
-                                    leading: Icon(
-                                      FontAwesomeIcons.funnelDollar,
-                                      color: Colors.white,
-                                      size: 22,
-                                    ),
-                                    onTap: () {
-                                      ExtendedNavigator.of(context)
-                                          .push(Routes.stripeProfile);
-                                    },
-                                  ),
+                              SizedBox(
+                                height: 1,
+                              ),
+                              Container(
+                                decoration: BoxDecoration(
+                                  borderRadius:
+                                  BorderRadius.circular(25),
+                                  color: Theme.of(context)
+                                      .colorScheme
+                                      .primary,
                                 ),
-                                SizedBox(
-                                  height: 1,
+                                child: ListTile(
+                                  title: Text(
+                                    'Remboursements',
+                                    style: Theme.of(context)
+                                        .textTheme
+                                        .headline3,
+                                  ),
+                                  leading: Icon(
+                                    FontAwesomeIcons.moneyBillWave,
+                                    color: Colors.white,
+                                    size: 22,
+                                  ),
+                                  onTap: () {
+                                    ExtendedNavigator.of(context)
+                                        .push(Routes.refundScreen);
+                                  },
                                 ),
-                                Container(
-                                  decoration: BoxDecoration(
-                                    borderRadius:
-                                    BorderRadius.circular(25),
-                                    color: Theme.of(context)
-                                        .colorScheme
-                                        .primary,
-                                  ),
-                                  child: ListTile(
-                                    title: Text(
-                                      'Admin Events',
-                                      style: Theme.of(context)
-                                          .textTheme
-                                          .headline6,
-                                    ),
-                                    leading: Icon(
-                                      FontAwesomeIcons.userCog,
-                                      color: Colors.white,
-                                      size: 22,
-                                    ),
-                                    onTap: () {
-                                      ExtendedNavigator.of(context)
-                                          .push(Routes.adminEvents);
-                                    },
-                                  ),
-                                ),
-                              ],
-                            )
-                                : myUser.typeDeCompte == TypeOfAccount.owner
-                                ? Column(
-                              children: [
-                                Container(
-                                  decoration: BoxDecoration(
-                                    borderRadius:
-                                    BorderRadius.circular(25),
-                                    color: Theme.of(context)
-                                        .colorScheme
-                                        .primary,
-                                  ),
-                                  child: ListTile(
-                                    title: Text(
-                                      'Admin Organisateur',
-                                      style: Theme.of(context)
-                                          .textTheme
-                                          .button,
-                                    ),
-                                    leading: Icon(
-                                      FontAwesomeIcons.userCog,
-                                      color: Colors.white,
-                                      size: 22,
-                                    ),
-                                    onTap: () {
-                                      ExtendedNavigator.of(context).push(
-                                          Routes.adminOrganisateurs);
-                                    },
-                                  ),
-                                ),
-                                Container(
-                                  decoration: BoxDecoration(
-                                    borderRadius:
-                                    BorderRadius.circular(25),
-                                    color: Theme.of(context)
-                                        .colorScheme
-                                        .primary,
-                                  ),
-                                  child: ListTile(
-                                    title: Text(
-                                      'Transport',
-                                      style: Theme.of(context)
-                                          .textTheme
-                                          .button,
-                                    ),
-                                    leading: Icon(
-                                      FontAwesomeIcons.car,
-                                      color: Colors.white,
-                                      size: 22,
-                                    ),
-                                    onTap: () {
-                                      ExtendedNavigator.of(context).push(
-                                          Routes.transportScreen);
-                                    },
-                                  ),
-                                ),
-                              ],
-                            )
-                                : SizedBox(),
-                          ],
-                        ),
+                              ),
+                            ],
+                          )
+                              :SizedBox(),
+                        ],
                       ),
                     ),
                     Padding(
@@ -383,7 +354,7 @@ class MyDrawer extends HookWidget {
                         child: ListTile(
                           title: Text(
                             "Se déconnecter",
-                            style: Theme.of(context).textTheme.headline6,
+                            style: Theme.of(context).textTheme.headline3,
                           ),
                           leading: Icon(
                             FontAwesomeIcons.signOutAlt,

@@ -1,22 +1,25 @@
 import 'package:auto_route/auto_route.dart';
 import 'package:auto_route/auto_route_annotations.dart';
+import 'package:van_events_project/presentation/pages/about_screen.dart';
 import 'package:van_events_project/presentation/pages/admin_event.dart';
 import 'package:van_events_project/presentation/pages/admin_organisateur.dart';
 import 'package:van_events_project/presentation/pages/base_screen.dart';
+import 'package:van_events_project/presentation/pages/cguCgv.dart';
 import 'package:van_events_project/presentation/pages/cgu_cgv_accept.dart';
 import 'package:van_events_project/presentation/pages/details.dart';
 import 'package:van_events_project/presentation/pages/formula_choice.dart';
 import 'package:van_events_project/presentation/pages/full_photo.dart';
 import 'package:van_events_project/presentation/pages/login/login_screen.dart';
 import 'package:van_events_project/presentation/pages/monitoring_scanner.dart';
-import 'package:van_events_project/presentation/pages/qr_code.dart';
+import 'package:van_events_project/presentation/pages/billet_details.dart';
+import 'package:van_events_project/presentation/pages/refund_screen.dart';
 import 'package:van_events_project/presentation/pages/reset_password.dart';
 import 'package:van_events_project/presentation/pages/screen_chat_room.dart';
 import 'package:van_events_project/presentation/pages/search_user_event.dart';
+import 'package:van_events_project/presentation/pages/settings.dart';
 import 'package:van_events_project/presentation/pages/splash_screen.dart';
 import 'package:van_events_project/presentation/pages/stripe_profile/screen_stripe_profile.dart';
-import 'package:van_events_project/presentation/pages/transport.dart';
-import 'package:van_events_project/presentation/pages/transport_details.dart';
+import 'package:van_events_project/presentation/pages/transport_details_screen.dart';
 import 'package:van_events_project/presentation/pages/transport_screen.dart';
 import 'package:van_events_project/presentation/pages/upload_event.dart';
 import 'package:van_events_project/presentation/pages/walkthrough.dart';
@@ -35,7 +38,7 @@ import 'package:van_events_project/route_authentication.dart';
   MaterialRoute(page: UploadEvent, fullscreenDialog: true, initial: false),
   MaterialRoute(page: Details, fullscreenDialog: true, initial: false),
   MaterialRoute(page: FormulaChoice, fullscreenDialog: true, initial: false),
-  MaterialRoute(page: QrCode, fullscreenDialog: true, initial: false),
+  MaterialRoute(page: BilletDetails, fullscreenDialog: true, initial: false),
   MaterialRoute(
       page: MonitoringScanner, fullscreenDialog: true, initial: false),
   MaterialRoute(page: AdminEvents, fullscreenDialog: true, initial: false),
@@ -44,15 +47,18 @@ import 'package:van_events_project/route_authentication.dart';
   MaterialRoute(page: MySplashScreen, fullscreenDialog: true, initial: false),
   MaterialRoute(page: Walkthrough, fullscreenDialog: true, initial: false),
   MaterialRoute(page: CguCgvAccept, fullscreenDialog: true, initial: false),
+  MaterialRoute(page: CguCgv, fullscreenDialog: true, initial: false),
   MaterialRoute(page: StripeProfile, fullscreenDialog: true, initial: false),
-  MaterialRoute(page: Transport, fullscreenDialog: true, initial: false),
-  MaterialRoute(page: TransportDetail, fullscreenDialog: true, initial: false),
+  MaterialRoute(page: TransportDetailScreen, fullscreenDialog: true, initial: false),
   MaterialRoute(page: LoginScreen, fullscreenDialog: true, initial: false),
   MaterialRoute(page: SearchUserEvent, fullscreenDialog: true, initial: false),
   MaterialRoute(page: TransportScreen, fullscreenDialog: true, initial: false),
+  MaterialRoute(page: Settings, fullscreenDialog: true, initial: false),
+  MaterialRoute(page: AboutScreen, fullscreenDialog: true, initial: false),
+  MaterialRoute(page: RefundScreen, fullscreenDialog: true, initial: false),
   //This route returns result of type [bool]
-  CupertinoRoute(page: LoginScreen, fullscreenDialog: true),
-  CustomRoute<bool>(page: LoginScreen, transitionsBuilder: TransitionsBuilders.slideLeftWithFade,durationInMilliseconds: 5000),
+  // CupertinoRoute(page: LoginScreen, fullscreenDialog: true),
+  // CustomRoute<bool>(page: LoginScreen, transitionsBuilder: TransitionsBuilders.slideLeftWithFade,durationInMilliseconds: 5000),
 
   // This should be at the end of your routes list
   // wildcards are represented by '*'

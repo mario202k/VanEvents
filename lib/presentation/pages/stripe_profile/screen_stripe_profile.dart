@@ -19,8 +19,8 @@ import 'package:van_events_project/domain/models/transfer.dart';
 import 'package:van_events_project/domain/repositories/stripe_repository.dart';
 import 'package:van_events_project/presentation/pages/stripe_profile/cubit/stripe_profile_cubit.dart';
 import 'package:van_events_project/presentation/widgets/model_screen.dart';
-import 'package:van_events_project/providers/toggle_bool_chat_room.dart';
-
+import 'package:van_events_project/providers/toggle_bool.dart';
+import 'package:van_events_project/services/firestore_path.dart';
 
 class StripeProfile extends HookWidget {
   final String stripeAccount;
@@ -59,7 +59,8 @@ class StripeProfile extends HookWidget {
                   if (state is StripeProfileInitial) {
                     BlocProvider.of<StripeProfileCubit>(context)
                         .fetchStripeProfile(
-                            stripeAccount ?? myUserRead.stripeAccount, myUserRead.person);
+                            stripeAccount ?? myUserRead.stripeAccount,
+                            myUserRead.person);
                   }
 
                   if (state is StripeProfileSuccess) {
@@ -68,9 +69,10 @@ class StripeProfile extends HookWidget {
                       children: [
                         Wrap(
                           alignment: WrapAlignment.center,
+                          crossAxisAlignment: WrapCrossAlignment.center,
                           direction: Axis.horizontal,
                           children: [
-                            Text(state.result.businessProfile.name),
+                            Text(state.result.businessProfile.name, style: Theme.of(context).textTheme.headline5,),
                             FittedBox(
                               child: Container(
                                   decoration: BoxDecoration(
@@ -109,36 +111,33 @@ class StripeProfile extends HookWidget {
                                 'Solde non disponible :',
                                 style: Theme.of(context)
                                     .textTheme
-                                    .bodyText1
-                                    .copyWith(fontSize: 22),
+                                    .headline5
                               ),
                               Text(
                                 toNormalAmount(
                                     toTotalPending(state.balance.pending)),
-                                style: Theme.of(context).textTheme.headline4,
+                                style: Theme.of(context).textTheme.bodyText1,
                               ),
                               Text(
                                 'Solde disponible :',
                                 style: Theme.of(context)
                                     .textTheme
-                                    .bodyText1
-                                    .copyWith(fontSize: 22),
+                                    .headline5
                               ),
                               Text(
                                 toNormalAmount(
                                     toTotalAvailable(state.balance.available)),
-                                style: Theme.of(context).textTheme.headline4,
+                                style: Theme.of(context).textTheme.bodyText1,
                               ),
                               Text(
                                 'En transit vers la banque :',
                                 style: Theme.of(context)
                                     .textTheme
-                                    .bodyText1
-                                    .copyWith(fontSize: 22),
+                                    .headline5
                               ),
                               Text(
                                 toTotalEnTransit(state.payoutList.data),
-                                style: Theme.of(context).textTheme.headline4,
+                                style: Theme.of(context).textTheme.bodyText1,
                               ),
                               // Text(
                               //   'Volume total :',
@@ -155,7 +154,9 @@ class StripeProfile extends HookWidget {
                           ),
                         ),
                         Divider(),
-                        Text('Virements'),
+                        Text('Virements',style: Theme.of(context)
+                            .textTheme
+                            .headline5),
                         SizedBox(
                           height: 150,
                           child: ListView.builder(
@@ -172,7 +173,6 @@ class StripeProfile extends HookWidget {
                                         style: Theme.of(context)
                                             .textTheme
                                             .bodyText1
-                                            .copyWith(fontSize: 22),
                                       ),
                                       Text(
                                         'Le : ' +
@@ -188,7 +188,6 @@ class StripeProfile extends HookWidget {
                                         style: Theme.of(context)
                                             .textTheme
                                             .bodyText1
-                                            .copyWith(fontSize: 22),
                                       ),
                                       Container(
                                         decoration: BoxDecoration(
@@ -232,7 +231,6 @@ class StripeProfile extends HookWidget {
                                 style: Theme.of(context)
                                     .textTheme
                                     .bodyText1
-                                    .copyWith(fontSize: 22),
                               ),
                               Text(
                                   'SIREN : ' +
@@ -241,7 +239,7 @@ class StripeProfile extends HookWidget {
                                   style: Theme.of(context)
                                       .textTheme
                                       .bodyText1
-                                      .copyWith(fontSize: 22)),
+                                      ),
                               Text(
                                   'Site internet : ' +
                                       isProvided(
@@ -250,15 +248,14 @@ class StripeProfile extends HookWidget {
                                   style: Theme.of(context)
                                       .textTheme
                                       .bodyText1
-                                      .copyWith(fontSize: 22)),
+                                      ),
                               Center(
                                 child: Text(
                                   'Numéro de téléphone : ' +
                                       state.result.businessProfile.supportPhone,
                                   style: Theme.of(context)
                                       .textTheme
-                                      .bodyText1
-                                      .copyWith(fontSize: 22),
+                                      .bodyText1,
                                   overflow: TextOverflow.fade,
                                   textAlign: TextAlign.center,
                                 ),
@@ -272,8 +269,7 @@ class StripeProfile extends HookWidget {
                                       state.result.company.address.city,
                                   style: Theme.of(context)
                                       .textTheme
-                                      .bodyText1
-                                      .copyWith(fontSize: 22),
+                                      .bodyText1,
                                   textAlign: TextAlign.center),
                               Text(
                                   'Compte Bancaire : ...' +
@@ -281,8 +277,7 @@ class StripeProfile extends HookWidget {
                                           .first['last4'],
                                   style: Theme.of(context)
                                       .textTheme
-                                      .bodyText1
-                                      .copyWith(fontSize: 22),
+                                      .bodyText1,
                                   textAlign: TextAlign.center),
                               Text(
                                   'Représentant : ' +
@@ -291,14 +286,12 @@ class StripeProfile extends HookWidget {
                                       state.person.lastName,
                                   style: Theme.of(context)
                                       .textTheme
-                                      .bodyText1
-                                      .copyWith(fontSize: 22),
+                                      .bodyText1,
                                   textAlign: TextAlign.center),
                               Text('Status : ' + buildStatus(state),
                                   style: Theme.of(context)
                                       .textTheme
-                                      .bodyText1
-                                      .copyWith(fontSize: 22),
+                                      .bodyText1,
                                   textAlign: TextAlign.center),
                             ],
                           ),
@@ -306,7 +299,7 @@ class StripeProfile extends HookWidget {
                         Divider(),
                         Text(
                           'Document d\'indentité recto',
-                          style: Theme.of(context).textTheme.bodyText1,
+                          style: Theme.of(context).textTheme.headline5,
                         ),
                         InkWell(
                           onTap: () async {
@@ -342,7 +335,7 @@ class StripeProfile extends HookWidget {
                         ),
                         Text(
                           'Document d\'indentité verso',
-                          style: Theme.of(context).textTheme.bodyText1,
+                          style: Theme.of(context).textTheme.headline5,
                         ),
                         InkWell(
                           onTap: () async {
@@ -379,7 +372,7 @@ class StripeProfile extends HookWidget {
                         ),
                         Text(
                           'Justificatif de domicile',
-                          style: Theme.of(context).textTheme.bodyText1,
+                          style: Theme.of(context).textTheme.headline5,
                         ),
                         InkWell(
                           onTap: () async {
@@ -473,13 +466,14 @@ class StripeProfile extends HookWidget {
     File file = await showDialogSource(context, idFront, boolToggleRead);
     boolToggleRead.setShowSpinner();
     if (file != null) {
-      firebase_storage.TaskSnapshot taskSnapshot  = await firebase_storage.FirebaseStorage.instance.ref()
-
-          .child(front + myUserRead.id)
+      firebase_storage.TaskSnapshot taskSnapshot = await firebase_storage
+          .FirebaseStorage.instance
+          .ref()
+          .child(MyPath.stripeDocs(myUserRead.id, front))
           .putFile(file);
 
       HttpsCallableResult response = await db.uploadFileToStripe(
-          taskSnapshot.metadata.name,
+          MyPath.stripeDocs(myUserRead.id, front),
           myUserRead.stripeAccount,
           myUserRead.person);
       String url;
@@ -500,7 +494,6 @@ class StripeProfile extends HookWidget {
             db.setUrljustificatifDomicile(url);
             break;
         }
-
       }
     }
     boolToggleRead.setShowSpinner();

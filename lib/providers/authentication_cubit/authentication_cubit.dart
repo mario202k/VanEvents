@@ -15,19 +15,18 @@ class AuthenticationCubit extends Cubit<AuthenticationState> {
   void authenticationStarted(MyUserRepository myUserRepository, BuildContext context) async {
     print('authenticationStarted');
     emit(AuthenticationLoading());
-    // myUserRepository.signOut();
 
     final userCredential = await myUserRepository.checkDynamicLinkData(context);
-
-
     final isSignedIn = userCredential != null? true:await myUserRepository.isSignedIn();
     if (isSignedIn) {
-      final firebaseUser = await myUserRepository.getFireBaseUser();
+      final firebaseUser =  myUserRepository.getFireBaseUser();
 
       final user = await myUserRepository.getMyUser(firebaseUser.uid);
-      if (user != null && !user.hasAcceptedCGUCGV) {
+
+      if (user != null && !user.hasAcceptedCGUCGV ) {
         emit(AuthenticationCGUCGV(firebaseUser));
       } else {
+
         emit(AuthenticationSuccess(firebaseUser, user));
       }
     } else {
@@ -39,7 +38,7 @@ class AuthenticationCubit extends Cubit<AuthenticationState> {
 
   void authenticationLoggedIn(MyUserRepository myUserRepository) async {
     try {
-      final firebaseUser = await myUserRepository.getFireBaseUser();
+      final firebaseUser =  myUserRepository.getFireBaseUser();
       final user = await myUserRepository.getMyUser(firebaseUser.uid);
 
       if (user != null && !user.hasAcceptedCGUCGV) {

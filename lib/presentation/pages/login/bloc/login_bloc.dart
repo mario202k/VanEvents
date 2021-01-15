@@ -24,6 +24,8 @@ class LoginBloc extends Bloc<LoginEvent, LoginState> {
       );
     }else if(event is LoginWithAnonymous){
       yield* _mapLoginWithAnonymous(event.myUserRepository);
+    }else if(event is LoginWithApplePressed){
+      yield* _mapLoginWithApplePressedToState(event.myUserRepository);
     }
   }
 
@@ -33,13 +35,36 @@ class LoginBloc extends Bloc<LoginEvent, LoginState> {
       UserCredential authResult =
           await myUserRepository.signInWithGoogle();
 
+      print('_mapLoginWithGooglePressedToState');
+
+      print(authResult.user.uid);
+
       await myUserRepository
           .createOrUpdateUserOnDatabase(authResult.user);
 
       yield LoginState.success();
 
     } catch (e) {
+      print(e);
+      print('!!!!');
+      yield LoginState.failure('Impossible de se connecter');
+    }
+  }
 
+  Stream<LoginState> _mapLoginWithApplePressedToState(MyUserRepository myUserRepository) async* {
+    try {
+
+      UserCredential authResult =
+      await myUserRepository.signInWithApple();
+
+      await myUserRepository
+          .createOrUpdateUserOnDatabase(authResult.user);
+
+      yield LoginState.success();
+
+    } catch (e) {
+      print(e);
+      print('!!!!');
       yield LoginState.failure('Impossible de se connecter');
     }
   }

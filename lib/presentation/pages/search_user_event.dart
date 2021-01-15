@@ -43,6 +43,7 @@ class _SearchUserEventState extends State<SearchUserEvent> {
     final uid = context.read(myUserProvider).id;
     return ModelScreen(
         child: Scaffold(
+          backgroundColor: Theme.of(context).colorScheme.background,
       appBar: PreferredSize(
         preferredSize: Size.fromHeight(77),
         child: AppBar(
@@ -51,7 +52,7 @@ class _SearchUserEventState extends State<SearchUserEvent> {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               IconButton(
-                icon: BackButtonIcon(),
+                icon: BackButtonIcon(),color: Theme.of(context).colorScheme.onPrimary,
                 onPressed: () {
                   ExtendedNavigator.of(context).pop();
                 },
@@ -62,7 +63,7 @@ class _SearchUserEventState extends State<SearchUserEvent> {
                     padding: const EdgeInsets.all(8.0),
                     child: FormBuilderTextField(
                       name: 'search',
-                      style: Theme.of(context).textTheme.headline6,
+                      style: Theme.of(context).textTheme.bodyText2,
                       cursorColor: Theme.of(context).colorScheme.onPrimary,
                       decoration: InputDecoration(
                         enabledBorder: OutlineInputBorder(
@@ -78,7 +79,7 @@ class _SearchUserEventState extends State<SearchUserEvent> {
                                 width: 2),
                             borderRadius: BorderRadius.circular(25.0)),
                         labelText: 'Recherche',
-                        labelStyle: Theme.of(context).textTheme.headline6,
+                        labelStyle: Theme.of(context).textTheme.bodyText2,
                       ),
                       onChanged: (val) {
                         setState(() {
@@ -90,7 +91,7 @@ class _SearchUserEventState extends State<SearchUserEvent> {
                 ),
               ),
               IconButton(
-                icon: Icon(Icons.clear),
+                icon: Icon(Icons.clear,color: Theme.of(context).colorScheme.onPrimary,),
                 onPressed: () {
                   SystemChannels.textInput.invokeMethod('TextInput.hide');
                 },
@@ -122,7 +123,7 @@ class _SearchUserEventState extends State<SearchUserEvent> {
               padding: const EdgeInsets.all(8.0),
               child: ListTile(
                 title: Text(widget.isEvent ? myEvent.titre : myUser.nom,
-                    style: Theme.of(context).textTheme.headline5),
+                    style: Theme.of(context).textTheme.bodyText1),
                 leading: (widget.isEvent
                     ? myEvent.imageFlyerUrl
                     : myUser.imageUrl)
@@ -193,29 +194,23 @@ class _SearchUserEventState extends State<SearchUserEvent> {
 
     await db.addAmongGroupe(myEvent.chatId).then((_) {
       db.getMyChat(myEvent.chatId).then((myChat) {
-        db.chatMyUsersFuture(myChat).then((users) {
-          ExtendedNavigator.of(context).push(Routes.chatRoom,
-              arguments: ChatRoomArguments(chatId: myChat.id));
-        });
+        ExtendedNavigator.of(context).push(Routes.chatRoom,
+            arguments: ChatRoomArguments(chatId: myChat.id));
       });
     });
   }
 
   Future toChatRoomUser(
-      MyChatRepository db, MyUser myUser, BuildContext context) {
-    return db.creationChatRoom(myUser).then((chatId) {
-      db.getMyChat(chatId).then((myChat) {
-        db.chatMyUsersFuture(myChat).then((users) {
-          ExtendedNavigator.of(context).push(Routes.chatRoom,
-              arguments: ChatRoomArguments(chatId: chatId));
-        }).catchError((onError) {
-          print(onError);
-        });
-      }).catchError((onError) {
-        print(onError);
-      });
+      MyChatRepository db, MyUser myUser, BuildContext context) async{
+    final chatId = await db.creationChatRoom(myUser);
+
+    await db.getMyChat(chatId).then((myChat) {
+      ExtendedNavigator.of(context).push(Routes.chatRoom,
+          arguments: ChatRoomArguments(chatId: chatId));
     }).catchError((onError) {
       print(onError);
     });
+
+
   }
 }

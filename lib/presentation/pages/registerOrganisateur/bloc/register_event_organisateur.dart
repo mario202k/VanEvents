@@ -1,7 +1,7 @@
 import 'package:equatable/equatable.dart';
 import 'package:van_events_project/domain/repositories/my_user_repository.dart';
 import 'package:van_events_project/domain/repositories/stripe_repository.dart';
-import 'package:van_events_project/providers/toggle_bool_chat_room.dart';
+import 'package:van_events_project/providers/toggle_bool.dart';
 
 abstract class RegisterEventOrganisateur extends Equatable {
   const RegisterEventOrganisateur();

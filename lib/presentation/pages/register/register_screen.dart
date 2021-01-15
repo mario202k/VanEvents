@@ -12,7 +12,7 @@ class RegisterScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return ModelScreen(
       child: Scaffold(
-        appBar: AppBar(title: Text('Inscription',style: Theme.of(context).textTheme.headline6,),),
+        appBar: AppBar(title: Text('Inscription',style: Theme.of(context).textTheme.headline4,),),
         body: ModelBody(
           child: BlocProvider<RegisterBloc>(
             create: (context) => RegisterBloc(context),

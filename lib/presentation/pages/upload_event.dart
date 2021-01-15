@@ -54,7 +54,6 @@ class UploadEventState extends State<UploadEvent> {
         appBar: AppBar(
           title: Text(
             'UploadEvent',
-            style: Theme.of(context).textTheme.headline6,
           ),
         ),
         body: SingleChildScrollView(
@@ -64,7 +63,7 @@ class UploadEventState extends State<UploadEvent> {
             children: <Widget>[
               Text(
                 'Flyer',
-                style: Theme.of(context).textTheme.bodyText2,
+                style: Theme.of(context).textTheme.headline5,
               ),
               InkWell(
                 onTap: () async {
@@ -124,7 +123,7 @@ class UploadEventState extends State<UploadEvent> {
               ),
               Text(
                 'Photos',
-                style: Theme.of(context).textTheme.bodyText2,
+                style: Theme.of(context).textTheme.headline5,
               ),
               InkWell(
                 onTap: uploadEventRead.loadAssets,
@@ -224,7 +223,7 @@ class UploadEventState extends State<UploadEvent> {
               ),
               Text(
                 'Genre',
-                style: Theme.of(context).textTheme.bodyText2,
+                style: Theme.of(context).textTheme.headline5,
               ),
               Column(
                 mainAxisSize: MainAxisSize.min,
@@ -242,7 +241,7 @@ class UploadEventState extends State<UploadEvent> {
                         Theme.of(context).colorScheme.primary,
                         title: Text(
                           e,
-                          style: Theme.of(context).textTheme.headline5,
+                          style: Theme.of(context).textTheme.bodyText1,
                         ),
                       );
                     },
@@ -252,7 +251,7 @@ class UploadEventState extends State<UploadEvent> {
               ),
               Text(
                 'Type',
-                style: Theme.of(context).textTheme.bodyText2,
+                style: Theme.of(context).textTheme.headline5,
               ),
               Column(
                 mainAxisSize: MainAxisSize.min,
@@ -269,7 +268,7 @@ class UploadEventState extends State<UploadEvent> {
                         Theme.of(context).colorScheme.primary,
                         title: Text(
                           e,
-                          style: Theme.of(context).textTheme.headline5,
+                          style: Theme.of(context).textTheme.bodyText1,
                         ),
                       );
                     },
@@ -299,7 +298,7 @@ class UploadEventState extends State<UploadEvent> {
                                 .requestFocus(uploadEventRead.nodes[1]);
                           }
                         },
-                        style: Theme.of(context).textTheme.headline5,
+                        style: Theme.of(context).textTheme.bodyText1,
                         cursorColor: Theme.of(context).colorScheme.onBackground,
                         decoration: InputDecoration(labelText: 'Titre'),
                         validator:FormBuilderValidators.required(context,),
@@ -326,7 +325,7 @@ class UploadEventState extends State<UploadEvent> {
                         onChanged: (dt) {
                           uploadEventRead.setDateDebut(dt);
                         },
-                        style: Theme.of(context).textTheme.headline5,
+                        style: Theme.of(context).textTheme.bodyText1,
                         cursorColor: Theme.of(context).colorScheme.onBackground,
                         inputType: InputType.both,
                         format: DateFormat("dd/MM/yyyy 'à' HH:mm"),
@@ -350,7 +349,7 @@ class UploadEventState extends State<UploadEvent> {
                         onChanged: (dt) {
                           uploadEventRead.setDateFin(dt);
                         },
-                        style: Theme.of(context).textTheme.headline5,
+                        style: Theme.of(context).textTheme.bodyText1,
                         cursorColor: Theme.of(context).colorScheme.onBackground,
                         focusNode: uploadEventRead.nodes[2],
                         onEditingComplete: () {
@@ -387,7 +386,7 @@ class UploadEventState extends State<UploadEvent> {
                                 activeColor: Theme.of(context).colorScheme.primary,
                                 title: Text(
                                   'A l\'affiche',
-                                  style: Theme.of(context).textTheme.headline5,
+                                  style: Theme.of(context).textTheme.bodyText1,
                                 ),
                               );
                             },
@@ -405,7 +404,7 @@ class UploadEventState extends State<UploadEvent> {
                                   watch(uploadEventProvider).isJusquauJourJ
                                       ? 'Jusqu\'au jour J'
                                       : 'Durée:',
-                                  style: Theme.of(context).textTheme.headline5,
+                                  style: Theme.of(context).textTheme.bodyText1,
                                 ),
                               ),
                             );
@@ -425,7 +424,7 @@ class UploadEventState extends State<UploadEvent> {
                                     onChanged: (dt) {
                                       uploadEventRead.setDebutAffiche(dt);
                                     },
-                                    style: Theme.of(context).textTheme.headline5,
+                                    style: Theme.of(context).textTheme.bodyText1,
                                     cursorColor:
                                     Theme.of(context).colorScheme.onBackground,
                                     inputType: InputType.both,
@@ -451,7 +450,7 @@ class UploadEventState extends State<UploadEvent> {
                                     onChanged: (dt) {
                                       uploadEventRead.setFinAffiche(dt);
                                     },
-                                    style: Theme.of(context).textTheme.headline5,
+                                    style: Theme.of(context).textTheme.bodyText1,
                                     cursorColor:
                                     Theme.of(context).colorScheme.onBackground,
                                     inputType: InputType.both,
@@ -480,7 +479,7 @@ class UploadEventState extends State<UploadEvent> {
                         controller: uploadEventRead.rue,
                         name: 'Rue',
                         focusNode: uploadEventRead.nodes[3],
-                        style: Theme.of(context).textTheme.headline5,
+                        style: Theme.of(context).textTheme.bodyText1,
                         onTap: () async {
                           final place = await Show.showAddress(context,'UploadEvent');
                           uploadEventRead.setPlace(place);
@@ -495,7 +494,7 @@ class UploadEventState extends State<UploadEvent> {
                         controller: uploadEventRead.codePostal,
                         name: 'Code Postal',
                         focusNode: uploadEventRead.nodes[4],
-                        style: Theme.of(context).textTheme.headline5,
+                        style: Theme.of(context).textTheme.bodyText1,
                         onTap: () async {
                           final place = await Show.showAddress(context,'UploadEvent');
                           uploadEventRead.setPlace(place);
@@ -510,7 +509,7 @@ class UploadEventState extends State<UploadEvent> {
                         controller: uploadEventRead.ville,
                         name: 'Ville',
                         focusNode: uploadEventRead.nodes[5],
-                        style: Theme.of(context).textTheme.headline5,
+                        style: Theme.of(context).textTheme.bodyText1,
                         onTap: () async {
                           final place = await Show.showAddress(context,'UploadEvent');
                           if(place == null){
@@ -528,7 +527,7 @@ class UploadEventState extends State<UploadEvent> {
                         controller: uploadEventRead.coords,
                         name: 'Coordonnée',
                         focusNode: uploadEventRead.nodes[6],
-                        style: Theme.of(context).textTheme.headline5,
+                        style: Theme.of(context).textTheme.bodyText1,
                         decoration: InputDecoration(labelText: 'Coordonnée'),
                         validator: FormBuilderValidators.compose([
                           FormBuilderValidators.required(context,),
@@ -541,7 +540,7 @@ class UploadEventState extends State<UploadEvent> {
                         name: 'description',
                         maxLines: 10,
                         focusNode: uploadEventRead.nodes[7],
-                        style: Theme.of(context).textTheme.headline5,
+                        style: Theme.of(context).textTheme.bodyText1,
                         decoration: InputDecoration(labelText: 'Description'),
                         validator:FormBuilderValidators.required(context,),
                       ),
@@ -746,12 +745,12 @@ class UploadEventState extends State<UploadEvent> {
                 children: <Widget>[
                   Text(
                     'Total',
-                    style: Theme.of(context).textTheme.headline5,
+                    style: Theme.of(context).textTheme.bodyText2,
                   ),
                   Text(
                     '${toggleWatch.eventCostDiscounted == null ? toggleWatch.eventCost.toStringAsFixed(toggleWatch.eventCost.truncateToDouble() == toggleWatch.eventCost ? 0 : 2) :
                     toggleWatch.eventCostDiscounted.toStringAsFixed(toggleWatch.eventCostDiscounted.truncateToDouble() == toggleWatch.eventCostDiscounted ? 0 : 2)} €',
-                    style: Theme.of(context).textTheme.headline5,
+                    style: Theme.of(context).textTheme.bodyText2,
                   ),
                 ],
               ),

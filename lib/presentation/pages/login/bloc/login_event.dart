@@ -15,6 +15,12 @@ class LoginWithGooglePressed extends LoginEvent {
   LoginWithGooglePressed(this.myUserRepository);
 }
 
+class LoginWithApplePressed extends LoginEvent {
+  final MyUserRepository myUserRepository;
+
+  LoginWithApplePressed(this.myUserRepository);
+}
+
 class LoginWithAnonymous extends LoginEvent {
   final MyUserRepository myUserRepository;
 

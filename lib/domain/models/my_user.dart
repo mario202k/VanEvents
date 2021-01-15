@@ -3,7 +3,7 @@ import 'package:hooks_riverpod/all.dart';
 final myUserProvider = Provider<MyUser>((ref) {
   return MyUser();
 });
-enum TypeOfAccount { userNormal, organizer, owner }
+enum TypeOfAccount { userNormal, organizer }
 
 class MyUser {
   String id;
@@ -69,17 +69,16 @@ class MyUser {
   }
 
   factory MyUser.fromMap(Map<String, dynamic> map) {
-    if (map == null) {
+    if(map == null){
       return MyUser();
     }
+
     Timestamp time = map['lastActivity'];
 
     TypeOfAccount typeOfAccount;
 
     switch (map['typeDeCompte'] as String) {
-      case 'TypeOfAccount.owner':
-        typeOfAccount = TypeOfAccount.owner;
-        break;
+
       case 'TypeOfAccount.userNormal':
         typeOfAccount = TypeOfAccount.userNormal;
         break;
@@ -129,6 +128,7 @@ class MyUser {
     this.typeDeCompte = user.typeDeCompte;
     this.stripeAccount = user.stripeAccount;
     this.person = user.person;
+    this.hasAcceptedCGUCGV = user.hasAcceptedCGUCGV;
   }
 
   @override
