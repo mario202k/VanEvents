@@ -84,10 +84,9 @@ class Billets extends HookWidget {
                           color: Theme.of(context).colorScheme.onBackground,
                         ),
                         onTap: () => ExtendedNavigator.of(context).push(
-                            Routes.qrCode,
-                            arguments: QrCodeArguments(
-                                data:
-                                    billets.elementAt(index).id)),
+                            Routes.billetDetails,
+                            arguments: BilletDetailsArguments(
+                                billetId: billets.elementAt(index).id)),
                       ),
                     );
                   },
@@ -108,8 +107,6 @@ class Billets extends HookWidget {
     );
   }
 
-
-
   Widget dateDachat(DateTime dateTime, BuildContext context) {
     final date = DateFormat(
       'dd/MM/yy',
@@ -120,8 +117,6 @@ class Billets extends HookWidget {
       style: Theme.of(context).textTheme.bodyText1,
     );
   }
-
-
 
   String toNormalBilletStatus(BilletStatus status) {
     switch (status) {
@@ -147,27 +142,27 @@ class Billets extends HookWidget {
   }
 }
 
-
-
 Future askRefund(BuildContext context, Billet billet) async {
   final rep = await Show.showAreYouSureModel(
       context: context,
       title: 'Remboursement',
-      content:
-      'Êtes-vous sûr de vouloir demander le remboursement?');
+      content: 'Êtes-vous sûr de vouloir demander le remboursement?');
   if (rep != null && rep) {
-
     context.read(myBilletRepositoryProvider).setStatusRefundAsked(billet.id);
     Refund myRefund = Refund(
-      id: FirestoreService.instance.getDocId(path: MyPath.refunds(billet.organisateurId)),
+      id: FirestoreService.instance
+          .getDocId(path: MyPath.refunds(billet.organisateurId)),
       amount: billet.amount,
       paymentIntent: billet.paymentIntentId,
       status: RefundStatus.new_demand,
       reason: RefundReason.requested_by_customer,
     );
-    context.read(stripeRepositoryProvider).setNewRefund(myRefund,billet.organisateurId);
+    context
+        .read(stripeRepositoryProvider)
+        .setNewRefund(myRefund, billet.organisateurId);
   }
 }
+
 void sharePdf(String id) async {
   final pdf = pw.Document();
 
@@ -175,9 +170,9 @@ void sharePdf(String id) async {
       pageFormat: PdfPageFormat.a4,
       build: (pw.Context context) {
         return pw.Center(
-          child: pw.QrCodeWidget(
+          child: pw.BarcodeWidget(
               data: id,
-              size: 320,
+              barcode: pw.Barcode.qrCode(),
               backgroundColor: PdfColor.fromInt(Colors.white.value)),
         ); // Center
       })); //
@@ -188,7 +183,7 @@ void sharePdf(String id) async {
   String tempPath = directory.path;
 
   final file = File('$tempPath/QrCode.pdf');
-  await file.writeAsBytes(pdf.save());
+  await file.writeAsBytes(await pdf.save());
 
   Share.shareFiles(['$tempPath/QrCode.pdf'], text: 'Mon billet');
 }

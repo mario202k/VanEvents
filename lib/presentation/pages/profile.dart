@@ -18,6 +18,10 @@ import 'package:van_events_project/presentation/widgets/model_body.dart';
 import 'package:van_events_project/providers/toggle_bool.dart';
 
 class Profil extends HookWidget {
+  final MyUser other;
+
+  Profil({this.other});
+
   void showDialogGenresEtTypes(BuildContext context, List userGenres,
       List userTypes, int indexStart, TabController tabController) {
     List<Widget> containersAlertDialog = [
@@ -289,7 +293,7 @@ class Profil extends HookWidget {
 
   @override
   Widget build(BuildContext context) {
-    final MyUser user = useProvider(myUserProvider);
+    final MyUser user = other == null ? useProvider(myUserProvider) : other;
     final streamMyUser = useProvider(streamMyUserProvider);
     final db = useProvider(myUserRepository);
     final tabController = useTabController(initialLength: 2);
@@ -307,74 +311,124 @@ class Profil extends HookWidget {
                 Positioned.fill(
                   child: Align(
                     alignment: Alignment.center,
-                    child: streamMyUser.when(
-                        data: (data) => Visibility(
-                              visible: data.imageUrl.isNotEmpty,
-                              child: InkWell(
-                                onTap: () {
-                                  ExtendedNavigator.of(context).push(
-                                      Routes.fullPhoto,
-                                      arguments: FullPhotoArguments(
-                                          url: data.imageUrl));
-                                },
-                                child: CachedNetworkImage(
-                                  imageUrl: data.imageUrl,
-                                  imageBuilder: (context, imageProvider) =>
-                                      Container(
-                                    height: 100,
-                                    width: 100,
-                                    decoration: BoxDecoration(
-                                      borderRadius: BorderRadius.all(
-                                          Radius.circular(100)),
-                                      image: DecorationImage(
-                                        image: imageProvider,
+                    child: other == null
+                        ? streamMyUser.when(
+                            data: (data) {
+                              return data.imageUrl.isNotEmpty
+                                  ? InkWell(
+                                      onTap: () {
+                                        ExtendedNavigator.of(context).push(
+                                            Routes.fullPhoto,
+                                            arguments: FullPhotoArguments(
+                                                url: data.imageUrl));
+                                      },
+                                      child: CachedNetworkImage(
+                                        imageUrl: data.imageUrl,
+                                        imageBuilder:
+                                            (context, imageProvider) =>
+                                                Container(
+                                          height: 100,
+                                          width: 100,
+                                          decoration: BoxDecoration(
+                                            borderRadius: BorderRadius.all(
+                                                Radius.circular(100)),
+                                            image: DecorationImage(
+                                              image: imageProvider,
+                                              fit: BoxFit.cover,
+                                            ),
+                                          ),
+                                        ),
                                         fit: BoxFit.cover,
+                                        placeholder: (context, url) =>
+                                            Shimmer.fromColors(
+                                          baseColor: Colors.white,
+                                          highlightColor: Theme.of(context)
+                                              .colorScheme
+                                              .primary,
+                                          child: CircleAvatar(
+                                            radius: 50,
+                                          ),
+                                        ),
+                                        errorWidget: (context, url, error) =>
+                                            Icon(Icons.error),
                                       ),
-                                    ),
-                                  ),
-                                  fit: BoxFit.cover,
-                                  placeholder: (context, url) =>
-                                      Shimmer.fromColors(
-                                    baseColor: Colors.white,
-                                    highlightColor:
-                                        Theme.of(context).colorScheme.primary,
-                                    child: CircleAvatar(
-                                      radius: 50,
-                                    ),
-                                  ),
-                                  errorWidget: (context, url, error) =>
-                                      Icon(Icons.error),
+                                    )
+                                  : Center(
+                                      child: CircleAvatar(
+                                        radius: 50,
+                                        backgroundColor: Theme.of(context)
+                                            .colorScheme
+                                            .primary,
+                                        backgroundImage: AssetImage(
+                                            'assets/img/normal_user_icon.png'),
+                                      ),
+                                    );
+                            },
+                            loading: () => Center(
+                                  child: CircularProgressIndicator(
+                                      valueColor: AlwaysStoppedAnimation<Color>(
+                                          Theme.of(context)
+                                              .colorScheme
+                                              .primary)),
                                 ),
-                              ),
-                              replacement: Center(
-                                child: CircleAvatar(
-                                  radius: 50,
-                                  backgroundColor:
-                                      Theme.of(context).colorScheme.primary,
-                                  backgroundImage: AssetImage(
-                                      'assets/img/normal_user_icon.png'),
+                            error: (err, stack) => Icon(Icons.error))
+                        : CachedNetworkImage(
+                            imageUrl: other?.imageUrl,
+                            imageBuilder: (context, imageProvider) =>
+                                GestureDetector(
+                              onTap: () {
+                                ExtendedNavigator.of(context).push(
+                                    Routes.fullPhoto,
+                                    arguments: FullPhotoArguments(
+                                        url: other?.imageUrl));
+                              },
+                              child: Container(
+                                height: 100,
+                                width: 100,
+                                decoration: BoxDecoration(
+                                  borderRadius:
+                                      BorderRadius.all(Radius.circular(100)),
+                                  image: DecorationImage(
+                                    image: imageProvider,
+                                    fit: BoxFit.cover,
+                                  ),
                                 ),
                               ),
                             ),
-                        loading: () => Center(
-                              child: CircularProgressIndicator(
-                                  valueColor: AlwaysStoppedAnimation<Color>(
-                                      Theme.of(context).colorScheme.primary)),
+                            fit: BoxFit.cover,
+                            placeholder: (context, url) => Shimmer.fromColors(
+                              baseColor: Colors.white,
+                              highlightColor:
+                                  Theme.of(context).colorScheme.primary,
+                              child: CircleAvatar(
+                                radius: 50,
+                              ),
                             ),
-                        error: (err, stack) => Icon(Icons.error)),
+                            errorWidget: (context, url, error) => Center(
+                              child: CircleAvatar(
+                                radius: 50,
+                                backgroundColor:
+                                    Theme.of(context).colorScheme.primary,
+                                backgroundImage: AssetImage(
+                                    'assets/img/normal_user_icon.png'),
+                              ),
+                            ),
+                          ),
                   ),
                 ),
-                Positioned(
-                    bottom: -15,
-                    right: 10,
-                    child: IconButton(
-                        icon: Icon(
-                          FontAwesomeIcons.pencilAlt,
-                          color: Theme.of(context).colorScheme.primary,
-                        ),
-                        onPressed: () {
-                          showDialogSource(context, db);
-                        })),
+                other == null
+                    ? Positioned(
+                        bottom: -15,
+                        right: 10,
+                        child: IconButton(
+                            icon: Icon(
+                              FontAwesomeIcons.pencilAlt,
+                              color: Theme.of(context).colorScheme.primary,
+                            ),
+                            onPressed: () {
+                              showDialogSource(context, db);
+                            }))
+                    : SizedBox(),
               ],
             ),
           ),
@@ -404,7 +458,7 @@ class Profil extends HookWidget {
           FutureBuilder(
             future: context
                 .read(myBilletRepositoryProvider)
-                .futureBilletParticipation(),
+                .futureBilletParticipation(otherUid: other?.id),
             builder: (context, async) {
               if (async.hasError) {
                 print(async.error);
@@ -460,7 +514,8 @@ class Profil extends HookWidget {
                                   ),
                                 ),
                                 fit: BoxFit.cover,
-                                placeholder: (context, url) => Shimmer.fromColors(
+                                placeholder: (context, url) =>
+                                    Shimmer.fromColors(
                                   baseColor: Colors.white,
                                   highlightColor:
                                       Theme.of(context).colorScheme.primary,
@@ -485,27 +540,54 @@ class Profil extends HookWidget {
               'Genres:',
               style: Theme.of(context).textTheme.headline5,
             ),
-            trailing: streamMyUser.when(
-                data: (user) => IconButton(
-                    icon: Icon(FontAwesomeIcons.pencilAlt,
-                        color: Theme.of(context).colorScheme.primary),
-                    onPressed: () => showDialogGenresEtTypes(
-                        context,
-                        user.genres != null ? user.genres.toList() : [],
-                        user.types != null ? user.types.toList() : [],
-                        0,
-                        tabController)),
-                loading: () => Center(
-                      child: CircularProgressIndicator(
-                          valueColor: AlwaysStoppedAnimation<Color>(
-                              Theme.of(context).colorScheme.primary)),
-                    ),
-                error: (err, stack) => Icon(Icons.error)),
+            trailing: other == null
+                ? streamMyUser.when(
+                    data: (user) => IconButton(
+                        icon: Icon(FontAwesomeIcons.pencilAlt,
+                            color: Theme.of(context).colorScheme.primary),
+                        onPressed: () => showDialogGenresEtTypes(
+                            context,
+                            user.genres != null ? user.genres.toList() : [],
+                            user.types != null ? user.types.toList() : [],
+                            0,
+                            tabController)),
+                    loading: () => Center(
+                          child: CircularProgressIndicator(
+                              valueColor: AlwaysStoppedAnimation<Color>(
+                                  Theme.of(context).colorScheme.primary)),
+                        ),
+                    error: (err, stack) => Icon(Icons.error))
+                : SizedBox(),
           ),
-          streamMyUser.when(
-              data: (user) {
-                return Column(
-                  children: user.genres
+          other == null
+              ? streamMyUser.when(
+                  data: (user) {
+                    return Column(
+                      children: user.genres
+                          .map((e) => ListTile(
+                                title: Text(
+                                  e ?? '',
+                                  style: Theme.of(context).textTheme.bodyText1,
+                                ),
+                                trailing: IconButton(
+                                  onPressed: null,
+                                  icon: Icon(FontAwesomeIcons.solidHeart,
+                                      color: Theme.of(context)
+                                          .colorScheme
+                                          .primary),
+                                ),
+                              ))
+                          .toList(),
+                    );
+                  },
+                  loading: () => Center(
+                        child: CircularProgressIndicator(
+                            valueColor: AlwaysStoppedAnimation<Color>(
+                                Theme.of(context).colorScheme.primary)),
+                      ),
+                  error: (err, stack) => Icon(Icons.error))
+              : Column(
+                  children: other.genres
                       .map((e) => ListTile(
                             title: Text(
                               e ?? '',
@@ -518,60 +600,73 @@ class Profil extends HookWidget {
                             ),
                           ))
                       .toList(),
-                );
-              },
-              loading: () => Center(
-                    child: CircularProgressIndicator(
-                        valueColor: AlwaysStoppedAnimation<Color>(
-                            Theme.of(context).colorScheme.primary)),
-                  ),
-              error: (err, stack) => Icon(Icons.error)),
+                ),
           Divider(),
           ListTile(
             leading: Text(
               'Types:',
               style: Theme.of(context).textTheme.headline5,
             ),
-            trailing: streamMyUser.when(
-                data: (user) => IconButton(
-                    icon: Icon(FontAwesomeIcons.pencilAlt,
-                        color: Theme.of(context).colorScheme.primary),
-                    onPressed: () => showDialogGenresEtTypes(
-                        context,
-                        user.genres != null ? user.genres.toList() : [],
-                        user.types != null ? user.types.toList() : [],
-                        1,
-                        tabController)),
-                loading: () => Center(
-                      child: CircularProgressIndicator(
-                          valueColor: AlwaysStoppedAnimation<Color>(
-                              Theme.of(context).colorScheme.primary)),
-                    ),
-                error: (err, stack) => Icon(Icons.error)),
+            trailing: other == null
+                ? streamMyUser.when(
+                    data: (user) => IconButton(
+                        icon: Icon(FontAwesomeIcons.pencilAlt,
+                            color: Theme.of(context).colorScheme.primary),
+                        onPressed: () => showDialogGenresEtTypes(
+                            context,
+                            user.genres != null ? user.genres.toList() : [],
+                            user.types != null ? user.types.toList() : [],
+                            1,
+                            tabController)),
+                    loading: () => Center(
+                          child: CircularProgressIndicator(
+                              valueColor: AlwaysStoppedAnimation<Color>(
+                                  Theme.of(context).colorScheme.primary)),
+                        ),
+                    error: (err, stack) => Icon(Icons.error))
+                : SizedBox(),
           ),
-          streamMyUser.when(
-              data: (user) => Column(
-                    children: user.types
-                        .map((e) => ListTile(
-                              title: Text(
-                                e ?? '',
-                                style: Theme.of(context).textTheme.bodyText1,
-                              ),
-                              trailing: IconButton(
-                                onPressed: null,
-                                icon: Icon(FontAwesomeIcons.solidHeart,
-                                    color:
-                                        Theme.of(context).colorScheme.primary),
-                              ),
-                            ))
-                        .toList(),
-                  ),
-              loading: () => Center(
-                    child: CircularProgressIndicator(
-                        valueColor: AlwaysStoppedAnimation<Color>(
-                            Theme.of(context).colorScheme.primary)),
-                  ),
-              error: (err, stack) => Icon(Icons.error)),
+          other == null
+              ? streamMyUser.when(
+                  data: (user) => Column(
+                        children: user.types
+                            .map((e) => ListTile(
+                                  title: Text(
+                                    e ?? '',
+                                    style:
+                                        Theme.of(context).textTheme.bodyText1,
+                                  ),
+                                  trailing: IconButton(
+                                    onPressed: null,
+                                    icon: Icon(FontAwesomeIcons.solidHeart,
+                                        color: Theme.of(context)
+                                            .colorScheme
+                                            .primary),
+                                  ),
+                                ))
+                            .toList(),
+                      ),
+                  loading: () => Center(
+                        child: CircularProgressIndicator(
+                            valueColor: AlwaysStoppedAnimation<Color>(
+                                Theme.of(context).colorScheme.primary)),
+                      ),
+                  error: (err, stack) => Icon(Icons.error))
+              : Column(
+                  children: other.types
+                      .map((e) => ListTile(
+                            title: Text(
+                              e ?? '',
+                              style: Theme.of(context).textTheme.bodyText1,
+                            ),
+                            trailing: IconButton(
+                              onPressed: null,
+                              icon: Icon(FontAwesomeIcons.solidHeart,
+                                  color: Theme.of(context).colorScheme.primary),
+                            ),
+                          ))
+                      .toList(),
+                ),
           Divider(),
           ListTile(
             leading: Icon(FontAwesomeIcons.envelope,

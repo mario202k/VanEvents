@@ -43,27 +43,23 @@ class BaseScreens extends HookWidget {
     boolToggle.initial();
     boolToggle.setNbMsgNonLu(context, myUser.id);
 
+
     return ModelScreen(
       child: Stack(
         children: <Widget>[
           Scaffold(
             appBar: AppBar(
-              title: Padding(
-                padding: const EdgeInsets.only(left: 34),
-                child: Row(
-                  mainAxisAlignment: Platform.isAndroid
-                      ? MainAxisAlignment.start
-                      : MainAxisAlignment.center,
-                  children: [
-                    Consumer(builder: (context, watch, _) {
-                      final nav = watch(navigationProvider).state;
-                      return Text(
-                        nav,
-                      );
-                    }),
-                  ],
-                ),
-              ),
+              title: Consumer(builder: (context, watch, _) {
+                final nav = watch(navigationProvider).state;
+                return Platform.isAndroid? Padding(
+                  padding: const EdgeInsets.only(left:  30),
+                  child: Text(
+                    nav,
+                  ),
+                ):Text(
+                  nav,
+                );
+              }),
             ),
             body: Consumer(builder: (context, watch, _) {
               final nav = watch(navigationProvider).state;
@@ -132,7 +128,6 @@ class BaseScreens extends HookWidget {
                         size: 30,
                         color: Theme.of(context).colorScheme.onPrimary,
                       ),
-
                       Consumer(
                         builder: (context, watch, child) {
                           final nbMap =
@@ -182,7 +177,6 @@ class BaseScreens extends HookWidget {
               );
             }),
           ),
-          //TopAppBar(state.toString()),
           Consumer(builder: (context, watch, _) {
             final nav = watch(navigationProvider).state;
             return nav == 'Chat'
@@ -304,7 +298,8 @@ class BaseScreens extends HookWidget {
                         color: Theme.of(context).colorScheme.onSecondary,
                       ),
                       onPressed: () {
-                        ExtendedNavigator.of(context).push(Routes.transportScreen);
+                        ExtendedNavigator.of(context)
+                            .push(Routes.transportScreen);
                       },
                     ))
                 : SizedBox();

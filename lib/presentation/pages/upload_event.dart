@@ -30,11 +30,11 @@ class UploadEventState extends State<UploadEvent> {
 
   @override
   void initState() {
+    super.initState();
     uploadEventRead = context.read(uploadEventProvider);
 
     uploadEventRead.initState(context, widget.myEvent);
 
-    super.initState();
   }
 
   @override
@@ -783,6 +783,7 @@ class CardFormulaState extends State<CardFormula> {
 
   @override
   void initState() {
+    super.initState();
     nodes = List<FocusScopeNode>.generate(
       3,
           (index) => FocusScopeNode(),
@@ -794,7 +795,6 @@ class CardFormulaState extends State<CardFormula> {
       textEditingControllernb.text = widget.formule.nombreDePersonne.toString();
 
     }
-    super.initState();
   }
 
   Widget build(BuildContext context) {

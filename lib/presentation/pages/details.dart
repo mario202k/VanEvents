@@ -1,17 +1,17 @@
-import 'package:add_2_calendar/add_2_calendar.dart';
 import 'package:auto_route/auto_route.dart';
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
-import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:intl/intl.dart';
 import 'package:map_launcher/map_launcher.dart';
 import 'package:shimmer/shimmer.dart';
 import 'package:van_events_project/domain/models/event.dart';
 import 'package:van_events_project/domain/models/my_user.dart';
+import 'package:van_events_project/domain/repositories/my_chat_repository.dart';
 import 'package:van_events_project/domain/repositories/my_event_repository.dart';
 import 'package:van_events_project/domain/routing/route.gr.dart';
 import 'package:van_events_project/presentation/widgets/model_screen.dart';
@@ -30,6 +30,7 @@ class Details extends HookWidget {
     final db = context.read(myEventRepositoryProvider);
     final participants = db.participantsEvent(event.id);
     final boolToggle = useProvider(boolToggleProvider);
+    final FirebaseMessaging firebaseMessaging = FirebaseMessaging();
 
     return Consumer(builder: (context, watch, child) {
       return ModelScreen(
@@ -113,9 +114,17 @@ class Details extends HookWidget {
                       //     ),
                       //     label: Flexible(child: Text("Plannifier"))),
                       RaisedButton.icon(
-                          onPressed: () {
-                            ExtendedNavigator.of(context).push(Routes.chatRoom,
-                                arguments: ChatRoomArguments(chatId: event.chatId));
+                          onPressed: () async {
+                            firebaseMessaging.subscribeToTopic(event.chatId);
+                            await context
+                                .read(myChatRepositoryProvider)
+                                .addAmongGroupe(event.chatId)
+                                .then((_) {
+                              ExtendedNavigator.of(context).push(
+                                  Routes.chatRoom,
+                                  arguments:
+                                      ChatRoomArguments(chatId: event.chatId));
+                            });
                           },
                           icon: FaIcon(FontAwesomeIcons.comments),
                           label: Text('Chat')),
@@ -269,7 +278,7 @@ class Details extends HookWidget {
 
                           return participantsList.isNotEmpty
                               ? ListView.builder(
-                            shrinkWrap: true,
+                                  shrinkWrap: true,
                                   scrollDirection: Axis.horizontal,
                                   itemCount: participantsList.length,
                                   itemBuilder: (context, index) {
@@ -299,51 +308,81 @@ class Details extends HookWidget {
 
                                           return Padding(
                                             padding: const EdgeInsets.all(8.0),
-                                            child: InkWell(
+                                            child: GestureDetector(
                                               onTap: () {
-                                                if(user?.imageUrl != null){
+                                                if (user?.imageUrl == null) {
                                                   return;
                                                 }
-                                                ExtendedNavigator.of(context).push(
-                                                    Routes.fullPhoto,
-                                                    arguments: FullPhotoArguments(
-                                                        url: user.imageUrl));
+                                                ExtendedNavigator.of(context)
+                                                    .push(Routes.otherProfile,
+                                                        arguments:
+                                                            OtherProfileArguments(
+                                                                myUser: user));
                                               },
-                                              child: user?.imageUrl == null? CachedNetworkImage(
-                                                imageUrl: user?.imageUrl,
-                                                imageBuilder: (context, imageProvider) =>
-                                                    Container(
-                                                      height: 80,
-                                                      width: 80,
-                                                      decoration: BoxDecoration(
-                                                        borderRadius:
-                                                        BorderRadius.all(Radius.circular(80)),
-                                                        image: DecorationImage(
-                                                          image: imageProvider,
-                                                          fit: BoxFit.cover,
+                                              child: user?.imageUrl != null
+                                                  ? CachedNetworkImage(
+                                                      imageUrl: user?.imageUrl,
+                                                      imageBuilder: (context,
+                                                              imageProvider) =>
+                                                          Container(
+                                                        height: 80,
+                                                        width: 80,
+                                                        decoration:
+                                                            BoxDecoration(
+                                                          borderRadius:
+                                                              BorderRadius.all(
+                                                                  Radius
+                                                                      .circular(
+                                                                          80)),
+                                                          image:
+                                                              DecorationImage(
+                                                            image:
+                                                                imageProvider,
+                                                            fit: BoxFit.cover,
+                                                          ),
                                                         ),
                                                       ),
+                                                      fit: BoxFit.cover,
+                                                      placeholder: (context,
+                                                              url) =>
+                                                          Shimmer.fromColors(
+                                                        baseColor: Colors.white,
+                                                        highlightColor:
+                                                            Theme.of(context)
+                                                                .colorScheme
+                                                                .primary,
+                                                        child: CircleAvatar(
+                                                          radius: 40,
+                                                        ),
+                                                      ),
+                                                      errorWidget: (context,
+                                                          url, error) {
+                                                        print(url);
+                                                        print(error);
+                                                        return Center(
+                                                          child: CircleAvatar(
+                                                            radius: 40,
+                                                            backgroundColor:
+                                                            Theme.of(context)
+                                                                .colorScheme
+                                                                .primary,
+                                                            backgroundImage: AssetImage(
+                                                                'assets/img/normal_user_icon.png'),
+                                                          ),
+                                                        );
+                                                      },
+                                                    )
+                                                  : Center(
+                                                      child: CircleAvatar(
+                                                        radius: 40,
+                                                        backgroundColor:
+                                                            Theme.of(context)
+                                                                .colorScheme
+                                                                .primary,
+                                                        backgroundImage: AssetImage(
+                                                            'assets/img/normal_user_icon.png'),
+                                                      ),
                                                     ),
-                                                fit: BoxFit.cover,
-                                                placeholder: (context, url) => Shimmer.fromColors(
-                                                  baseColor: Colors.white,
-                                                  highlightColor:
-                                                  Theme.of(context).colorScheme.primary,
-                                                  child: CircleAvatar(
-                                                    radius: 40,
-                                                  ),
-                                                ),
-                                                errorWidget: (context, url, error) =>
-                                                    Icon(Icons.error),
-                                              ):Center(
-                                                child: CircleAvatar(
-                                                  radius: 40,
-                                                  backgroundColor:
-                                                  Theme.of(context).colorScheme.primary,
-                                                  backgroundImage: AssetImage(
-                                                      'assets/img/normal_user_icon.png'),
-                                                ),
-                                              ),
                                             ),
                                           );
                                         });
@@ -351,6 +390,9 @@ class Details extends HookWidget {
                                 )
                               : SizedBox();
                         }),
+                  ),
+                  SizedBox(
+                    height: 60,
                   ),
                 ],
               ),
@@ -360,14 +402,8 @@ class Details extends HookWidget {
             onPressed: () {
               db.getFormulasList(event.id).then((form) {
                 ExtendedNavigator.of(context).push(Routes.formulaChoice,
-                    arguments: FormulaChoiceArguments(
-                        formulas: form,
-                        eventId: event.id,
-                        latLng: LatLng(
-                            event.position.latitude, event.position.longitude),
-                        stripeAccount: event.stripeAccount,
-                        imageUrl: event.imageFlyerUrl,
-                        dateDebut: event.dateDebut));
+                    arguments:
+                        FormulaChoiceArguments(formulas: form, myEvent: event));
               });
             },
             icon: Icon(

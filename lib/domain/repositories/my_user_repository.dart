@@ -5,6 +5,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_dynamic_links/firebase_dynamic_links.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/src/widgets/framework.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:hooks_riverpod/all.dart';
@@ -14,6 +15,7 @@ import 'package:van_events_project/domain/models/my_chat.dart';
 import 'package:van_events_project/domain/models/my_user.dart';
 import 'package:van_events_project/domain/routing/route.gr.dart';
 import 'package:van_events_project/presentation/widgets/lieuQuandAlertDialog.dart';
+import 'package:van_events_project/providers/authentication_cubit/authentication_cubit.dart';
 import 'package:van_events_project/services/firestore_path.dart';
 import 'package:van_events_project/services/firestore_service.dart';
 
@@ -82,17 +84,13 @@ class MyUserRepository {
     return await _firebaseAuth.signInWithCredential(credential);
   }
 
-  Future<UserCredential> checkDynamicLinkData(BuildContext context) async {
-    UserCredential userCredential;
-    //Returns the deep linked data
+  Future<void> checkDynamicLinkData(BuildContext context) async {
     FirebaseDynamicLinks.instance.onLink(
         onSuccess: (PendingDynamicLinkData dynamicLink) async {
       print(dynamicLink.toString());
       final Uri deepLink = dynamicLink?.link;
       print('FirebaseDynamicLinks');
-      if (deepLink != null) {
-        userCredential = await handleLink(deepLink, context);
-      }
+      await handleLink(deepLink, context);
     }, onError: (OnLinkErrorException e) async {
       print('onLinkError');
       print(e.message);
@@ -100,12 +98,11 @@ class MyUserRepository {
     final PendingDynamicLinkData data =
         await FirebaseDynamicLinks.instance.getInitialLink();
     if (data?.link != null) {
-      return await handleLink(data?.link, context);
+      await handleLink(data?.link, context);
     }
-    return userCredential;
   }
 
-  Future<UserCredential> handleLink(Uri link, BuildContext context) async {
+  Future<void> handleLink(Uri link, BuildContext context) async {
     print(link.toString());
     print(link.path);
     print(link.query);
@@ -113,37 +110,31 @@ class MyUserRepository {
     print(link.userInfo);
     print(email);
     print(link.path == "/signIn");
-    print(_firebaseAuth.isSignInWithEmailLink(link.toString()));
 
-    UserCredential userCredential;
-    if (link != null && !_firebaseAuth.isSignInWithEmailLink(link.toString())) {
-      print('Reboot');
-      Navigator.of(context).pushReplacementNamed(Routes.routeAuthentication);
-      // Phoenix.rebirth(context);
-    }
+    if (link != null) {
+      final mode = link.queryParameters['mode'];
+      final actionCode = link.queryParameters['oobCode'];
+      final continueUrl = link.queryParameters['continueUrl'];
+      final lang = link.queryParameters['lang'] ?? 'fr';
 
-    if (link != null && _firebaseAuth.isSignInWithEmailLink(link.toString())) {
-      print('coucou!!!!');
-      if (email == null) {
-        Uri uri = Uri.parse(link.queryParameters['continueUrl']);
-        email = uri.queryParameters['email'];
+      // Handle the user management action.
+      switch (mode) {
+        case 'resetPassword':
+          // Display reset password handler and UI.
+          handleResetPassword(actionCode, continueUrl, lang);
+          break;
+        case 'recoverEmail':
+          // Display email recovery handler and UI.
+          handleRecoverEmail(actionCode, lang);
+          break;
+        case 'verifyEmail':
+          // Display email verification handler and UI.
+          await handleVerifyEmail(context, actionCode, continueUrl, lang);
+          break;
+        default:
+        // Error: invalid mode.
       }
-      userCredential = await _firebaseAuth
-          .signInWithEmailLink(email: email, emailLink: link.toString())
-          .catchError((e) {
-        print(e);
-      });
-
-      if (userCredential != null) {
-        this.uid = userCredential.user.uid;
-        await createOrUpdateUserOnDatabase(userCredential.user);
-        Navigator.of(context).pushReplacementNamed(Routes.routeAuthentication);
-        // BlocProvider.of<AuthenticationCubit>(context).authenticationLoggedIn(myUserRepo);
-      }
-    } else {
-      print("no email verification ");
     }
-    return userCredential;
   }
 
   Future<void> _createDynamicLink(bool short) async {
@@ -233,8 +224,8 @@ class MyUserRepository {
       {File image,
       String nomPrenom,
       String email,
-      String password,
       TypeOfAccount typeDeCompte,
+      String password,
       String stripeAccount,
       String person}) async {
     String rep = 'Impossible de joindre le serveur';
@@ -269,7 +260,6 @@ class MyUserRepository {
                   nom: nomPrenom,
                   imageUrl: url,
                   email: email,
-                  password: password,
                   lastActivity: DateTime.now(),
                   isLogin: false,
                   typeDeCompte: typeDeCompte,
@@ -280,14 +270,11 @@ class MyUserRepository {
               await _service
                   .setData(path: MyPath.user(uid), data: myUser.toMap())
                   .then((_) async {
-                //envoi de l'email de vérification
-                await sendSignInLinkToEmail(
-                        email: user.user.email,
-                        actionCodeSettings:
-                            MyPath.actionCodeSettingsSignIn(email))
+                await user.user
+                    .sendEmailVerification(
+                        MyPath.actionCodeSettingsSignIn(email))
                     .then((value) {
                   rep = 'Un email de validation a été envoyé';
-                  return 'Un email de validation a été envoyé';
                 }).catchError((e) {
                   print(e);
                   return 'Impossible d\'envoyer l\'email';
@@ -303,7 +290,6 @@ class MyUserRepository {
                 id: uid,
                 nom: nomPrenom,
                 email: email,
-                password: password,
                 lastActivity: DateTime.now(),
                 isLogin: false,
                 typeDeCompte: typeDeCompte,
@@ -314,35 +300,15 @@ class MyUserRepository {
             await _service
                 .setData(path: MyPath.user(uid), data: myUser.toMap())
                 .then((_) async {
-              //envoi de l'email de vérification
-              await sendSignInLinkToEmail(
-                      email: user.user.email,
-                      actionCodeSettings: MyPath.actionCodeSettingsSignIn(email))
+              await user.user
+                  .sendEmailVerification(MyPath.actionCodeSettingsSignIn(email))
                   .then((value) {
                 rep = 'Un email de validation a été envoyé';
-                return 'Un email de validation a été envoyé';
               }).catchError((e) {
                 print(e);
                 return 'Impossible d\'envoyer l\'email';
               });
             });
-            // await _service
-            //     .setData(path: Path.user(uid), data: myUser.toMap())
-            //     .then((value) async {
-            //   print('I love you Diana');
-            //   await user.user.sendEmailVerification().then((value) {
-            //     print('Un email de validation a été envoyé');
-            //     rep = 'Un email de validation a été envoyé';
-            //     return rep;
-            //   }).catchError((e) {
-            //     print(e);
-            //     print('//');
-            //     rep = 'Impossible d\'envoyer l\'email';
-            //   });
-            // }).catchError((e) {
-            //   print(e);
-            //   rep = 'Impossible de joindre le serveur';
-            // });
           }
           //rep = 'un email de validation a été envoyé';
         }).catchError((e) {
@@ -375,12 +341,13 @@ class MyUserRepository {
   }
 
   Future<bool> isSignedIn() async {
-    final currentUser = _firebaseAuth.currentUser;
+    User currentUser = _firebaseAuth.currentUser;
+    await currentUser?.reload();
+    currentUser = _firebaseAuth.currentUser;
     if (currentUser != null) {
       await createOrUpdateUserOnDatabase(currentUser);
     }
-
-    return currentUser != null && _firebaseAuth.currentUser.emailVerified;
+    return (currentUser != null && currentUser.emailVerified)||(currentUser != null && currentUser.isAnonymous);
   }
 
   User getFireBaseUser() {
@@ -404,14 +371,13 @@ class MyUserRepository {
         path: MyPath.user(user.uid), builder: (map) => MyUser.fromMap(map));
 
     await _service.setData(path: MyPath.user(user.uid), data: {
-      'id':user.uid,
+      'id': user.uid,
       'lastActivity': FieldValue.serverTimestamp(),
       'nom': fromDb.nom ?? user?.displayName,
       'imageUrl': fromDb.imageUrl ?? user?.photoURL,
       'hasAcceptedCGUCGV': fromDb.hasAcceptedCGUCGV ?? false,
       'isLogin': true
     });
-
 
     return fromDb.hasAcceptedCGUCGV ?? false;
   }
@@ -545,7 +511,9 @@ class MyUserRepository {
     print(pathlogo);
 
     String urlFlyer = await _service.uploadImg(
-        file: file, path: MyPath.logoImage(pathlogo), contentType: 'image/jpeg');
+        file: file,
+        path: MyPath.logoImage(pathlogo),
+        contentType: 'image/jpeg');
     print(urlFlyer);
   }
 
@@ -563,8 +531,35 @@ class MyUserRepository {
         path: MyPath.abouts(), builder: (data) => About.fromMap(data));
   }
 
-  Future<List<MyUser>>getMyUserFromStripeAccount(String stripeAccount) {
-    return _service.collectionFuture(path: MyPath.users(), builder: (map)=>MyUser.fromMap(map),
-    queryBuilder: (query)=>query.where('stripeAccount',isEqualTo:stripeAccount));
+  Future<List<MyUser>> getMyUserFromStripeAccount(String stripeAccount) {
+    return _service.collectionFuture(
+        path: MyPath.users(),
+        builder: (map) => MyUser.fromMap(map),
+        queryBuilder: (query) =>
+            query.where('stripeAccount', isEqualTo: stripeAccount));
+  }
+
+  void handleResetPassword(
+      String actionCode, String continueUrl, String lang) {}
+
+  void handleRecoverEmail(String actionCode, String lang) {}
+
+  Future<void> handleVerifyEmail(BuildContext context, String actionCode,
+      String continueUrl, String lang) async {
+    await _firebaseAuth
+        .applyActionCode(actionCode)
+        .then((_) {
+      Uri deepLink = Uri.parse(continueUrl);
+
+
+      BlocProvider.of<AuthenticationCubit>(context)
+          .authenticationEmailLinkSuccess(deepLink.queryParameters['email']);
+        })
+        .catchError((e) {
+      print(e);
+    });
+
+
+
   }
 }

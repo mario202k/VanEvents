@@ -11,7 +11,6 @@ import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:van_events_project/domain/models/message.dart';
 import 'package:van_events_project/domain/routing/route.gr.dart';
 import 'package:van_events_project/providers/chat_room_change_notifier.dart';
-import 'package:van_events_project/providers/settings_change_notifier.dart';
 import 'package:van_events_project/providers/toggle_bool.dart';
 Future<dynamic> myBackgroundMessageHandler(Map<String, dynamic> message) async {
   return NotificationHandler().showNotification(message);
@@ -79,6 +78,10 @@ class NotificationHandler {
       onBackgroundMessage:
           Platform.isAndroid ? myBackgroundMessageHandler : null,
       onMessage: (Map<String, dynamic> message) async {
+        print(message);
+        print("////");
+
+
         if(message.containsKey('chatId') || message['data']['chatId'] != null ){
           MyMessage myMessage;
           String chatId = '';
@@ -89,7 +92,7 @@ class NotificationHandler {
             myMessage = MyMessage.fromIosFcm(message);
             chatId = message['chatId'];
           }
-          if ( myMessage.idFrom != uid ) {
+          if ( myMessage.idFrom != uid && context.read(chatRoomProvider).chatId == null) {
             showNotification(message);
           }
           if(myMessage.idFrom != uid && context.read(chatRoomProvider).chatId == chatId){
@@ -97,10 +100,16 @@ class NotificationHandler {
           }
         }
 
-
+        if( message['from'] == 'topics/newEvent'|| message['notification']['title'].toString().startsWith('Nouvel évènement')){
+          showNotification(message);
+        }
 
       },
       onLaunch: (Map<String, dynamic> message) async {
+        if(message['from'] == 'topics/newEvent'|| message['notification']['title'].toString().startsWith('Nouvel évènement')){
+          showNotification(message);
+          return;
+        }
         String chatId = '';
         if (Platform.isAndroid) {
           chatId = message['data']['chatId'];
@@ -115,6 +124,10 @@ class NotificationHandler {
         );
       },
       onResume: (Map<String, dynamic> message) async {
+        if(message['from'] == 'topics/newEvent'|| message['notification']['title'].toString().startsWith('Nouvel évènement')){
+          showNotification(message);
+          return;
+        }
         String chatId = '';
         if (Platform.isAndroid) {
           chatId = message['data']['chatId'];
@@ -138,6 +151,7 @@ class NotificationHandler {
   }
 
   void showNotification(Map<String, dynamic> message) async {
+    print('showNotification');
 
     if(!context.read(boolToggleProvider).isNextEvents && message.containsKey('newEventId')){
       return;
@@ -146,6 +160,7 @@ class NotificationHandler {
       return;
     }
     String title, type, body, chatId;
+
 
     if (Platform.isIOS) {
       title = message['aps'] != null
@@ -161,6 +176,10 @@ class NotificationHandler {
       type = message['data']['type'];
       body = message['notification']['body'];
       chatId = message['data']['chatId'];
+    }
+
+    if( message['from'] == 'topics/newEvent'|| message['notification']['title'].toString().startsWith('Nouvel évènement')){
+      type = MyMessageType.text.toString();
     }
 
     var androidPlatformChannelSpecifics = AndroidNotificationDetails(
@@ -285,22 +304,27 @@ class NotificationHandler {
 //  }
 
   Future onSelectNotification(String payload) async {
-    final newRouteName = Routes.chatRoom;
-    bool isNewRouteSameAsCurrent = false;
+    if(payload != null){
+      final newRouteName = Routes.chatRoom;
+      bool isNewRouteSameAsCurrent = false;
 
-    Navigator.popUntil(context, (route) {
-      if (route.settings.name == newRouteName) {
-        isNewRouteSameAsCurrent = true;
+      Navigator.popUntil(context, (route) {
+        if (route.settings.name == newRouteName) {
+          isNewRouteSameAsCurrent = true;
+        }
+        return true;
+      });
+
+      if (!isNewRouteSameAsCurrent) {
+        await ExtendedNavigator.of(context).push(
+          Routes.chatRoom,
+          arguments: ChatRoomArguments(chatId: payload),
+        );
       }
-      return true;
-    });
-
-    if (!isNewRouteSameAsCurrent) {
-      await ExtendedNavigator.of(context).push(
-        Routes.chatRoom,
-        arguments: ChatRoomArguments(chatId: payload),
-      );
+    }else{
+      await ExtendedNavigator.of(context).push(Routes.routeAuthentication);
     }
+
 //    if (payload != null) {
 //      debugPrint('notification payload: ' + payload);
 //    }

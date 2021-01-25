@@ -79,8 +79,11 @@ class LoginBloc extends Bloc<LoginEvent, LoginState> {
       UserCredential authResult = await myUserRepository
           .signInWithCredentials(email, password);
 
-      if (authResult.user.emailVerified || authResult.user.metadata.creationTime
-          .compareTo(authResult.user.metadata.lastSignInTime) < 0 ) {
+
+      print(await myUserRepository.isSignedIn());
+      print('!!!!!!!!!!!');
+      print('_mapLoginWithCredentialsPressedToState');
+      if (authResult.user.emailVerified) {
         await myUserRepository
             .createOrUpdateUserOnDatabase(authResult.user);
 

@@ -15,6 +15,7 @@ import 'package:van_events_project/domain/models/chat_membres.dart';
 import 'package:van_events_project/domain/models/message.dart';
 import 'package:van_events_project/domain/models/my_user.dart';
 import 'package:van_events_project/domain/repositories/my_chat_repository.dart';
+import 'package:van_events_project/domain/repositories/my_user_repository.dart';
 import 'package:van_events_project/domain/routing/route.gr.dart';
 import 'package:van_events_project/presentation/widgets/chatMessageListItem.dart';
 import 'package:van_events_project/presentation/widgets/model_screen.dart';
@@ -132,13 +133,11 @@ class _ChatRoomState extends State<ChatRoom> with WidgetsBindingObserver {
                     ),
                     title: InkWell(
                       onTap: () {
-                        if(chatRoomRead.imageUrl.isNotEmpty){
-                          ExtendedNavigator.of(context).push(
-                              Routes.fullPhoto,
+                        if (chatRoomRead.imageUrl.isNotEmpty) {
+                          ExtendedNavigator.of(context).push(Routes.fullPhoto,
                               arguments: FullPhotoArguments(
                                   url: chatRoomRead.imageUrl));
                         }
-
                       },
                       child: Row(
                         children: <Widget>[
@@ -196,7 +195,7 @@ class _ChatRoomState extends State<ChatRoom> with WidgetsBindingObserver {
                                   child: StreamBuilder<MyUser>(
                                       stream: chatRoomRead.streamUserFriend,
                                       builder: (context, snapshot) {
-                                        if(!snapshot.hasData){
+                                        if (!snapshot.hasData) {
                                           return SizedBox();
                                         }
                                         MyUser user = snapshot.data;
@@ -265,7 +264,7 @@ class _ChatRoomState extends State<ChatRoom> with WidgetsBindingObserver {
                       children: [
                         Flexible(
                           child: SingleChildScrollView(
-                            padding: const EdgeInsets.symmetric(horizontal: 12),
+                            padding: const EdgeInsets.symmetric(horizontal: 8),
                             physics: ClampingScrollPhysics(),
                             controller: scrollController,
                             reverse: true,
@@ -387,6 +386,7 @@ class _ChatRoomState extends State<ChatRoom> with WidgetsBindingObserver {
                             ),
                           ),
                         ),
+                        SizedBox(height: 4,),
                         Divider(
                           height: 1.0,
                           thickness: 2,
@@ -407,60 +407,67 @@ class _ChatRoomState extends State<ChatRoom> with WidgetsBindingObserver {
             final tempImage = watch(chatRoomProvider).tempImage;
 
             return tempImage != null
-                ? Container(
-                    height: 200,
-                    color: Theme.of(context).colorScheme.background,
-                    width: MediaQuery.of(context).size.width,
-                    child: Column(
-                      children: [
-                        Text(
-                          'Voulez-vous envoyer cette image?',
-                          style: Theme.of(context).textTheme.bodyText1,
-                        ),
-                        Row(
+                ? LimitedBox(
+                    maxHeight: 200,
+                    child: FittedBox(
+                      child: Container(
+                        width: MediaQuery.of(context).size.width,
+                        color: Theme.of(context).colorScheme.background,
+                        child: Column(
                           children: [
-                            SizedBox(
-                              height: 175,
-                              width: MediaQuery.of(context).size.width - 50,
-                              child: Image(
-                                image: FileImage(tempImage),
-                                fit: BoxFit.contain,
-                              ),
+                            Text(
+                              'Voulez-vous envoyer cette image?',
+                              style: Theme.of(context).textTheme.bodyText1,
                             ),
-                            SizedBox(
-                              height: 175,
-                              child: Column(
-                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                children: [
-                                  IconButton(
-                                      icon: Icon(
-                                        Icons.close,
-                                        color:
-                                            Theme.of(context).colorScheme.onBackground,
-                                      ),
-                                      onPressed: () =>
-                                          chatRoomRead.setNewTempImage(null)),
-                                  IconButton(
-                                      color:
-                                          Theme.of(context).colorScheme.primary,
-                                      icon: FaIcon(
-                                        FontAwesomeIcons.paperPlane,
-                                        color: Theme.of(context)
-                                            .colorScheme
-                                            .onBackground,
-                                      ),
-                                      onPressed: () {
-                                        db.displayAndSendImage(
-                                          tempImage, chatRoomRead);
-                                        chatRoomRead.setNewTempImage(null);
-
-                                      }),
-                                ],
-                              ),
-                            )
+                            Row(
+                              children: [
+                                Expanded(
+                                  child: LimitedBox(
+                                    maxHeight: 200,
+                                    child: Image(
+                                      image: FileImage(tempImage),
+                                      fit: BoxFit.fitHeight,
+                                    ),
+                                  ),
+                                ),
+                                LimitedBox(
+                                  maxHeight: 200,
+                                  child: Column(
+                                    mainAxisAlignment:
+                                        MainAxisAlignment.spaceBetween,
+                                    children: [
+                                      IconButton(
+                                          icon: Icon(
+                                            Icons.close,
+                                            color: Theme.of(context)
+                                                .colorScheme
+                                                .onBackground,
+                                          ),
+                                          onPressed: () => chatRoomRead
+                                              .setNewTempImage(null)),
+                                      IconButton(
+                                          color: Theme.of(context)
+                                              .colorScheme
+                                              .primary,
+                                          icon: FaIcon(
+                                            FontAwesomeIcons.paperPlane,
+                                            color: Theme.of(context)
+                                                .colorScheme
+                                                .onBackground,
+                                          ),
+                                          onPressed: () {
+                                            db.displayAndSendImage(
+                                                tempImage, chatRoomRead);
+                                            chatRoomRead.setNewTempImage(null);
+                                          }),
+                                    ],
+                                  ),
+                                )
+                              ],
+                            ),
                           ],
                         ),
-                      ],
+                      ),
                     ),
                   )
                 : SizedBox();
@@ -475,7 +482,6 @@ class _ChatRoomState extends State<ChatRoom> with WidgetsBindingObserver {
     return AnimatedList(
       //initialItemCount: chatRoomRead.messages?.length ?? 0,
       key: chatRoomRead.listKey,
-      padding: EdgeInsets.all(8.0),
       physics: ClampingScrollPhysics(),
       shrinkWrap: true,
       reverse: true,
@@ -575,7 +581,7 @@ class _ChatRoomState extends State<ChatRoom> with WidgetsBindingObserver {
         return 'Vendredi';
       case DateTime.saturday:
         return 'Samedi';
-      case DateTime.sunday:
+      default://DateTime.sunday
         return 'Dimanche';
     }
   }
@@ -604,7 +610,7 @@ class _ChatRoomState extends State<ChatRoom> with WidgetsBindingObserver {
         return 'Octobre';
       case DateTime.november:
         return 'Novembre';
-      case DateTime.december:
+      default://DateTime.december
         return 'Décembre';
     }
   }
@@ -680,113 +686,94 @@ class _ChatRoomState extends State<ChatRoom> with WidgetsBindingObserver {
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 8.0),
       child: Column(
+        crossAxisAlignment: CrossAxisAlignment.end,
         children: [
           Consumer(builder: (context, watch, child) {
-            return Visibility(
-              visible: watch(chatRoomProvider).replyMessage.isNotEmpty,
-              child: Row(
-                children: [
-                  Expanded(
-                    flex: 8,
-                    child: Container(
-                      clipBehavior: Clip.hardEdge,
-                      decoration: BoxDecoration(
-                        color: Colors.black26,
-                        borderRadius: BorderRadius.all(Radius.circular(10)),
-                      ),
-                      child: Container(
-                        child: IntrinsicHeight(
-                          child: Row(
-                            crossAxisAlignment: CrossAxisAlignment.start,
+            return watch(chatRoomProvider).replyMessage.isNotEmpty
+                ? Container(
+              clipBehavior: Clip.hardEdge,
+              constraints: BoxConstraints(maxHeight: 200,maxWidth: 300),
+              decoration: BoxDecoration(
+                color: Colors.black26,
+                borderRadius: BorderRadius.all(Radius.circular(10)),
+
+              ),
+              child: IntrinsicHeight(
+                child: Row(
+                  children: [
+                    Container(
+                      color: Theme.of(context).colorScheme.secondary,
+                      width: 5,
+                    ),
+                    SizedBox(width: 5,),
+                    Expanded(
+                      child: Column(
+                        children: [
+                          Row(
+                            mainAxisSize: MainAxisSize.min,
                             children: [
-                              Container(
-                                color: Theme.of(context).colorScheme.primary,
-                                width: 4,
-                              ),
-                              const SizedBox(width: 8),
                               Expanded(
-                                  child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    chatRoomRead.replyName,
-                                    style:
-                                        Theme.of(context).textTheme.headline5,
-                                  ),
-                                  chatRoomRead.replyMessagetype ==
-                                          MyMessageType.text
-                                      ? Text(
-                                          chatRoomRead.replyMessage,
-                                          style: Theme.of(context)
-                                              .textTheme
-                                              .bodyText1,
-                                        )
-                                      : CachedNetworkImage(
-                                          placeholder: (context, url) =>
-                                              Shimmer.fromColors(
-                                            baseColor: Colors.white,
-                                            highlightColor: Theme.of(context)
-                                                .colorScheme
-                                                .primary,
-                                            child: Container(
-                                                height: 200,
-                                                width: 200,
-                                                color: Colors.white),
-                                          ),
-                                          imageBuilder: (context,
-                                                  imageProvider) =>
-                                              SizedBox(
-                                                  height: 220,
-                                                  width: MediaQuery.of(context)
-                                                          .size
-                                                          .width *
-                                                      0.8,
-                                                  child: FittedBox(
-                                                    fit: BoxFit.contain,
-                                                    alignment:
-                                                        Alignment.centerLeft,
-                                                    child: Image(
-                                                        image: imageProvider),
-                                                  )),
-                                          errorWidget: (context, url, error) =>
-                                              Material(
-                                            child: Image.asset(
-                                              'assets/img/img_not_available.jpeg',
-                                              width: 200.0,
-                                              height: 200.0,
-                                              fit: BoxFit.cover,
-                                            ),
-                                            borderRadius: BorderRadius.all(
-                                              Radius.circular(8.0),
-                                            ),
-                                            clipBehavior: Clip.hardEdge,
-                                          ),
-                                          imageUrl: chatRoomRead.replyMessage,
-                                          fit: BoxFit.scaleDown,
-                                        )
-                                ],
-                              )),
+                                child: Text(
+                                  chatRoomRead.replyName,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: Theme.of(context).textTheme.headline5,
+                                ),
+                              ),
                               IconButton(
                                   icon: Icon(
                                     Icons.close,
-                                    color:
-                                        Theme.of(context).colorScheme.primary,
+                                    color: Theme.of(context).colorScheme.primary,
                                   ),
-                                  onPressed: () =>
-                                      chatRoomRead.setReplyToNull()),
-                            ],
+                                  onPressed: () => chatRoomRead.setReplyToNull()),
+                            ],mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           ),
-                        ),
+                          Expanded(
+                            child: chatRoomRead.replyMessagetype == MyMessageType.text
+                                ? Text(
+                              chatRoomRead.replyMessage,
+                              overflow: TextOverflow.ellipsis,
+                              maxLines: 3,
+                              style: Theme.of(context).textTheme.caption,
+                            )
+                                : CachedNetworkImage(
+                                  placeholder: (context, url) =>
+                                      Shimmer.fromColors(
+                                        baseColor: Colors.white,
+                                        highlightColor:
+                                        Theme.of(context).colorScheme.primary,
+                                        child: Container(
+                                            height: 200,
+                                            width: 200,
+                                            color: Colors.white),
+                                      ),
+                                  imageBuilder: (context, imageProvider) =>
+                                      Image(
+                                          image: imageProvider),
+                                  errorWidget: (context, url, error) =>
+                                      Material(
+                                        child: Image.asset(
+                                          'assets/img/img_not_available.jpeg',
+                                          width: 200.0,
+                                          height: 200.0,
+                                          fit: BoxFit.cover,
+                                        ),
+                                        borderRadius: BorderRadius.all(
+                                          Radius.circular(8.0),
+                                        ),
+                                        clipBehavior: Clip.hardEdge,
+                                      ),
+                                  imageUrl: chatRoomRead.replyMessage,
+                                  fit: BoxFit.scaleDown,
+                                ),
+                          )
+                        ],
                       ),
                     ),
-                  ),
-                  Expanded(
-                    flex: 2,
-                    child: SizedBox(),
-                  )
-                ],
+                  ],
+                ),
               ),
-            );
+            )
+                : SizedBox();
           }), //ReplyMessage
           Row(children: [
             Container(
@@ -797,6 +784,15 @@ class _ChatRoomState extends State<ChatRoom> with WidgetsBindingObserver {
                   color: Theme.of(context).colorScheme.onBackground,
                 ),
                 onPressed: () async {
+                  if (context.read(myUserRepository).user.isAnonymous) {
+                    Show.showDialogToDismiss(
+                        context,
+                        'Dommage',
+                        'Vous devez vous connecter pour envoyer un message',
+                        'Ok');
+                    return;
+                  }
+
                   final file = await Show.showDialogSource(context);
                   chatRoomRead.setNewTempImage(file);
                   // if (file != null) {
@@ -815,6 +811,14 @@ class _ChatRoomState extends State<ChatRoom> with WidgetsBindingObserver {
                   color: Theme.of(context).colorScheme.onBackground,
                 ),
                 onPressed: () {
+                  if (context.read(myUserRepository).user.isAnonymous) {
+                    Show.showDialogToDismiss(
+                        context,
+                        'Dommage',
+                        'Vous devez vous connecter pour envoyer un message',
+                        'Ok');
+                    return;
+                  }
                   context
                       .read(myChatRepositoryProvider)
                       .pickGif(context, chatRoomRead);
@@ -822,21 +826,35 @@ class _ChatRoomState extends State<ChatRoom> with WidgetsBindingObserver {
               ),
             ),
             Flexible(
-              child: TextField(
-                controller: _textEditingController,
-                focusNode: textFieldFocus,
-                style: Theme.of(context).textTheme.bodyText1,
-                onChanged: (val) {
-                  if (val.length > 0 && val.trim() != '') {
-                    chatRoomRead.setShowSendBotton(true);
-                  } else {
-                    chatRoomRead.setShowSendBotton(false);
+              child: GestureDetector(
+                onTap: () {
+                  print('coucou!!!');
+                  if (context.read(myUserRepository).user.isAnonymous) {
+                    Show.showDialogToDismiss(
+                        context,
+                        'Dommage',
+                        'Vous devez vous connecter pour envoyer un message',
+                        'Ok');
+                    return;
                   }
                 },
-                decoration: InputDecoration(
-                  border: OutlineInputBorder(borderSide: BorderSide.none),
-                  hintText: 'Saisir un message',
-                  hintStyle: Theme.of(context).textTheme.bodyText1,
+                child: TextField(
+                  controller: _textEditingController,
+                  enabled: !context.read(myUserRepository).user.isAnonymous,
+                  focusNode: textFieldFocus,
+                  style: Theme.of(context).textTheme.bodyText1,
+                  onChanged: (val) {
+                    if (val.length > 0 && val.trim() != '') {
+                      chatRoomRead.setShowSendBotton(true);
+                    } else {
+                      chatRoomRead.setShowSendBotton(false);
+                    }
+                  },
+                  decoration: InputDecoration(
+                    border: OutlineInputBorder(borderSide: BorderSide.none),
+                    hintText: 'Saisir un message',
+                    hintStyle: Theme.of(context).textTheme.bodyText1,
+                  ),
                 ),
               ),
             ),

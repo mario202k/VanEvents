@@ -22,6 +22,20 @@ class AuthenticationSuccess extends AuthenticationState {
   String toString() => 'Authenticated { displayName: $firebaseUser }';
 }
 
+class AuthenticationEmailLinkSuccess extends AuthenticationState {
+  final String myEmail;
+
+  const AuthenticationEmailLinkSuccess(this.myEmail);
+
+  @override
+  List<Object> get props => [myEmail];
+
+  @override
+  String toString() {
+    return 'AuthenticationEmailLinkSuccess{myEmail: $myEmail}';
+  }
+}
+
 class AuthenticationCGUCGV extends AuthenticationState {
 
   final User firebaseUser;

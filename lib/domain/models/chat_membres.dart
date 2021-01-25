@@ -19,7 +19,7 @@ class ChatMembre{
   }
 
   factory ChatMembre.fromMap(Map<String, dynamic> map)  {
-    Timestamp lastReading = map['lastReading'] ;
+    Timestamp lastReading = map['lastReading'] ?? Timestamp.now();
 
     return new ChatMembre(
       id: map['id'] as String,

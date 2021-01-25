@@ -42,16 +42,11 @@ class MyTransportRepository {
         builder: (data) => MyTransport.fromMap(data));
   }
 
-  Stream<List<MyTransport>> streamTransportsVtc() {
-    return _service.collectionStream(
-        path: MyPath.transports(), builder: (data) => MyTransport.fromMap(data));
-  }
-
   Stream<List<MyTransport>> streamTransportsVtcNonTraiter() {
     return _service.collectionStream(
         path: MyPath.transports(),
         queryBuilder: (query) =>
-            query.where('statusTransport', isEqualTo: 'submitted'),
+            query.where('statusTransport', isEqualTo: 'submitted').where('userId',isEqualTo:uid),
         builder: (data) => MyTransport.fromMap(data));
   }
 
@@ -59,7 +54,7 @@ class MyTransportRepository {
     return _service.collectionStream(
         path: MyPath.transports(),
         queryBuilder: (query) => query.where('statusTransport',
-            whereIn: ['acceptedByVtc', 'invoiceSent', 'holdOnCard', 'scanOK']),
+            whereIn: ['acceptedByVtc', 'invoiceSent', 'holdOnCard', 'scanOK']).where('userId',isEqualTo:uid),
         builder: (data) => MyTransport.fromMap(data));
   }
 
@@ -72,7 +67,7 @@ class MyTransportRepository {
               'cancelledByVTC',
               'cancelledByCustomer',
               'Error'
-            ]),
+            ]).where('userId',isEqualTo:uid),
         builder: (data) => MyTransport.fromMap(data));
   }
 

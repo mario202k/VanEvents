@@ -1,27 +1,28 @@
-import 'dart:io';
-
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_form_builder/flutter_form_builder.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
-import 'package:intl/intl.dart';
 import 'package:open_mail_app/open_mail_app.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:van_events_project/domain/repositories/my_user_repository.dart';
 import 'package:van_events_project/domain/repositories/stripe_repository.dart';
 import 'package:van_events_project/presentation/pages/register/register_button.dart';
-import 'package:van_events_project/presentation/pages/registerOrganisateur/bloc/blocOrganisateur.dart';
+import 'package:van_events_project/presentation/pages/registerOrganisateur/bloc/register_bloc_organisateur.dart';
+import 'package:van_events_project/presentation/pages/registerOrganisateur/bloc/register_state_organisateur.dart';
+import 'package:van_events_project/presentation/pages/registerOrganisateur/register_organisateur.dart';
 import 'package:van_events_project/presentation/widgets/show.dart';
 import 'package:van_events_project/providers/toggle_bool.dart';
 
-class RegisterFormOrganisateur extends HookWidget {
+class Company extends HookWidget {
   final GlobalKey<FormBuilderState> _fbKey = GlobalKey<FormBuilderState>();
 
   final List<FocusScopeNode> listFocusNode =
       List.generate(19, (index) => FocusScopeNode());
+  final PageController _pageController;
+
+  Company(this._pageController);
 
   @override
   Widget build(BuildContext context) {
@@ -47,13 +48,20 @@ class RegisterFormOrganisateur extends HookWidget {
             );
         }
         if (state.isSuccess) {
-          final result = await Show.showDialogToDismiss(context, 'Email envoyé',
-              'Veuillez vérifier vos emails', 'Ok')
-              .then((_)async => await OpenMailApp.openMailApp() );
+          Scaffold.of(context)
+            ..hideCurrentSnackBar();
+          final result = await Show.showDialogToDismiss(
+                  context, 'Email envoyé', 'Veuillez vérifier vos emails', 'Ok')
+              .then((_) async => await OpenMailApp.openMailApp());
 
-          if (!result.didOpen && !result.canOpen){
-            Show.showDialogToDismiss(context, 'Oops', 'Pas d\'application de messagerie installée', 'Ok');
-          }else if(!result.didOpen && result.canOpen){
+          if (!result.didOpen && !result.canOpen) {
+            Scaffold.of(context)
+              ..hideCurrentSnackBar();
+            Show.showDialogToDismiss(context, 'Oops',
+                'Pas d\'application de messagerie installée', 'Ok');
+          } else if (!result.didOpen && result.canOpen) {
+            Scaffold.of(context)
+              ..hideCurrentSnackBar();
             showDialog(
               context: context,
               builder: (_) {
@@ -88,22 +96,10 @@ class RegisterFormOrganisateur extends HookWidget {
               padding: EdgeInsets.all(20.0),
               child: Column(
                 children: <Widget>[
-                  Consumer(builder: (context, watch, child) {
-                    return CircleAvatar(
-                        backgroundColor: Theme.of(context).colorScheme.primary,
-                        backgroundImage:
-                            watch(boolToggleProvider).imageProfil != null
-                                ? FileImage(boolToggleRead.imageProfil)
-                                : AssetImage('assets/img/normal_user_icon.png'),
-                        radius: 50,
-                        child: RawMaterialButton(
-                          shape: const CircleBorder(),
-                          //splashColor: Colors.black45,
-                          onPressed: () =>
-                              _onPressImage(context, boolToggleRead),
-                          padding: const EdgeInsets.all(50.0),
-                        ));
-                  }),
+                  RaisedButton.icon(onPressed: (){
+                    _pageController.jumpToPage(0);
+                  }, icon: FaIcon(FontAwesomeIcons.arrowLeft),
+                      label: Text('Précédent')),
                   FormBuilder(
                     key: _fbKey,
                     //autovalidate: false,
@@ -112,7 +108,10 @@ class RegisterFormOrganisateur extends HookWidget {
                         Card(
                           child: Column(
                             children: <Widget>[
-                              Text('Votre société',style: Theme.of(context).textTheme.headline6,),
+                              Text(
+                                'Votre société',
+                                style: Theme.of(context).textTheme.headline6,
+                              ),
                               Padding(
                                 padding: const EdgeInsets.all(8.0),
                                 child: FormBuilderTextField(
@@ -353,51 +352,7 @@ class RegisterFormOrganisateur extends HookWidget {
                                     return null;
                                   },
                                 ),
-                              ),//region
-                              // Padding(
-                              //   padding: const EdgeInsets.all(8.0),
-                              //   child: FormBuilderTextField(
-                              //     keyboardType: TextInputType.text,
-                              //     focusNode: listFocusNode[5],
-                              //     style: TextStyle(
-                              //         color: Theme.of(context)
-                              //             .colorScheme
-                              //             .onBackground),
-                              //     cursorColor: Theme.of(context)
-                              //         .colorScheme
-                              //         .onBackground,
-                              //     name: 'region',
-                              //     decoration: InputDecoration(
-                              //       labelText: 'Région*',
-                              //       icon: Icon(
-                              //         Icons.my_location,
-                              //         size: 22.0,
-                              //         color: Theme.of(context)
-                              //             .colorScheme
-                              //             .onBackground,
-                              //       ),
-                              //     ),
-                              //     onEditingComplete: () {
-                              //       print('vmlj');
-                              //       print(_fbKey.currentState.fields['region'].validate());
-                              //       print(_fbKey.currentState.fields['region'].isValid);
-                              //       print('sdfre');
-                              //       if (_fbKey.currentState.fields['region']
-                              //           .validate()) {
-                              //         listFocusNode[5].unfocus();
-                              //         FocusScope.of(context)
-                              //             .requestFocus(listFocusNode[6]);
-                              //       }
-                              //     },
-                              //     validator: FormBuilderValidators.compose([
-                              //       FormBuilderValidators.required(context,
-                              //           errorText: 'Champs requis'),
-                              //       FormBuilderValidators.match(context,
-                              //           r'^[a-zA-ZáàâäãåçéèêëíìîïñóòôöõúùûüýÿæœÁÀÂÄÃÅÇÉÈÊËÍÌÎÏÑÓÒÔÖÕÚÙÛÜÝŸÆŒ.- ]{2,60}$',
-                              //           errorText: 'Erreur de saisie')
-                              //     ]),
-                              //   ),
-                              // ), //region
+                              ), //region
                               Padding(
                                 padding: const EdgeInsets.all(8.0),
                                 child: FormBuilderTextField(
@@ -478,41 +433,6 @@ class RegisterFormOrganisateur extends HookWidget {
                                   ]),
                                 ),
                               ), //support email
-                              Padding(
-                                padding: const EdgeInsets.all(8.0),
-                                child: FormBuilderTextField(
-                                  keyboardType: TextInputType.url,
-                                  focusNode: listFocusNode[8],
-                                  style: TextStyle(
-                                      color: Theme.of(context)
-                                          .colorScheme
-                                          .onBackground),
-                                  cursorColor: Theme.of(context)
-                                      .colorScheme
-                                      .onBackground,
-                                  name: 'url',
-                                  decoration: InputDecoration(
-                                    labelText: 'URL',
-                                    icon: Icon(
-                                      FontAwesomeIcons.at,
-                                      size: 22.0,
-                                      color: Theme.of(context)
-                                          .colorScheme
-                                          .onBackground,
-                                    ),
-                                  ),
-                                  onEditingComplete: () {
-                                    if (_fbKey.currentState.fields['url']
-                                        .validate()) {
-                                      listFocusNode[8].unfocus();
-                                      FocusScope.of(context)
-                                          .requestFocus(listFocusNode[9]);
-                                    }
-                                  },
-                                  validator: FormBuilderValidators.url(context,
-                                      errorText: 'URL non valide'),
-                                ),
-                              ), //url
                               //support url
                               Padding(
                                 padding: const EdgeInsets.all(8.0),
@@ -634,282 +554,6 @@ class RegisterFormOrganisateur extends HookWidget {
                             ],
                           ),
                         ), //Societe/personne Physique
-
-                        Card(
-                          child: Column(
-                            children: <Widget>[
-                              Text('Sur vous',style: Theme.of(context).textTheme.headline6,),
-                              Padding(
-                                padding: const EdgeInsets.all(8.0),
-                                child: FormBuilderTextField(
-                                  keyboardType: TextInputType.text,
-                                  focusNode: listFocusNode[13],
-                                  style: TextStyle(
-                                      color: Theme.of(context)
-                                          .colorScheme
-                                          .onBackground),
-                                  cursorColor: Theme.of(context)
-                                      .colorScheme
-                                      .onBackground,
-                                  name: 'Prénom',
-                                  decoration: InputDecoration(
-                                    labelText: 'Prénom*',
-                                    icon: Icon(
-                                      FontAwesomeIcons.user,
-                                      size: 22.0,
-                                      color: Theme.of(context)
-                                          .colorScheme
-                                          .onBackground,
-                                    ),
-                                  ),
-                                  onEditingComplete: () {
-                                    if (_fbKey.currentState.fields['Prénom']
-                                        .validate()) {
-                                      listFocusNode[13].unfocus();
-                                      FocusScope.of(context)
-                                          .requestFocus(listFocusNode[14]);
-                                    }
-                                  },
-                                  validator: FormBuilderValidators.compose([
-                                    FormBuilderValidators.required(context,
-                                        errorText: 'Champs requis'),
-                                    FormBuilderValidators.match(context,
-                                        r'^[a-zA-ZáàâäãåçéèêëíìîïñóòôöõúùûüýÿæœÁÀÂÄÃÅÇÉÈÊËÍÌÎÏÑÓÒÔÖÕÚÙÛÜÝŸÆŒ. ]{2,60}$',
-                                        errorText: 'Erreur de saisie')
-                                  ]),
-                                ),
-                              ),
-                              Padding(
-                                padding: const EdgeInsets.all(8.0),
-                                child: FormBuilderTextField(
-                                  keyboardType: TextInputType.text,
-                                  focusNode: listFocusNode[14],
-                                  style: TextStyle(
-                                      color: Theme.of(context)
-                                          .colorScheme
-                                          .onBackground),
-                                  cursorColor: Theme.of(context)
-                                      .colorScheme
-                                      .onBackground,
-                                  name: 'Nom',
-                                  decoration: InputDecoration(
-                                    labelText: 'Nom*',
-                                    icon: Icon(
-                                      FontAwesomeIcons.user,
-                                      size: 22.0,
-                                      color: Theme.of(context)
-                                          .colorScheme
-                                          .onBackground,
-                                    ),
-                                  ),
-                                  onEditingComplete: () {
-                                    if (_fbKey.currentState.fields['Nom']
-                                        .validate()) {
-                                      listFocusNode[14].unfocus();
-                                      FocusScope.of(context)
-                                          .requestFocus(listFocusNode[15]);
-                                    }
-                                  },
-                                  validator: FormBuilderValidators.compose([
-                                    FormBuilderValidators.required(context,
-                                        errorText: 'Champs requis'),
-                                    FormBuilderValidators.match(context,
-                                        r'^[a-zA-ZáàâäãåçéèêëíìîïñóòôöõúùûüýÿæœÁÀÂÄÃÅÇÉÈÊËÍÌÎÏÑÓÒÔÖÕÚÙÛÜÝŸÆŒ. ]{2,60}$',
-                                        errorText: 'Erreur de saisie')
-                                  ]),
-                                ),
-                              ),
-                              Padding(
-                                padding: const EdgeInsets.all(8.0),
-                                child: FormBuilderDateTimePicker(
-                                    locale: Locale('fr'),
-                                    name: "date_of_birth",
-                                    focusNode: listFocusNode[15],
-                                    style:
-                                        Theme.of(context).textTheme.headline5,
-                                    cursorColor: Theme.of(context)
-                                        .colorScheme
-                                        .onBackground,
-                                    inputType: InputType.date,
-                                    format: DateFormat("dd/MM/yyyy"),
-                                    decoration: InputDecoration(
-                                      labelText: 'Date de naissance*',
-                                      icon: Icon(
-                                        FontAwesomeIcons.calendarAlt,
-                                        size: 22.0,
-                                        color: Theme.of(context)
-                                            .colorScheme
-                                            .onBackground,
-                                      ),
-                                    ),
-                                    validator: (val){
-
-                                      if((DateTime.now().year - val.year )< 18){
-                                        return '18 ans minimum';
-                                      }
-
-                                      return null;
-                                    }),
-                              ), //Nom
-                              Padding(
-                                padding: const EdgeInsets.all(8.0),
-                                child: FormBuilderTextField(
-                                  keyboardType: TextInputType.emailAddress,
-                                  focusNode: listFocusNode[16],
-                                  style: TextStyle(
-                                      color: Theme.of(context)
-                                          .colorScheme
-                                          .onBackground),
-                                  cursorColor: Theme.of(context)
-                                      .colorScheme
-                                      .onBackground,
-                                  name: 'email',
-                                  decoration: InputDecoration(
-                                    labelText: 'Email*',
-                                    icon: Icon(
-                                      FontAwesomeIcons.at,
-                                      size: 22.0,
-                                      color: Theme.of(context)
-                                          .colorScheme
-                                          .onBackground,
-                                    ),
-                                  ),
-                                  onEditingComplete: () {
-                                    if (_fbKey.currentState.fields['email']
-                                        .validate()) {
-                                      listFocusNode[16].unfocus();
-                                      FocusScope.of(context)
-                                          .requestFocus(listFocusNode[17]);
-                                    }
-                                  },
-                                  validator: FormBuilderValidators.compose([
-                                    FormBuilderValidators.required(context,
-                                        errorText: 'Champs requis'),
-                                    FormBuilderValidators.email(context,
-                                        errorText: 'Email non valide')
-                                  ]),
-                                ),
-                              ), //email
-                              Padding(
-                                padding: const EdgeInsets.all(8.0),
-                                child:
-                                    Consumer(builder: (context, watch, child) {
-                                  return FormBuilderTextField(
-                                    keyboardType: TextInputType.text,
-                                    focusNode: listFocusNode[17],
-                                    style: TextStyle(
-                                        color: Theme.of(context)
-                                            .colorScheme
-                                            .onBackground),
-                                    cursorColor: Theme.of(context)
-                                        .colorScheme
-                                        .onBackground,
-                                    name: 'password',
-                                    obscureText: watch(boolToggleProvider)
-                                        .obscureTextLogin,
-                                    decoration: InputDecoration(
-                                      labelText: 'Mot de passe*',
-                                      icon: Icon(
-                                        FontAwesomeIcons.key,
-                                        size: 22.0,
-                                        color: Theme.of(context)
-                                            .colorScheme
-                                            .onBackground,
-                                      ),
-                                      suffixIcon: IconButton(
-                                        onPressed: () => boolToggleRead
-                                            .setObscureTextLogin(),
-                                        color: Theme.of(context)
-                                            .colorScheme
-                                            .onBackground,
-                                        iconSize: 20,
-                                        icon: Icon(FontAwesomeIcons.eye),
-                                      ),
-                                    ),
-                                    onEditingComplete: () {
-                                      if (_fbKey.currentState.fields['password']
-                                          .validate()) {
-                                        listFocusNode[17].unfocus();
-                                        FocusScope.of(context)
-                                            .requestFocus(listFocusNode[18]);
-                                      }
-                                    },
-                                    validator: FormBuilderValidators.compose([
-                                      FormBuilderValidators.required(context,
-                                          errorText: 'Champs requis'),
-                                      FormBuilderValidators.match(context,
-                                          r'^(?=.*[a-z])(?=.*[A-Z])(?=.*\d.*)[a-zA-Z0-9\S]{8,15}$',
-                                          errorText:
-                                              '1 majuscule, 1 chiffre, 8 caractères')
-                                    ]),
-                                  );
-                                }),
-                              ), //password
-                              Padding(
-                                padding: const EdgeInsets.all(8.0),
-                                child:
-                                    Consumer(builder: (context, watch, child) {
-                                  return FormBuilderTextField(
-                                    keyboardType: TextInputType.text,
-                                    focusNode: listFocusNode[18],
-                                    style: TextStyle(
-                                        color: Theme.of(context)
-                                            .colorScheme
-                                            .onBackground),
-                                    cursorColor: Theme.of(context)
-                                        .colorScheme
-                                        .onBackground,
-                                    name: 'Confirmation',
-                                    obscureText: watch(boolToggleProvider)
-                                        .obscuretextRegister,
-                                    decoration: InputDecoration(
-                                      labelText: 'Confirmation*',
-                                      icon: Icon(
-                                        FontAwesomeIcons.key,
-                                        size: 22.0,
-                                        color: Theme.of(context)
-                                            .colorScheme
-                                            .onBackground,
-                                      ),
-                                      suffixIcon: IconButton(
-                                        onPressed: () => boolToggleRead
-                                            .setObscureTextRegister(),
-                                        color: Theme.of(context)
-                                            .colorScheme
-                                            .onBackground,
-                                        iconSize: 20,
-                                        icon: Icon(FontAwesomeIcons.eye),
-                                      ),
-                                    ),
-                                    onEditingComplete: () {
-                                      if (_fbKey
-                                          .currentState.fields['Confirmation']
-                                          .validate()) {
-                                        listFocusNode[18].unfocus();
-                                        //FocusScope.of(context).requestFocus(listFocusNode[14]);
-
-                                        _onFormSubmitted(
-                                            context, boolToggleRead,stripeRepo, myUserRepo);
-                                      }
-                                    },
-                                    validator: (val) {
-                                      if (_fbKey.currentState
-                                              .fields['Confirmation'].value
-                                              .toString() !=
-                                          _fbKey.currentState.fields['password']
-                                              .value
-                                              .toString()) {
-                                        return 'Pas identique';
-                                      }
-                                      return null;
-                                    },
-                                  );
-                                }),
-                              ),
-                              //confirmation
-                            ],
-                          ),
-                        ), //mot de passe
                       ],
                     ),
                   ),
@@ -920,7 +564,6 @@ class RegisterFormOrganisateur extends HookWidget {
                     return CheckboxListTile(
                       onChanged: (bool val) => boolToggleRead.changeCGUCGV(),
                       value: watch(boolToggleProvider).cguCgv,
-
                       activeColor: Theme.of(context).colorScheme.primary,
                       checkColor: Theme.of(context).colorScheme.background,
                       title: Wrap(
@@ -969,7 +612,8 @@ class RegisterFormOrganisateur extends HookWidget {
                     );
                   }),
                   RegisterButton(
-                    onPressed: () => _onFormSubmitted(context, boolToggleRead,stripeRepo, myUserRepo),
+                    onPressed: () => _onFormSubmitted(
+                        context, boolToggleRead, stripeRepo, myUserRepo),
                   ),
                 ],
               ),
@@ -980,54 +624,8 @@ class RegisterFormOrganisateur extends HookWidget {
     );
   }
 
-  Future<void> _onPressImage(
-      BuildContext context, BoolToggle boolToggleRead) async {
-    return await showDialog(
-        context: context,
-        builder: (_) => Platform.isAndroid
-            ? AlertDialog(
-                title: Text('Source?'),
-                content: Text('Veuillez choisir une source'),
-                actions: <Widget>[
-                  FlatButton(
-                    child: Text('Caméra'),
-                    onPressed: () {
-                      boolToggleRead.getImageCamera('Profil');
-                      Navigator.of(context).pop();
-                    },
-                  ),
-                  FlatButton(
-                    child: Text('Galerie'),
-                    onPressed: () {
-                      boolToggleRead.getImageGallery('Profil');
-                      Navigator.of(context).pop();
-                    },
-                  ),
-                ],
-              )
-            : CupertinoAlertDialog(
-                title: Text('Source?'),
-                content: Text('Veuillez choisir une source'),
-                actions: <Widget>[
-                  FlatButton(
-                    child: Text('Caméra'),
-                    onPressed: () {
-                      boolToggleRead.getImageCamera('Profil');
-                      Navigator.of(context).pop();
-                    },
-                  ),
-                  FlatButton(
-                    child: Text('Galerie'),
-                    onPressed: () {
-                      boolToggleRead.getImageGallery('Profil');
-                      Navigator.of(context).pop();
-                    },
-                  ),
-                ],
-              ));
-  }
-
-  void _onFormSubmitted(BuildContext context, BoolToggle boolToggleRead, StripeRepository stripeRepo, MyUserRepository myUserRepo) {
+  void _onFormSubmitted(BuildContext context, BoolToggle boolToggleRead,
+      StripeRepository stripeRepo, MyUserRepository myUserRepo) {
     if (!boolToggleRead.cguCgv) {
       Scaffold.of(context)
         ..hideCurrentSnackBar()
@@ -1047,12 +645,9 @@ class RegisterFormOrganisateur extends HookWidget {
 
     if (_fbKey.currentState.validate()) {
       final state = _fbKey.currentState;
-      print(state.fields['date_of_birth'].value);
-      String dob = state.fields['date_of_birth'].value.toString();
 
       BlocProvider.of<RegisterBlocOrganisateur>(context).add(
         RegisterSubmitted(
-            email: state.fields['email'].value.toString().trim(),
             account_holder_name:
                 state.fields['account_holder_name'].value.toString().trim(),
             account_number:
@@ -1061,19 +656,14 @@ class RegisterFormOrganisateur extends HookWidget {
             line1: state.fields['line1'].value.toString().trim(),
             line2: state.fields['line2'].value.toString().trim(),
             nomSociete: state.fields['nomSociete'].value.toString().trim(),
-            password: state.fields['password'].value.toString().trim(),
             phone:
                 parsePhoneNumber(state.fields['phone'].value.toString().trim()),
             postal_code: state.fields['postal_code'].value.toString().trim(),
             state: state.fields['region'].value.toString().trim(),
             supportEmail: state.fields['support_email'].value.toString().trim(),
-            url: state.fields['url'] != null
-                ? state.fields['url'].value.toString().trim()
-                : '',
-            nom: state.fields['Nom'].value.toString().trim(),
-            prenom: state.fields['Prénom'].value.toString().trim(),
             SIREN: state.fields['SIREN'].value.toString().trim(),
-            date_of_birth: dob.substring(0, dob.indexOf(' ')),stripeRepository: stripeRepo,myUserRepository: myUserRepo,
+            stripeRepository: stripeRepo,
+            myUserRepository: myUserRepo,
             boolToggleRead: boolToggleRead),
       );
     }

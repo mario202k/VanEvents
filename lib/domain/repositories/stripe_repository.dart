@@ -1,9 +1,15 @@
 import 'package:cloud_functions/cloud_functions.dart';
+import 'package:flare_flutter/flare_cache.dart';
+import 'package:flare_flutter/provider/asset_flare.dart';
+import 'package:flutter/services.dart';
+import 'package:flutter/src/material/scaffold.dart';
+import 'package:flutter/src/widgets/framework.dart';
 import 'package:flutter_stripe_payment/flutter_stripe_payment.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:van_events_project/constants/credentials.dart';
 import 'package:van_events_project/domain/models/my_user.dart';
 import 'package:van_events_project/domain/models/refund.dart';
+import 'package:van_events_project/presentation/widgets/show.dart';
 import 'package:van_events_project/services/firestore_path.dart';
 import 'package:van_events_project/services/firestore_service.dart';
 
@@ -61,9 +67,15 @@ class StripeRepository {
 
     return stripeResponse;
   }
+  //firebase deploy --only functions:addMessage,functions:makeUppercase
 
   Future<dynamic> paymentIntentBillet(double amount, String stripeAccount,
-      String description, int length) async {
+      String description, int length, int nbEvents, int nbOrganizer, BuildContext context ) async {
+
+    // precache
+    final assetProvider = AssetFlare(bundle: rootBundle, name: 'assets/animations/paymentProcess.flr');
+    cachedActor(assetProvider);
+
     final stripePayment = FlutterStripePayment();
 
     stripePayment.onCancel = () {
@@ -73,14 +85,16 @@ class StripeRepository {
 
     var paymentResponse = await stripePayment.addPaymentMethod();
 
+
     String paymentMethodId = paymentResponse.paymentMethodId;
 
     if (paymentResponse.status == PaymentResponseStatus.succeeded) {
+      Show.showProgress(context);
       HttpsCallableResult intentResponse;
       try {
         final HttpsCallable callable =
             FirebaseFunctions.instanceFor(region: 'europe-west1').httpsCallable(
-          'paymentIntent',
+          'paymentIntentBillet',
         );
         intentResponse = await callable.call(
           <String, dynamic>{
@@ -88,7 +102,9 @@ class StripeRepository {
             'stripeAccount': stripeAccount,
             'description': description,
             'paymentMethodId': paymentMethodId,
-            'nbParticipant': length
+            'nbParticipant': length,
+            'nbEvents':nbEvents,
+            'nbOrganizer':nbOrganizer
           },
         );
       } on FirebaseFunctionsException catch (e) {
@@ -341,7 +357,6 @@ class StripeRepository {
       String email,
       String supportEmail,
       String phone,
-      String url,
       String city,
       String line1,
       String line2,
@@ -349,7 +364,6 @@ class StripeRepository {
       String state,
       String accountHolderName,
       String accountNumber,
-      String password,
       String nom,
       String prenom,
       String siren,
@@ -366,7 +380,6 @@ class StripeRepository {
           'email': email,
           'support_email': supportEmail,
           'phone': phone,
-          'url': url,
           'city': city,
           'line1': line1,
           'line2': line2,
@@ -376,7 +389,6 @@ class StripeRepository {
           'account_holder_type': 'company',
           'account_number': accountNumber,
           'business_type': 'company',
-          'password': password,
           'siren': siren,
           'first_name': prenom,
           'last_name': nom,
@@ -506,17 +518,17 @@ class StripeRepository {
 
   Future setUrlFront(String url) async {
     return _service
-        .updateData(path: MyPath.user(uid), data: {'idRectoUrl': url});
+        .setData(path: MyPath.user(uid), data: {'idRectoUrl': url});
   }
 
   Future setUrlBack(String url) async {
     return _service
-        .updateData(path: MyPath.user(uid), data: {'idVersoUrl': url});
+        .setData(path: MyPath.user(uid), data: {'idVersoUrl': url});
   }
 
   Future setUrljustificatifDomicile(String url) {
     return _service
-        .updateData(path: MyPath.user(uid), data: {'proofOfAddress': url});
+        .setData(path: MyPath.user(uid), data: {'proofOfAddress': url});
   }
 
   Future<HttpsCallableResult> refundList() async {

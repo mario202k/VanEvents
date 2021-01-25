@@ -64,7 +64,7 @@ exports.paymentIntentUploadEvents = functions.region('europe-west1').https.onCal
 });
 
 
-exports.paymentIntent = functions.region('europe-west1').https.onCall(async (data, context) => {
+exports.paymentIntentBillet = functions.region('europe-west1').https.onCall(async (data, context) => {
     const amount = assert(data, 'amount');
     const stripeAccount = assert(data, 'stripeAccount')
     const description = assert(data, 'description');
@@ -72,9 +72,9 @@ exports.paymentIntent = functions.region('europe-west1').https.onCall(async (dat
     const uid = assertUID(context);
     const user = await getUser(uid);
     const customer = await getOrCreateCustomer(uid);
-    //const transportAmount = assert(data,'transportAmount');
-    const promotionCodeId = data['idPromotionCode'];
     const nbParticipant = assert(data, 'nbParticipant');
+    const nbEvents: number = data['nbEvents'];
+    const nbOrganizer:number = data['nbOrganizer'];
 
     const paymentIntent = await stripe.paymentIntents.create({
         amount: amount,
@@ -86,19 +86,14 @@ exports.paymentIntent = functions.region('europe-west1').https.onCall(async (dat
         confirm: true,
         receipt_email: user!.email,
         description: description,
-        application_fee_amount: 100 * nbParticipant,
+        application_fee_amount: (nbEvents == 1 && nbOrganizer <=10)? 0 : 100 * nbParticipant,
         on_behalf_of: stripeAccount,
         transfer_data: {
             destination: stripeAccount
         }
     });
 
-    if (paymentIntent.status === 'succeeded' && promotionCodeId != null) {
-        await stripe.customers.update(
-            customer.id,
-            {promotion_code: promotionCodeId}
-        );
-    }
+
 
     console.log(paymentIntent.status);
 
@@ -241,7 +236,6 @@ exports.createStripeAccount = functions.region('europe-west1').https.onCall(asyn
     const business_type = assert(data, 'business_type')
     const support_email = assert(data, 'support_email');
     const phone = assert(data, 'phone');
-    const url = data['url'];
     const city = assert(data, 'city');
     const line1 = assert(data, 'line1');
     const line2 = data['line2'];
@@ -305,7 +299,6 @@ exports.createStripeAccount = functions.region('europe-west1').https.onCall(asyn
             support_phone: phone,
             support_email: support_email,
             product_description: 'Des billets pour des évènement, pour les utilisateurs de l\'application, débit au moment de l\'achat.',
-            url: url,
             mcc: '8999'
         },
     });
@@ -750,3 +743,33 @@ exports.refundList = functions.region('europe-west1').https.onCall(async (data, 
     });
 
 });
+
+exports.sendNewEvent = functions.region('europe-west1').firestore
+    .document('events/{eventId}')
+    .onCreate(async (snap, context) => {
+        console.log(`----------------start function--------------------`)
+
+        const eventId = context.params.eventId;
+
+        console.log(`Le eventId : ${eventId}`)
+
+        const doc = snap.data()
+
+        const dateTime: Date = doc!.dateDebut.toDate()
+
+        const date = dateTime.toJSON().slice(0, 10).split('-').reverse().join('/');
+
+        const ville = doc!.adresseZone[0]
+
+        const payload: admin.messaging.MessagingPayload = {
+            notification: {
+                title: `Nouvel évènement : ${doc!.titre}`,
+                body: `Le ${date} à ${ville}`,
+                badge: '1',
+                click_action: 'FLUTTER_NOTIFICATION_CLICK' // required only for onResume or onLaunch callbacks
+            },
+        };
+
+        return fcm.sendToTopic('newEvent', payload);
+
+    });

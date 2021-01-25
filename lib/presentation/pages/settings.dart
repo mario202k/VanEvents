@@ -48,7 +48,13 @@ class Settings extends HookWidget {
                           'Reconnecter',
                           'Veuillez-vous reconnecter afin de supprimer votre compte.',
                           'Ok');
-                    }).then((value) async {
+                    }).whenComplete(() async {
+                      await Show.showDialogToDismiss(
+                          context,
+                          'Supprimer',
+                          'Votre compte est supprimé',
+                          'Ok');
+
                       BlocProvider.of<AuthenticationCubit>(context).authenticationLoggedOut(myUserRepo);
                     });
                   }
@@ -161,7 +167,7 @@ class MyAccountSettings extends StatelessWidget {
   final List<String> settingsList;
 
   MyAccountSettings(this.myUserRepo)
-      : settingsList = ['Changer de mot de passe', 'A propos'];
+      : settingsList = ['Changer de mot de passe', 'A propos', 'Revoir intro'];
 
   @override
   Widget build(BuildContext context) {
@@ -230,6 +236,9 @@ class MyAccountSettings extends StatelessWidget {
                     break;
                   case 'A propos':
                     ExtendedNavigator.of(context).push(Routes.aboutScreen);
+                    break;
+                  case 'Revoir intro':
+                    ExtendedNavigator.of(context).push(Routes.walkthrough);
                 }
               },
             ))

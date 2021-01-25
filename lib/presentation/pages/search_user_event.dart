@@ -193,10 +193,8 @@ class _SearchUserEventState extends State<SearchUserEvent> {
     firebaseMessaging.subscribeToTopic(myEvent.chatId);
 
     await db.addAmongGroupe(myEvent.chatId).then((_) {
-      db.getMyChat(myEvent.chatId).then((myChat) {
-        ExtendedNavigator.of(context).push(Routes.chatRoom,
-            arguments: ChatRoomArguments(chatId: myChat.id));
-      });
+      ExtendedNavigator.of(context).push(Routes.chatRoom,
+          arguments: ChatRoomArguments(chatId: myEvent.chatId));
     });
   }
 

@@ -1,5 +1,4 @@
 import 'dart:async';
-
 import 'package:bloc/bloc.dart';
 import 'package:cloud_functions/cloud_functions.dart';
 import 'package:flutter/cupertino.dart';
@@ -16,6 +15,12 @@ class RegisterBlocOrganisateur
     extends Bloc<RegisterEventOrganisateur, RegisterStateOrganisateur> {
   final BuildContext _context;
 
+  String nom;
+  String prenom;
+  String date_of_birth;
+  String email;
+  String password;
+
   RegisterBlocOrganisateur(this._context) : super(null);
 
   @override
@@ -29,10 +34,9 @@ class RegisterBlocOrganisateur
     if (event is RegisterSubmitted) {
       yield* _mapRegisterSubmittedToState(
           event.nomSociete,
-          event.email,
+          email,
           event.supportEmail,
           event.phone,
-          event.url,
           event.city,
           event.line1,
           event.line2,
@@ -40,11 +44,11 @@ class RegisterBlocOrganisateur
           event.state,
           event.account_holder_name,
           event.account_number,
-          event.password,
-          event.nom,
-          event.prenom,
+          password,
+          nom,
+          prenom,
           event.SIREN,
-          event.date_of_birth, event.boolToggleRead,event.stripeRepository,event.myUserRepository);
+          date_of_birth, event.boolToggleRead,event.stripeRepository,event.myUserRepository);
     }
   }
 
@@ -53,7 +57,6 @@ class RegisterBlocOrganisateur
       String email,
       String supportEmail,
       String phone,
-      String url,
       String city,
       String line1,
       String line2,
@@ -70,8 +73,6 @@ class RegisterBlocOrganisateur
       StripeRepository stripeRepository,MyUserRepository myUserRepository) async* {
     yield RegisterStateOrganisateur.loading();
 
-    print('RegisterStateOrganisateur');
-
     HttpsCallableResult stripeRep =
         await stripeRepository
             .createStripeAccount(
@@ -79,7 +80,6 @@ class RegisterBlocOrganisateur
                 email,
                 supportEmail,
                 phone,
-                url,
                 city,
                 line1,
                 line2,
@@ -87,15 +87,12 @@ class RegisterBlocOrganisateur
                 state,
                 account_holder_name,
                 account_number,
-                password,
                 nom,
                 prenom,
                 SIREN,
                 date_of_birth);
 
     if (stripeRep != null) {
-      print("!!!!!!!!!!!!!");
-      print(stripeRep.data['stripeAccount']);
 
       String rep = await myUserRepository.signUp(
           image: boolToggleRead.imageProfil,
@@ -105,7 +102,6 @@ class RegisterBlocOrganisateur
           stripeAccount: stripeRep.data['stripeAccount'],
           person: stripeRep.data['person'],
           nomPrenom: prenom + ' ' + nom);
-      print(rep);
 
       if (rep == 'Un email de validation a été envoyé') {
         yield RegisterStateOrganisateur.success(rep);
@@ -119,5 +115,13 @@ class RegisterBlocOrganisateur
       yield RegisterStateOrganisateur.failure(
           'Impossible de créer le compte stripe');
     }
+  }
+
+  void aboutYou({String nom, String prenom, String date_of_birth, String email, String password}) {
+    this.nom = nom;
+    this.prenom = prenom;
+    this.date_of_birth = date_of_birth;
+    this.email = email;
+    this.password = password;
   }
 }

@@ -12,7 +12,6 @@ class MyUser {
   bool isLogin;
   DateTime lastActivity;
   String nom;
-  String password;
   List genres;
   List types;
   TypeOfAccount typeDeCompte;
@@ -33,7 +32,6 @@ class MyUser {
       this.isLogin,
       this.lastActivity,
       this.nom,
-      this.password,
       this.types,
       this.genres,
       this.typeDeCompte,
@@ -45,27 +43,48 @@ class MyUser {
       this.geoPoint});
 
   Map<String, dynamic> toMap() {
-    return {
-      'id': this.id,
-      'email': this.email,
-      'imageUrl': this.imageUrl,
-      'idRectoUrl': this.idRectoUrl,
-      'idVersoUrl': this.idVersoUrl,
-      'proofOfAddress': this.proofOfAddress,
-      'isLogin': this.isLogin,
-      'lastActivity': this.lastActivity,
-      'nom': this.nom,
-      'password': this.password,
-      'genres': this.genres,
-      'types': this.types,
-      'typeDeCompte': this.typeDeCompte.toString(),
-      'stripeAccount': this.stripeAccount,
-      'person': this.person,
-      'hasAcceptedCGUCGV': this.hasAcceptedCGUCGV,
-      'lieu': this.lieu,
-      'quand': this.quand,
-      'geoPoint': this.geoPoint,
-    };
+    switch(typeDeCompte){
+      case TypeOfAccount.userNormal:
+        return {
+          'id': this.id,
+          'email': this.email,
+          'imageUrl': this.imageUrl,
+          'isLogin': this.isLogin,
+          'lastActivity': this.lastActivity,
+          'nom': this.nom,
+          'genres': this.genres,
+          'types': this.types,
+          'typeDeCompte': this.typeDeCompte.toString(),
+          'hasAcceptedCGUCGV': this.hasAcceptedCGUCGV,
+          'lieu': this.lieu,
+          'quand': this.quand,
+          'geoPoint': this.geoPoint,
+        };
+        break;
+      default://TypeOfAccount.organizer
+        return {
+          'id': this.id,
+          'email': this.email,
+          'imageUrl': this.imageUrl,
+          'idRectoUrl': this.idRectoUrl,
+          'idVersoUrl': this.idVersoUrl,
+          'proofOfAddress': this.proofOfAddress,
+          'isLogin': this.isLogin,
+          'lastActivity': this.lastActivity,
+          'nom': this.nom,
+          'genres': this.genres,
+          'types': this.types,
+          'typeDeCompte': this.typeDeCompte.toString(),
+          'stripeAccount': this.stripeAccount,
+          'person': this.person,
+          'hasAcceptedCGUCGV': this.hasAcceptedCGUCGV,
+          'lieu': this.lieu,
+          'quand': this.quand,
+          'geoPoint': this.geoPoint,
+        };
+        break;
+    }
+
   }
 
   factory MyUser.fromMap(Map<String, dynamic> map) {
@@ -97,7 +116,6 @@ class MyUser {
         isLogin: map['isLogin'] as bool ?? false,
         lastActivity: time?.toDate() ?? DateTime.now(),
         nom: map['nom'] as String ?? 'Anonymous',
-        password: map['password'] as String,
         genres: map['genres'] as List ?? List.generate(1, (index) => null),
         types: map['types'] as List ?? List.generate(1, (index) => null),
         lieu: map['lieu'] as List ?? List.generate(1, (index) => null),
@@ -117,7 +135,6 @@ class MyUser {
     this.geoPoint = user.geoPoint;
     this.id = user.id;
     this.email = user.email;
-    this.password = user.password;
     this.nom = user.nom;
     this.imageUrl = user.imageUrl;
     this.idRectoUrl = user.idRectoUrl;
@@ -133,6 +150,6 @@ class MyUser {
 
   @override
   String toString() {
-    return 'MyUser{id: $id, email: $email, imageUrl: $imageUrl, idRectoUrl: $idRectoUrl, idVersoUrl: $idVersoUrl, proofOfAddress: $proofOfAddress, isLogin: $isLogin, lastActivity: $lastActivity, nom: $nom, password: $password, genres: $genres, types: $types, typeDeCompte: $typeDeCompte, stripeAccount: $stripeAccount, person: $person, hasAcceptedCGUCGV: $hasAcceptedCGUCGV, lieu: $lieu, quand: $quand, geoPoint: $geoPoint}';
+    return 'MyUser{id: $id, email: $email, imageUrl: $imageUrl, idRectoUrl: $idRectoUrl, idVersoUrl: $idVersoUrl, proofOfAddress: $proofOfAddress, isLogin: $isLogin, lastActivity: $lastActivity, nom: $nom, genres: $genres, types: $types, typeDeCompte: $typeDeCompte, stripeAccount: $stripeAccount, person: $person, hasAcceptedCGUCGV: $hasAcceptedCGUCGV, lieu: $lieu, quand: $quand, geoPoint: $geoPoint}';
   }
 }

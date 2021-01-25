@@ -12,6 +12,7 @@ import 'package:van_events_project/presentation/pages/full_photo.dart';
 import 'package:van_events_project/presentation/pages/login/login_screen.dart';
 import 'package:van_events_project/presentation/pages/monitoring_scanner.dart';
 import 'package:van_events_project/presentation/pages/billet_details.dart';
+import 'package:van_events_project/presentation/pages/other_profil.dart';
 import 'package:van_events_project/presentation/pages/refund_screen.dart';
 import 'package:van_events_project/presentation/pages/reset_password.dart';
 import 'package:van_events_project/presentation/pages/screen_chat_room.dart';
@@ -56,6 +57,7 @@ import 'package:van_events_project/route_authentication.dart';
   MaterialRoute(page: Settings, fullscreenDialog: true, initial: false),
   MaterialRoute(page: AboutScreen, fullscreenDialog: true, initial: false),
   MaterialRoute(page: RefundScreen, fullscreenDialog: true, initial: false),
+  MaterialRoute(page: OtherProfile, fullscreenDialog: true, initial: false),
   //This route returns result of type [bool]
   // CupertinoRoute(page: LoginScreen, fullscreenDialog: true),
   // CustomRoute<bool>(page: LoginScreen, transitionsBuilder: TransitionsBuilders.slideLeftWithFade,durationInMilliseconds: 5000),

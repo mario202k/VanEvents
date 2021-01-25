@@ -26,7 +26,9 @@ class MyBilletRepository {
 
   Stream<List<Billet>> streamBilletsMyUser() {
     return _service.collectionStream(
-        path: MyPath.billets(), builder: (map) => Billet.fromMap(map));
+        path: MyPath.billets(),
+        queryBuilder: (query)=>query.where('uid',isEqualTo: uid),
+        builder: (map) => Billet.fromMap(map));
   }
 
   Stream<List<Billet>> streamBilletsAdmin(String eventId) {
@@ -43,11 +45,11 @@ class MyBilletRepository {
         builder: (map) => Billet.fromMap(map));
   }
 
-  Future<List<Billet>> futureBilletParticipation() {
+  Future<List<Billet>> futureBilletParticipation({String otherUid}) {
     return _service.collectionFuture(
         path: MyPath.billets(),
         builder: (map) => Billet.fromMap(map),
-        queryBuilder: (query) => query.where('uid', isEqualTo: uid));
+        queryBuilder: (query) => query.where('uid', isEqualTo: otherUid ?? uid));
   }
 
   Future setToggleisHere(Map participant, String qrResult, int index) async {

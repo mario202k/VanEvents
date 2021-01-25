@@ -54,7 +54,7 @@ class FirestoreService {
     });
   }
 
-  Future<List<T>> collectionFuture<T> ({
+  Future<List<T>> collectionFuture<T>({
     @required String path,
     @required T builder(Map<String, dynamic> data),
     Query queryBuilder(Query query),
@@ -66,8 +66,10 @@ class FirestoreService {
     }
     final QuerySnapshot docs = await query.get();
 
-    final result = docs.docs.map((e) => builder(e.data()))
-        .where((element) => element != null).toList();
+    final result = docs.docs
+        .map((e) => builder(e.data()))
+        .where((element) => element != null)
+        .toList();
 
     if (sort != null) {
       result.sort(sort);
@@ -100,7 +102,6 @@ class FirestoreService {
       query = queryBuilder(query);
     }
     return query;
-
   }
 
   String getDocId<T>({
@@ -137,4 +138,17 @@ class FirestoreService {
         .delete();
   }
 
+  Future<int> nbDocuments(
+      {@required String path, Query queryBuilder(Query query)}) async {
+    Query query = FirebaseFirestore.instance.collection(path);
+    if (queryBuilder != null) {
+      query = queryBuilder(query);
+    }
+    final QuerySnapshot docs = await query.get();
+
+    final result = docs.docs
+        .where((element) => element != null).length;
+
+    return result;
+  }
 }

@@ -19,6 +19,7 @@ import 'package:van_events_project/domain/models/transfer.dart';
 import 'package:van_events_project/domain/repositories/stripe_repository.dart';
 import 'package:van_events_project/presentation/pages/stripe_profile/cubit/stripe_profile_cubit.dart';
 import 'package:van_events_project/presentation/widgets/model_screen.dart';
+import 'package:van_events_project/presentation/widgets/show.dart';
 import 'package:van_events_project/providers/toggle_bool.dart';
 import 'package:van_events_project/services/firestore_path.dart';
 
@@ -298,18 +299,16 @@ class StripeProfile extends HookWidget {
                         ),
                         Divider(),
                         Text(
-                          'Document d\'indentité recto',
+                          'Document d\'identité recto',
                           style: Theme.of(context).textTheme.headline5,
                         ),
                         InkWell(
                           onTap: () async {
                             await sendDocument(boolToggleRead, context,
-                                myUserRead, db, 'idFront', 'front');
+                                myUserRead, db, 'front');
                           },
                           child: Consumer(builder: (context, watch, child) {
-                            print(watch(boolToggleProvider).showSpinner);
-                            print('////');
-                            print(watch(boolToggleProvider).onGoingUpload);
+
                             if (watch(boolToggleProvider).showSpinner &&
                                 watch(boolToggleProvider).onGoingUpload ==
                                     'idFront') {
@@ -334,18 +333,16 @@ class StripeProfile extends HookWidget {
                           }),
                         ),
                         Text(
-                          'Document d\'indentité verso',
+                          'Document d\'identité verso',
                           style: Theme.of(context).textTheme.headline5,
                         ),
                         InkWell(
                           onTap: () async {
                             await sendDocument(boolToggleRead, context,
-                                myUserRead, db, 'idBack', 'back');
+                                myUserRead, db, 'back');
                           },
                           child: Consumer(builder: (context, watch, child) {
-                            print(watch(boolToggleProvider).showSpinner);
-                            print('////');
-                            print(watch(boolToggleProvider).onGoingUpload);
+
                             if (watch(boolToggleProvider).showSpinner &&
                                 watch(boolToggleProvider).onGoingUpload ==
                                     'idBack') {
@@ -381,7 +378,6 @@ class StripeProfile extends HookWidget {
                                 context,
                                 myUserRead,
                                 db,
-                                'justificatifDomicile',
                                 'justificatifDomicile');
                           },
                           child: Consumer(builder: (context, watch, child) {
@@ -461,94 +457,51 @@ class StripeProfile extends HookWidget {
       BuildContext context,
       MyUser myUserRead,
       StripeRepository db,
-      String idFront,
-      String front) async {
-    File file = await showDialogSource(context, idFront, boolToggleRead);
+      String type) async {
+
+    boolToggleRead.setOnGoingUpload(type);
+
+    File file = await Show.showDialogSource(context);
+
     boolToggleRead.setShowSpinner();
     if (file != null) {
-      firebase_storage.TaskSnapshot taskSnapshot = await firebase_storage
-          .FirebaseStorage.instance
-          .ref()
-          .child(MyPath.stripeDocs(myUserRead.id, front))
-          .putFile(file);
+      bool rep = await Show.showAreYouSurePhotoModel(context: context,content: file,
+          title: 'Êtes-vous sûr de vouloir envoyer cette image?');
+      if(rep != null && rep){
+        firebase_storage.TaskSnapshot taskSnapshot = await firebase_storage
+            .FirebaseStorage.instance
+            .ref()
+            .child(MyPath.stripeDocs(myUserRead.id, type))
+            .putFile(file);
 
-      HttpsCallableResult response = await db.uploadFileToStripe(
-          MyPath.stripeDocs(myUserRead.id, front),
-          myUserRead.stripeAccount,
-          myUserRead.person);
-      String url;
-      if (response != null) {
-        url = await taskSnapshot.ref.getDownloadURL();
+        HttpsCallableResult response = await db.uploadFileToStripe(
+            MyPath.stripeDocs(myUserRead.id, type),
+            myUserRead.stripeAccount,
+            myUserRead.person);
+        String url;
+        if (response != null) {
+          url = await taskSnapshot.ref.getDownloadURL();
 
-        switch (front) {
-          case 'front':
-            boolToggleRead.setUrlFront(url);
-            db.setUrlFront(url);
-            break;
-          case 'back':
-            boolToggleRead.setUrlBack(url);
-            db.setUrlBack(url);
-            break;
-          case 'justificatifDomicile':
-            boolToggleRead.setUrljustificatifDomicile(url);
-            db.setUrljustificatifDomicile(url);
-            break;
+          switch (type) {
+            case 'front':
+              boolToggleRead.setUrlFront(url);
+              db.setUrlFront(url);
+              break;
+            case 'back':
+              boolToggleRead.setUrlBack(url);
+              db.setUrlBack(url);
+              break;
+            case 'justificatifDomicile':
+              boolToggleRead.setUrljustificatifDomicile(url);
+              db.setUrljustificatifDomicile(url);
+              break;
+          }
         }
       }
     }
     boolToggleRead.setShowSpinner();
   }
 
-  Future<File> showDialogSource(
-      BuildContext context, String type, BoolToggle boolToggleRead) {
-    print('showDialogSource');
-    print(type);
-    return showDialog<File>(
-      context: context,
-      builder: (BuildContext context) => Platform.isAndroid
-          ? AlertDialog(
-              title: Text('Source?'),
-              content: Text('Veuillez choisir une source'),
-              actions: <Widget>[
-                FlatButton(
-                  child: Text('Caméra'),
-                  onPressed: () async {
-                    File file = await boolToggleRead.getImageCamera(type);
-                    Navigator.of(context).pop(file);
-                  },
-                ),
-                FlatButton(
-                  child: Text('Galerie'),
-                  onPressed: () async {
-                    File file = await boolToggleRead.getImageGallery(type);
-
-                    Navigator.of(context).pop(file);
-                  },
-                ),
-              ],
-            )
-          : CupertinoAlertDialog(
-              title: Text('Source?'),
-              content: Text('Veuillez choisir une source'),
-              actions: <Widget>[
-                FlatButton(
-                  child: Text('Caméra'),
-                  onPressed: () async {
-                    File file = await boolToggleRead.getImageCamera(type);
-                    Navigator.of(context).pop(file);
-                  },
-                ),
-                FlatButton(
-                  child: Text('Galerie'),
-                  onPressed: () async {
-                    File file = await boolToggleRead.getImageGallery(type);
-                    Navigator.of(context).pop(file);
-                  },
-                ),
-              ],
-            ),
-    );
-  }
 
   String buildStatus(StripeProfileSuccess state) =>
       state.person.verification.status == 'verified'

@@ -666,7 +666,6 @@ class MyEventRepository {
       }
     }
 
-
     switch (listLieu[0]) {
       case 'address':
         switch (listQuand[0]) {
@@ -850,7 +849,6 @@ class MyEventRepository {
   }
 
   Stream<List<MyEvent>> collectionStreamGenres(List genres) {
-
     return _service.collectionStream(
         path: MyPath.events(),
         queryBuilder: (query) => query
@@ -929,5 +927,19 @@ class MyEventRepository {
   Stream<List<MyEvent>> dateCompriGenre(
       List genres, DateTime date, DateTime dateTimePlusUn) {
     return map23Genres(genres, date, dateTimePlusUn);
+  }
+
+  Future<int> nbEvents(String stripeAccount) async {
+    return await _service.nbDocuments(
+        path: MyPath.events(),
+        queryBuilder: (query) =>
+            query.where('stripeAccount', isEqualTo: stripeAccount));
+  }
+
+  Future<int> nbOrganizer() async {
+    return await _service.nbDocuments(
+        path: MyPath.users(),
+        queryBuilder: (query) =>
+            query.where('typeDeCompte', isEqualTo: 'TypeOfAccount.organizer'));
   }
 }

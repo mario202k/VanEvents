@@ -16,8 +16,10 @@ class AuthenticationCubit extends Cubit<AuthenticationState> {
     print('authenticationStarted');
     emit(AuthenticationLoading());
 
-    final userCredential = await myUserRepository.checkDynamicLinkData(context);
-    final isSignedIn = userCredential != null? true:await myUserRepository.isSignedIn();
+    // myUserRepository.signOut();
+
+    await myUserRepository.checkDynamicLinkData(context);
+    final isSignedIn = await myUserRepository.isSignedIn();
     if (isSignedIn) {
       final firebaseUser =  myUserRepository.getFireBaseUser();
 
@@ -30,7 +32,6 @@ class AuthenticationCubit extends Cubit<AuthenticationState> {
         emit(AuthenticationSuccess(firebaseUser, user));
       }
     } else {
-
       emit(AuthenticationFailure(
           (await SharedPreferences.getInstance()).getBool('seen') ?? false));
     }
@@ -56,5 +57,9 @@ class AuthenticationCubit extends Cubit<AuthenticationState> {
     emit(AuthenticationFailure(
         (await SharedPreferences.getInstance()).getBool('seen') ?? false));
     myUserRepository.signOut();
+  }
+
+  void authenticationEmailLinkSuccess(String myEmail) {
+    emit(AuthenticationEmailLinkSuccess(myEmail));
   }
 }

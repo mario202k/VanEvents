@@ -35,6 +35,7 @@ class BoolToggle with ChangeNotifier {
   StreamSubscription<List<MyChat>> streamSubscriptionListChat;
   List<StreamSubscription<Stream<int>>> streamSubscriptionListStream;
   List<StreamSubscription<int>> streamSubscriptionNbMsgNonLu;
+  BuildContext progressContext;
 
   int nbPhotos = 0;
   List<Prediction> suggestions = List<Prediction>();
@@ -172,6 +173,11 @@ class BoolToggle with ChangeNotifier {
 
   void modificationTypeNONotif(String key) {
     type[key] = !type[key];
+  }
+
+  void setOnGoingUpload(String type){
+    onGoingUpload = type;
+    notifyListeners();
   }
 
   Future<dynamic> getImageGallery(String type) async {
@@ -449,6 +455,12 @@ class BoolToggle with ChangeNotifier {
       case 'Next Events':
         isNextEvents = b;
         sharePref.setBool('isNextEvents', b);
+        if(b){
+          FirebaseMessaging().subscribeToTopic('newEvent');
+        }else{
+          FirebaseMessaging().unsubscribeFromTopic('newEvent');
+        }
+
         break;
       default:
         isMessages = b; //Messages
@@ -470,6 +482,12 @@ class BoolToggle with ChangeNotifier {
         break;
       case 'Next Events':
         isNextEvents = b;
+
+        if(b){
+          FirebaseMessaging().subscribeToTopic('newEvent');
+        }else{
+          FirebaseMessaging().unsubscribeFromTopic('newEvent');
+        }
 
         sharePref.setBool('isNextEvents', b);
         break;
@@ -545,5 +563,9 @@ class BoolToggle with ChangeNotifier {
   void setAmount(value) {
     amount = value;
     notifyListeners();
+  }
+
+  void setProgressContext(BuildContext context) {
+    progressContext= context;
   }
 }

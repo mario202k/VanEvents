@@ -325,12 +325,16 @@ class UploadEventChangeNotifier extends ChangeNotifier {
           // if (chartKey.currentState != null && isUpdating && initializationDone) {
           //   chartKey.currentState.updateData(data);
           // }
+          if (chartKey.currentState != null) {
+            chartKey.currentState.updateData(data);
+          }
 
           nbTotal = 0;
           data[0].entries.forEach((d) {
             print(d.value.toInt());
             nbTotal += d.value.toInt();
           });
+
         }
         notifyListeners();
       },
@@ -353,6 +357,7 @@ class UploadEventChangeNotifier extends ChangeNotifier {
     }else if(listIndicator.length >1 && !isUpdating){
       notifyListeners();
     }
+
 
   }
 

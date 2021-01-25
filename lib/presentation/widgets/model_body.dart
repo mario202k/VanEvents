@@ -14,13 +14,15 @@ class ModelBody extends StatelessWidget {
       body: LayoutBuilder(builder: (context, constraints) {
         return SingleChildScrollView(
           physics: ClampingScrollPhysics(),
-          child: ConstrainedBox(
-            constraints: BoxConstraints(
-                minWidth: constraints.maxWidth,
-                minHeight: constraints.maxHeight),
-            child: Padding(
-              padding: const EdgeInsets.fromLTRB(10, 15, 10, 60),
-              child: child,
+          child: Center(
+            child: ConstrainedBox(
+              constraints: BoxConstraints(
+                maxWidth: 500,
+                  minHeight: constraints.maxHeight),
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(10, 15, 10, 60),
+                child: child,
+              ),
             ),
           ),
         );

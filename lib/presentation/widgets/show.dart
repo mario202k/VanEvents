@@ -2,8 +2,13 @@ import 'dart:async';
 import 'dart:io';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flare_flutter/asset_provider.dart';
+import 'package:flare_flutter/flare_actor.dart';
+import 'package:flare_flutter/flare_cache_builder.dart';
+import 'package:flare_flutter/provider/asset_flare.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_form_builder/flutter_form_builder.dart';
 import 'package:google_maps_webservice/places.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
@@ -219,14 +224,18 @@ class Show {
   }
 
   static showSnackBar(String val, GlobalKey<ScaffoldState> myScaffold) {
-    myScaffold.currentState.showSnackBar(SnackBar(
-        backgroundColor: Colors.blue,
-        duration: Duration(seconds: 3),
-        content: Text(
-          val,
-          textAlign: TextAlign.center,
-          style: TextStyle(color: Colors.white, fontSize: 16.0),
-        )));
+    print('showSnackBar');
+    print('//////');
+    myScaffold.currentState
+      ..hideCurrentSnackBar()
+      ..showSnackBar(SnackBar(
+          backgroundColor: const Color(0xFF26418f),
+          duration: const Duration(seconds: 3),
+          content: Text(
+            val,
+            textAlign: TextAlign.center,
+            // style: TextStyle(color: Colors.white, fontSize: 16.0),
+          )));
   }
 
   static Future<File> showDialogSource(BuildContext context) async {
@@ -1113,7 +1122,7 @@ class Show {
                 ),
                 actions: <Widget>[
                   FlatButton(
-                    child: Text('Non'),
+                    child: Text('Annulé'),
                     onPressed: () {
                       Navigator.of(context).pop({});
                     },
@@ -1133,9 +1142,12 @@ class Show {
                           Navigator.of(context).pop(response);
                         } catch (e) {
                           print(e);
+                          Navigator.of(context).pop({});
                         }
                       } else if (context.read(boolToggleProvider).amount ==
-                          'La totalité') {}
+                          'La totalité') {
+                        Navigator.of(context).pop(response);
+                      }
                     },
                   ),
                 ],
@@ -1239,6 +1251,7 @@ class Show {
                           Navigator.of(context).pop(response);
                         } catch (e) {
                           print(e);
+                          Navigator.of(context).pop({});
                         }
                       } else if (context.read(boolToggleProvider).amount ==
                           'La totalité') {
@@ -1268,5 +1281,116 @@ class Show {
     return chosenAmountTemp != null &&
         chosenAmountTemp < amountOfItem &&
         chosenAmountTemp > 0;
+  }
+
+  static Future<bool> showAreYouSurePhotoModel(
+      {BuildContext context, String title, File content}) async {
+    return await showDialog<bool>(
+        context: context,
+        builder: (_) => Platform.isAndroid
+            ? AlertDialog(
+                title: Text(title),
+                content: Image(
+                  image: FileImage(content),
+                ),
+                actions: <Widget>[
+                  FlatButton(
+                    child: Text('Non'),
+                    onPressed: () {
+                      Navigator.of(context).pop(false);
+                    },
+                  ),
+                  FlatButton(
+                    child: Text('Oui'),
+                    onPressed: () {
+                      Navigator.of(context).pop(true);
+                    },
+                  ),
+                ],
+              )
+            : CupertinoAlertDialog(
+                title: Text(title),
+                content: Image(
+                  image: FileImage(content),
+                ),
+                actions: <Widget>[
+                  FlatButton(
+                    child: Text('Non'),
+                    onPressed: () {
+                      Navigator.of(context).pop(false);
+                    },
+                  ),
+                  FlatButton(
+                    child: Text('Oui'),
+                    onPressed: () {
+                      Navigator.of(context).pop(true);
+                    },
+                  ),
+                ],
+              ));
+  }
+
+  static void showProgress(BuildContext context) async{
+    await showGeneralDialog<String>(
+        barrierDismissible: true,
+        barrierLabel: "Label",
+        barrierColor: Colors.black.withOpacity(0.5),
+        transitionDuration: Duration(milliseconds: 500),
+        transitionBuilder: (context, anim1, anim2, child) {
+          return SlideTransition(
+            position:
+            Tween(begin: Offset(0, 1), end: Offset(0, 0)).animate(anim1),
+            child: child,
+          );
+        },
+        context: context,
+        pageBuilder: (BuildContext context, anim1, anim2) {
+          context.read(boolToggleProvider).setProgressContext(context);
+
+          return Center(
+          child: Container(
+            margin:
+            EdgeInsets.only( left: 20, right: 20,),
+            constraints: BoxConstraints(
+                maxWidth: 300,
+                minHeight: 300
+            ),
+            decoration: BoxDecoration(
+              color: Theme.of(context).colorScheme.surface,
+              borderRadius: BorderRadius.circular(5),
+            ),
+
+            child: SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  AspectRatio(
+                    aspectRatio: 1,
+                    child: FlareCacheBuilder(
+                        [AssetFlare(bundle: rootBundle, name: 'assets/animations/paymentProcess.flr')],
+                      builder: (context,  isWarm) {
+                        return !isWarm
+                            ? Center(
+                          child: CircularProgressIndicator(
+                              valueColor:
+                              AlwaysStoppedAnimation<Color>(
+                                  Theme.of(context)
+                                      .colorScheme
+                                      .primary)),
+                        )
+                            : FlareActor('assets/animations/paymentProcess.flr',
+                          alignment: Alignment.center,
+                          animation: 'paymentProcess',);
+                      }
+                    ),
+                  ),
+                  Text('Veuillez patienter...',style: Theme.of(context).textTheme.headline6,)
+
+                ],
+              ),
+            ),
+          ),
+        );
+        });
   }
 }

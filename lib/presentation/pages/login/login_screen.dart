@@ -7,6 +7,10 @@ import 'package:van_events_project/presentation/pages/login/login_form.dart';
 import 'package:van_events_project/presentation/widgets/model_body.dart';
 
 class LoginScreen extends StatelessWidget {
+  final String myEmail;
+
+  LoginScreen({this.myEmail});
+
   @override
   Widget build(BuildContext context) {
     return WillPopScope(
@@ -20,7 +24,7 @@ class LoginScreen extends StatelessWidget {
         body: ModelBody(
           child: BlocProvider<LoginBloc>(
             create: (context) => LoginBloc(),
-            child: LoginForm(),
+            child: LoginForm(myEmail: myEmail),
           ),
         ),
       ),

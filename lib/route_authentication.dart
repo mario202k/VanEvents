@@ -19,11 +19,8 @@ class RouteAuthentication extends HookWidget {
     final myUser = useProvider(myUserProvider);
     final myUserRepo = useProvider(myUserRepository);
 
-    if(myUserRepo.uid != null){
-      BlocProvider.of<AuthenticationCubit>(context).authenticationLoggedIn(myUserRepo);
-    }else{
-      BlocProvider.of<AuthenticationCubit>(context).authenticationStarted(myUserRepo,context);
-    }
+    BlocProvider.of<AuthenticationCubit>(context)
+        .authenticationStarted(myUserRepo, context);
 
     return ModelScreen(
       child: BlocListener<AuthenticationCubit, AuthenticationState>(
@@ -37,6 +34,11 @@ class RouteAuthentication extends HookWidget {
           } else if (state is AuthenticationCGUCGV) {
             Navigator.of(context).pushReplacementNamed(Routes.cguCgvAccept,
                 arguments: CguCgvAcceptArguments(uid: state.firebaseUser.uid));
+          } else if (state is AuthenticationEmailLinkSuccess) {
+            print('AuthenticationEmailLinkSuccess');
+            print('!!!!!!!!!!!!');
+            Navigator.of(context).pushReplacementNamed(Routes.loginScreen,
+                arguments: LoginScreenArguments(myEmail: state.myEmail));
           }
         },
         child: BlocBuilder<AuthenticationCubit, AuthenticationState>(
@@ -45,7 +47,7 @@ class RouteAuthentication extends HookWidget {
               myUserRepo.setUid(state.firebaseUser.uid);
               myUser.setUser(state.myUser);
 
-              return CustomDrawer( state.firebaseUser.uid,child: BaseScreens());
+              return CustomDrawer(state.firebaseUser.uid, child: BaseScreens());
             }
             return Center(
               child: CircularProgressIndicator(
