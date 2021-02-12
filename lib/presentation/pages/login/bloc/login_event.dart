@@ -12,19 +12,19 @@ abstract class LoginEvent extends Equatable {
 class LoginWithGooglePressed extends LoginEvent {
   final MyUserRepository myUserRepository;
 
-  LoginWithGooglePressed(this.myUserRepository);
+  const LoginWithGooglePressed(this.myUserRepository);
 }
 
 class LoginWithApplePressed extends LoginEvent {
   final MyUserRepository myUserRepository;
 
-  LoginWithApplePressed(this.myUserRepository);
+  const LoginWithApplePressed(this.myUserRepository);
 }
 
 class LoginWithAnonymous extends LoginEvent {
   final MyUserRepository myUserRepository;
 
-  LoginWithAnonymous(this.myUserRepository);
+  const LoginWithAnonymous(this.myUserRepository);
 }
 
 class LoginWithCredentialsPressed extends LoginEvent {

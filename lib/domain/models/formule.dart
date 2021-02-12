@@ -15,13 +15,12 @@ class Formule {
     };
   }
 
-
   factory Formule.fromMap(Map data) {
     return Formule(
-        id: data['id'],
-        title: data['title'] ?? '',
-        prix: data['prix'] ?? '',
-        nombreDePersonne: data['nb'] ?? 0);
+        id: data['id'] as String,
+        title: data['title'] as String,
+        prix: data['prix'] as double,
+        nombreDePersonne: data['nb'] as int ?? 0);
   }
 
   @override

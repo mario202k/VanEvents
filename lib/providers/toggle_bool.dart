@@ -1,11 +1,12 @@
 import 'dart:async';
 import 'dart:io';
 
+import 'package:audioplayers/audio_cache.dart';
+import 'package:audioplayers/audioplayers.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/src/painting/image_provider.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:google_maps_webservice/places.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
@@ -15,7 +16,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:van_events_project/domain/models/my_chat.dart';
 import 'package:van_events_project/domain/models/refund.dart';
 import 'package:van_events_project/domain/repositories/my_chat_repository.dart';
-import 'package:van_events_project/presentation/widgets/lieuQuandAlertDialog.dart';
+import 'package:van_events_project/presentation/widgets/lieu_quand_alertdialog.dart';
 import 'package:van_events_project/providers/settings_change_notifier.dart';
 
 final boolToggleProvider = ChangeNotifierProvider<BoolToggle>((ref) {
@@ -25,27 +26,28 @@ final boolToggleProvider = ChangeNotifierProvider<BoolToggle>((ref) {
 class BoolToggle with ChangeNotifier {
   RefundReason reason;
   final amountList = ['La totalité', 'Une partie'];
-  String amount = 'La totalité' ;
+  String amount = 'La totalité';
+
+  bool playEffectTocTocToc = false, playEffect = false;
   File imageProfil, idFront, idBack, justificatifDomicile;
   String onGoingUpload;
   double eventCost = 0;
   double eventCostDiscounted;
   List<Asset> images;
-  Map<String, int> chatNbMsgNonLu = Map<String, int>();
+  Map<String, int> chatNbMsgNonLu = <String, int>{};
   StreamSubscription<List<MyChat>> streamSubscriptionListChat;
   List<StreamSubscription<Stream<int>>> streamSubscriptionListStream;
   List<StreamSubscription<int>> streamSubscriptionNbMsgNonLu;
   BuildContext progressContext;
-
   int nbPhotos = 0;
-  List<Prediction> suggestions = List<Prediction>();
+  List<Prediction> suggestions = <Prediction>[];
   Stream<List<MyChat>> streamListChat;
   Lieu lieu;
   Quand quand;
   DateTime dateQuand;
   Position position;
-  Map<int, ImageProvider> imageProviderDetail = Map<int, ImageProvider>();
-  Map<String, ImageProvider> imageProviderEvent = Map<String, ImageProvider>();
+  Map<int, ImageProvider> imageProviderDetail = <int, ImageProvider>{};
+  Map<String, ImageProvider> imageProviderEvent = <String, ImageProvider>{};
   Map<String, bool> genre = {
     'Classique': false,
     'Dancehall/Reggae/Soca': false,
@@ -76,10 +78,10 @@ class BoolToggle with ChangeNotifier {
   bool obscureTextLogin = true;
   bool obscuretextRegister = true;
   bool isNewsVanEvents, isNextEvents, isMessages;
-  final FirebaseMessaging firebaseMessaging = new FirebaseMessaging();
+  final FirebaseMessaging firebaseMessaging = FirebaseMessaging();
   Map<String, int> listTempMessages =
-      Map<String, int>(); //-1 error; 0 loading; 1 success
-  Map<String, File> listPhoto = Map<String, File>();
+      <String, int>{}; //-1 error; 0 loading; 1 success
+  Map<String, File> listPhoto = <String, File>{};
 
   String selectedAdress;
 
@@ -124,8 +126,7 @@ class BoolToggle with ChangeNotifier {
             'Variété française': genres.contains('Variété française'),
             'Zouk/Kompa': genres.contains('Zouk/Kompa'),
           };
-    print('initGenre');
-    print(genre);
+
   }
 
   void initType({List types}) {
@@ -175,7 +176,7 @@ class BoolToggle with ChangeNotifier {
     type[key] = !type[key];
   }
 
-  void setOnGoingUpload(String type){
+  void setOnGoingUpload(String type) {
     onGoingUpload = type;
     notifyListeners();
   }
@@ -185,7 +186,7 @@ class BoolToggle with ChangeNotifier {
     onGoingUpload = type;
     switch (type) {
       case 'Profil':
-        String str =
+        final String str =
             (await _picker.getImage(source: ImageSource.gallery))?.path;
         if (str == null) {
           return;
@@ -195,7 +196,7 @@ class BoolToggle with ChangeNotifier {
         break;
 
       case 'idFront':
-        String str =
+        final String str =
             (await _picker.getImage(source: ImageSource.gallery))?.path;
         if (str == null) {
           return;
@@ -203,7 +204,7 @@ class BoolToggle with ChangeNotifier {
         idFront = File(str);
         return idFront;
       case 'idBack':
-        String str =
+        final String str =
             (await _picker.getImage(source: ImageSource.gallery))?.path;
         if (str == null) {
           return;
@@ -211,7 +212,7 @@ class BoolToggle with ChangeNotifier {
         idBack = File(str);
         return idBack;
       case 'justificatifDomicile':
-        String str =
+        final String str =
             (await _picker.getImage(source: ImageSource.gallery))?.path;
         if (str == null) {
           return;
@@ -225,10 +226,9 @@ class BoolToggle with ChangeNotifier {
   Future<dynamic> getImageCamera(String type) async {
     final _picker = ImagePicker();
     onGoingUpload = type;
-    print(onGoingUpload);
     switch (type) {
       case 'Profil':
-        String str = (await _picker.getImage(source: ImageSource.camera))?.path;
+        final String str = (await _picker.getImage(source: ImageSource.camera))?.path;
         if (str == null) {
           return;
         }
@@ -236,21 +236,21 @@ class BoolToggle with ChangeNotifier {
         return imageProfil;
 
       case 'idFront':
-        String str = (await _picker.getImage(source: ImageSource.camera))?.path;
+        final String str = (await _picker.getImage(source: ImageSource.camera))?.path;
         if (str == null) {
           return;
         }
         idFront = File(str);
         return idFront;
       case 'idBack':
-        String str = (await _picker.getImage(source: ImageSource.camera))?.path;
+        final String str = (await _picker.getImage(source: ImageSource.camera))?.path;
         if (str == null) {
           return;
         }
         idBack = File(str);
         return idBack;
       case 'justificatifDomicile':
-        String str = (await _picker.getImage(source: ImageSource.camera))?.path;
+        final String str = (await _picker.getImage(source: ImageSource.camera))?.path;
         if (str == null) {
           return;
         }
@@ -293,7 +293,7 @@ class BoolToggle with ChangeNotifier {
     notifyListeners();
   }
 
-  changeCGUCGV() {
+  void changeCGUCGV() {
     cguCgv = !cguCgv;
     notifyListeners();
   }
@@ -322,11 +322,10 @@ class BoolToggle with ChangeNotifier {
   }
 
   void initLieuQuandGeo({List listLieu, List listQuand}) {
-    print('initLieuQuandGeo');
-    print(listQuand);
+
     Quand quand;
 
-    switch (listQuand[0]) {
+    switch (listQuand[0] as String) {
       case 'date':
         quand = Quand.date;
         dateQuand = (listQuand[1] as Timestamp)?.toDate();
@@ -347,10 +346,10 @@ class BoolToggle with ChangeNotifier {
     Lieu lieu;
     //address, aroundMe
 
-    switch (listLieu[0]) {
+    switch (listLieu[0] as String) {
       case 'address':
         lieu = Lieu.address;
-        setSelectedAdress(listLieu[1]);
+        setSelectedAdress(listLieu[1] as String);
         break;
       case 'aroundMe':
         lieu = Lieu.aroundMe;
@@ -375,9 +374,8 @@ class BoolToggle with ChangeNotifier {
     selectedAdress = e;
   }
 
-  newZone(double newZone) {
-    print(newZone);
-    this.zone = newZone;
+  void newZone(double newZone) {
+    zone = newZone;
     notifyListeners();
   }
 
@@ -405,7 +403,7 @@ class BoolToggle with ChangeNotifier {
     notifyListeners();
   }
 
-  void initial() {
+  Future<void> initial() async {
     if (isNewsVanEvents != null) {
       return;
     }
@@ -413,17 +411,11 @@ class BoolToggle with ChangeNotifier {
     isNewsVanEvents = sharePref.getBool('isNewsVanEvents');
     isNextEvents = sharePref.getBool('isNextEvents');
     isMessages = sharePref.getBool('isMessages');
-    if (isNewsVanEvents == null) {
-      isNewsVanEvents = true;
-    }
+    isNewsVanEvents ??= true;
 
-    if (isNextEvents == null) {
-      isNextEvents = true;
-    }
+    isNextEvents ??= true;
 
-    if (isMessages == null) {
-      isMessages = true;
-    }
+    isMessages ??= true;
 
     setIsEnableNotificationNoNotif(isNewsVanEvents, 'News VanEvents');
     setIsEnableNotificationNoNotif(isNextEvents, 'Next Events');
@@ -455,9 +447,9 @@ class BoolToggle with ChangeNotifier {
       case 'Next Events':
         isNextEvents = b;
         sharePref.setBool('isNextEvents', b);
-        if(b){
+        if (b) {
           FirebaseMessaging().subscribeToTopic('newEvent');
-        }else{
+        } else {
           FirebaseMessaging().unsubscribeFromTopic('newEvent');
         }
 
@@ -483,9 +475,9 @@ class BoolToggle with ChangeNotifier {
       case 'Next Events':
         isNextEvents = b;
 
-        if(b){
+        if (b) {
           FirebaseMessaging().subscribeToTopic('newEvent');
-        }else{
+        } else {
           FirebaseMessaging().unsubscribeFromTopic('newEvent');
         }
 
@@ -499,6 +491,7 @@ class BoolToggle with ChangeNotifier {
   }
 
   void addDetailsPhotos(ImageProvider<Object> imageProvider, int index) {
+
     if (!imageProviderDetail.containsKey(index)) {
       imageProviderDetail.addAll({index: imageProvider});
     }
@@ -523,10 +516,21 @@ class BoolToggle with ChangeNotifier {
     super.dispose();
   }
 
-  void setNbMsgNonLu(BuildContext context, String uid) {
+  Future<void> setNbMsgNonLu(BuildContext context, String uid) async {
     if (streamListChat != null) {
       return;
     }
+
+    final AudioCache audioCache = AudioCache();
+    final AudioPlayer advancedPlayer = AudioPlayer();
+
+    if (Platform.isIOS) {
+      if (audioCache.fixedPlayer != null) {
+        audioCache.fixedPlayer.startHeadlessService();
+      }
+      advancedPlayer.startHeadlessService();
+    }
+
     streamListChat =
         context.read(myChatRepositoryProvider).chatRoomsStream(uid);
 
@@ -545,9 +549,16 @@ class BoolToggle with ChangeNotifier {
         streamSubscriptionListStream[i]?.cancel();
         streamSubscriptionListStream[i] = stream.listen((fluxStream) {
           streamSubscriptionNbMsgNonLu[i]?.cancel();
-          streamSubscriptionNbMsgNonLu[i] = fluxStream.listen((event) {
+          streamSubscriptionNbMsgNonLu[i] = fluxStream.listen((event) async {
             chatNbMsgNonLu.addAll({myChat[i].id: event});
 
+            if (chatNbMsgNonLu.keys.length == myChat.length) {
+              if (event > 0) {
+                audioCache.play('sound/TOC_TOC_TOC_.aac').catchError((e) {
+                  debugPrint(e.toString());
+                });
+              }
+            }
             notifyListeners();
           });
         });
@@ -555,17 +566,17 @@ class BoolToggle with ChangeNotifier {
     });
   }
 
-  void setRefundRaison(val) {
+  void setRefundRaison(RefundReason val) {
     reason = val;
     notifyListeners();
   }
 
-  void setAmount(value) {
+  void setAmount(String value) {
     amount = value;
     notifyListeners();
   }
 
   void setProgressContext(BuildContext context) {
-    progressContext= context;
+    progressContext = context;
   }
 }

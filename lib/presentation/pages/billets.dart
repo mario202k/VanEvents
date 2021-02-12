@@ -24,15 +24,15 @@ import 'package:van_events_project/services/firestore_service.dart';
 class Billets extends HookWidget {
   @override
   Widget build(BuildContext context) {
-    print('buildBillet');
     final myBilletRepo = useProvider(myBilletRepositoryProvider);
     return ModelBody(
-      child: StreamBuilder(
+      child: StreamBuilder<List<Billet>>(
         stream: myBilletRepo.streamBilletsMyUser(),
-        initialData: [],
+        initialData: const [],
         builder: (context, snapshot) {
           if (snapshot.hasError) {
-            return Center(
+            print(snapshot.error.toString());
+            return const Center(
               child: Text('Erreur de connexion'),
             );
           } else if (snapshot.connectionState == ConnectionState.waiting) {
@@ -43,16 +43,16 @@ class Billets extends HookWidget {
             );
           }
 
-          List<Billet> billets = List<Billet>();
+          final List<Billet> billets = <Billet>[];
           billets.addAll(snapshot.data);
 
           return billets.isNotEmpty
               ? ListView.separated(
-                  physics: ClampingScrollPhysics(),
+                  physics: const ClampingScrollPhysics(),
                   itemCount: billets.length,
                   itemBuilder: (context, index) {
                     return Slidable(
-                      actionPane: SlidableDrawerActionPane(),
+                      actionPane: const SlidableDrawerActionPane(),
                       actionExtentRatio: 0.15,
                       actions: <Widget>[
                         IconSlideAction(
@@ -120,19 +120,19 @@ class Billets extends HookWidget {
 
   String toNormalBilletStatus(BilletStatus status) {
     switch (status) {
-      case BilletStatus.up_coming:
+      case BilletStatus.upComing:
         return 'À venir';
         break;
       case BilletStatus.check:
         return 'Vérifié';
         break;
-      case BilletStatus.refund_asked:
+      case BilletStatus.refundAsked:
         return 'Remboursement demandé';
         break;
-      case BilletStatus.refund_cancelled:
+      case BilletStatus.refundCancelled:
         return 'Demande annulé';
         break;
-      case BilletStatus.refund_refused:
+      case BilletStatus.refundRefused:
         return 'Remboursement refusé';
         break;
       default: //BilletStatus.refunded
@@ -149,7 +149,7 @@ Future askRefund(BuildContext context, Billet billet) async {
       content: 'Êtes-vous sûr de vouloir demander le remboursement?');
   if (rep != null && rep) {
     context.read(myBilletRepositoryProvider).setStatusRefundAsked(billet.id);
-    Refund myRefund = Refund(
+    final Refund myRefund = Refund(
       id: FirestoreService.instance
           .getDocId(path: MyPath.refunds(billet.organisateurId)),
       amount: billet.amount,
@@ -163,7 +163,7 @@ Future askRefund(BuildContext context, Billet billet) async {
   }
 }
 
-void sharePdf(String id) async {
+Future<void> sharePdf(String id) async {
   final pdf = pw.Document();
 
   pdf.addPage(pw.Page(
@@ -180,7 +180,7 @@ void sharePdf(String id) async {
   final directory = Platform.isAndroid
       ? await getExternalStorageDirectory()
       : await getApplicationDocumentsDirectory();
-  String tempPath = directory.path;
+  final String tempPath = directory.path;
 
   final file = File('$tempPath/QrCode.pdf');
   await file.writeAsBytes(await pdf.save());

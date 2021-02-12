@@ -49,7 +49,7 @@ class ResetPassword extends StatelessWidget {
                                   style:
                                       Theme.of(context).textTheme.headline5,
                                 ),
-                                SizedBox(
+                                const SizedBox(
                                   height: 20,
                                 ),
                                 FormBuilderTextField(
@@ -58,7 +58,7 @@ class ResetPassword extends StatelessWidget {
                                     await submit(context);
                                   },
                                   name: 'email',
-                                  decoration: InputDecoration(
+                                  decoration: const InputDecoration(
                                     labelText: 'Email',
                                   ),
                                   validator: FormBuilderValidators.compose([
@@ -77,15 +77,15 @@ class ResetPassword extends StatelessWidget {
                       child: Consumer(builder: (context, watch, child) {
                         return !watch(boolToggleProvider).showSpinner
                             ? RaisedButton(
-                            child: Padding(
-                              padding: const EdgeInsets.all(12.0),
+                            onPressed: () async {
+                              await submit(context);
+                            },
+                            child: const Padding(
+                              padding: EdgeInsets.all(12.0),
                               child: Text(
                                 'Envoyer l\'email',
                               ),
-                            ),
-                            onPressed: () async {
-                              await submit(context);
-                            })
+                            ))
                             : CircularProgressIndicator(
                             valueColor: AlwaysStoppedAnimation<Color>(
                                 Theme.of(context).colorScheme.primary));
@@ -108,12 +108,12 @@ class ResetPassword extends StatelessWidget {
       try {
         await context
             .read(myUserRepository)
-            .resetEmail(_fbKey.currentState.fields['email'].value);
+            .resetEmail(_fbKey.currentState.fields['email'].value as String);
 
 
         final result = await Show.showDialogToDismiss(context, 'Email envoyé',
             'Veuillez vérifier vos emails', 'Ok')
-            .then((_)async => await OpenMailApp.openMailApp() );
+            .then((_)async => OpenMailApp.openMailApp() );
 
         if (!result.didOpen && !result.canOpen){
           Show.showDialogToDismiss(context, 'Oops', 'Pas d\'application de messagerie installée', 'Ok');

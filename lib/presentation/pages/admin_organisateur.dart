@@ -24,7 +24,7 @@ class AdminOrganisateurs extends HookWidget {
       child: Scaffold(
         backgroundColor: Theme.of(context).colorScheme.background,
         appBar: AppBar(
-          title: Text('Admin'),
+          title: const Text('Admin'),
         ),
         body: FutureBuilder<HttpsCallableResult>(
             future: stripeRepo.allStripeAccounts(),
@@ -43,16 +43,16 @@ class AdminOrganisateurs extends HookWidget {
                           Theme.of(context).colorScheme.secondary)),
                 );
               }
-              List organisateur = List();
+              final List organisateur = [];
 
-              organisateur.addAll(snapshot.data.data['data']);
+              organisateur.addAll(snapshot.data.data['data'] as List);
 
               return organisateur.isNotEmpty
                   ? ListView.separated(
                       itemCount: organisateur.length,
                       itemBuilder: (context, index) {
                         return Slidable(
-                          actionPane: SlidableDrawerActionPane(),
+                          actionPane: const SlidableDrawerActionPane(),
                           actionExtentRatio: 0.15,
                           actions: <Widget>[
                             IconSlideAction(
@@ -64,18 +64,17 @@ class AdminOrganisateurs extends HookWidget {
                                     context: context,
                                     builder: (_) => Platform.isAndroid
                                         ? AlertDialog(
-                                            title: Text('Supprimer?'),
-                                            content: Text(
+                                            title: const Text('Supprimer?'),
+                                            content: const Text(
                                                 'Etes vous sur de vouloir supprimer l\'organisateur'),
                                             actions: <Widget>[
                                               FlatButton(
-                                                child: Text('Non'),
                                                 onPressed: () {
                                                   Navigator.of(context).pop();
                                                 },
+                                                child: const Text('Non'),
                                               ),
                                               FlatButton(
-                                                child: Text('Oui'),
                                                 onPressed: () {
                                                   Scaffold.of(context)
                                                     ..hideCurrentSnackBar()
@@ -85,7 +84,7 @@ class AdminOrganisateurs extends HookWidget {
                                                           mainAxisAlignment:
                                                               MainAxisAlignment
                                                                   .spaceBetween,
-                                                          children: [
+                                                          children: const [
                                                             Text(
                                                                 'Suppression...'),
                                                             CircularProgressIndicator(),
@@ -98,9 +97,9 @@ class AdminOrganisateurs extends HookWidget {
                                                       .deleteStripeAccount(
                                                           organisateur
                                                               .elementAt(
-                                                                  index)['id'])
+                                                                  index)['id'] as String)
                                                       .then((value) {
-                                                    if (value.data['deleted']) {
+                                                    if (value.data['deleted'] as bool) {
                                                       Scaffold.of(context)
                                                         ..hideCurrentSnackBar()
                                                         ..showSnackBar(
@@ -109,12 +108,12 @@ class AdminOrganisateurs extends HookWidget {
                                                               mainAxisAlignment:
                                                                   MainAxisAlignment
                                                                       .spaceBetween,
-                                                              children: [
+                                                              children: const [
                                                                 Text(
                                                                     'Suppression ok'),
                                                               ],
                                                             ),
-                                                            duration: Duration(
+                                                            duration: const Duration(
                                                                 seconds: 3),
                                                           ),
                                                         );
@@ -128,35 +127,35 @@ class AdminOrganisateurs extends HookWidget {
                                                               mainAxisAlignment:
                                                                   MainAxisAlignment
                                                                       .spaceBetween,
-                                                              children: [
+                                                              children: const [
                                                                 Text(
                                                                     'Suppression impossible'),
                                                                 CircularProgressIndicator(),
                                                               ],
                                                             ),
-                                                            duration: Duration(
+                                                            duration: const Duration(
                                                                 seconds: 3),
                                                           ),
                                                         );
                                                     }
                                                   });
                                                 },
+                                                child: const Text('Oui'),
                                               ),
                                             ],
                                           )
                                         : CupertinoAlertDialog(
-                                            title: Text('Supprimer?'),
-                                            content: Text(
+                                            title: const Text('Supprimer?'),
+                                            content: const Text(
                                                 'Etes vous sur de vouloir annuler l\'organisateur'),
                                             actions: <Widget>[
                                               FlatButton(
-                                                child: Text('Non'),
                                                 onPressed: () {
                                                   Navigator.of(context).pop();
                                                 },
+                                                child: const Text('Non'),
                                               ),
                                               FlatButton(
-                                                child: Text('Oui'),
                                                 onPressed: () {
                                                   Scaffold.of(context)
                                                     ..hideCurrentSnackBar()
@@ -166,7 +165,7 @@ class AdminOrganisateurs extends HookWidget {
                                                           mainAxisAlignment:
                                                               MainAxisAlignment
                                                                   .spaceBetween,
-                                                          children: [
+                                                          children: const [
                                                             Text(
                                                                 'Suppression...'),
                                                             CircularProgressIndicator(),
@@ -177,6 +176,7 @@ class AdminOrganisateurs extends HookWidget {
                                                   Navigator.of(context).pop();
                                                   //db.deleteStripeAccount(organisateur.elementAt(index)['id']).;
                                                 },
+                                                child: const Text('Oui'),
                                               ),
                                             ],
                                           ));
@@ -188,7 +188,7 @@ class AdminOrganisateurs extends HookWidget {
                               DateFormat('dd/MM/yyyy').format(
                                   DateTime.fromMillisecondsSinceEpoch(
                                       organisateur
-                                          .elementAt(index)['created'])),
+                                          .elementAt(index)['created'] as int)),
                               style: Theme.of(context)
                                   .textTheme
                                   .button
@@ -199,7 +199,7 @@ class AdminOrganisateurs extends HookWidget {
                             ),
                             title: Text(
                               organisateur.elementAt(index)['business_profile']
-                                  ['name'],
+                                  ['name'] as String,
                               style: Theme.of(context)
                                   .textTheme
                                   .button
@@ -216,7 +216,7 @@ class AdminOrganisateurs extends HookWidget {
                             },
                             trailing: FutureBuilder<HttpsCallableResult>(
                               future: stripeRepo.organisateurBalance(
-                                  organisateur.elementAt(index)['id']),
+                                  organisateur.elementAt(index)['id'] as String ),
                               builder: (context, snapshot) {
                                 if (snapshot.hasError) {
                                   return Center(
@@ -234,22 +234,21 @@ class AdminOrganisateurs extends HookWidget {
                                               .colorScheme
                                               .secondary));
                                 } else if (!snapshot.hasData) {
-                                  return SizedBox();
+                                  return const SizedBox();
                                 }
-                                List available =
-                                    snapshot.data.data['available'];
-                                int amount = available.firstWhere((element) =>
-                                    element['currency'] == 'eur')['amount'];
+                                final List available =
+                                    snapshot.data.data['available'] as List;
+                                final int amount = available.firstWhere((element) =>
+                                    element['currency'] == 'eur')['amount'] as int;
 
-                                double amountd = amount / 100;
+                                final double amountd = amount / 100;
 
                                 return Text(
-                                    amountd.toStringAsFixed(
+                                    '${amountd.toStringAsFixed(
                                             amountd.truncateToDouble() ==
                                                     amountd
                                                 ? 0
-                                                : 2) +
-                                        ' €',
+                                                : 2)} €',
                                     style: Theme.of(context)
                                         .textTheme
                                         .button
@@ -280,11 +279,11 @@ class AdminOrganisateurs extends HookWidget {
                     );
             }),
         floatingActionButton: FloatingActionButton(
+          onPressed: () {},
           child: Icon(
             Icons.autorenew,
             color: Theme.of(context).colorScheme.onSecondary,
           ),
-          onPressed: () {},
         ),
       ),
     );

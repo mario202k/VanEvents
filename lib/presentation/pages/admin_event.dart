@@ -23,7 +23,7 @@ class AdminEvents extends HookWidget {
       child: Scaffold(
         backgroundColor: Theme.of(context).colorScheme.background,
         appBar: AppBar(
-          title: Text('Admin'),
+          title: const Text('Admin'),
         ),
         body: ModelBody(
           child: StreamBuilder<List<MyEvent>>(
@@ -43,7 +43,7 @@ class AdminEvents extends HookWidget {
                             Theme.of(context).colorScheme.secondary)),
                   );
                 }
-                List<MyEvent> events = List<MyEvent>();
+                final List<MyEvent> events = <MyEvent>[];
                 events.addAll(snapshot.data);
 
                 return events.isNotEmpty
@@ -51,7 +51,7 @@ class AdminEvents extends HookWidget {
                         itemCount: events.length,
                         itemBuilder: (context, index) {
                           return Slidable(
-                            actionPane: SlidableDrawerActionPane(),
+                            actionPane: const SlidableDrawerActionPane(),
                             actionExtentRatio: 0.15,
                             actions: <Widget>[
                               IconSlideAction(
@@ -123,12 +123,12 @@ class AdminEvents extends HookWidget {
               }),
         ),
         floatingActionButton: FloatingActionButton(
+          onPressed: () =>
+              ExtendedNavigator.of(context).push(Routes.uploadEvent),
           child: Icon(
             FontAwesomeIcons.plus,
             color: Theme.of(context).colorScheme.onSecondary,
           ),
-          onPressed: () =>
-              ExtendedNavigator.of(context).push(Routes.uploadEvent),
         ),
       ),
     );

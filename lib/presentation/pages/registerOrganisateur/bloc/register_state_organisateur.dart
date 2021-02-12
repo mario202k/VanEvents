@@ -11,7 +11,7 @@ class RegisterStateOrganisateur {
 
   bool get isFormValid => isEmailValid && isPasswordValid;
 
-  RegisterStateOrganisateur({
+  const RegisterStateOrganisateur({
     @required this.isEmailValid,
     @required this.isPasswordValid,
     @required this.isSubmitting,
@@ -21,7 +21,7 @@ class RegisterStateOrganisateur {
   });
 
   factory RegisterStateOrganisateur.initial() {
-    return RegisterStateOrganisateur(
+    return const RegisterStateOrganisateur(
       isEmailValid: true,
       isPasswordValid: true,
       isSubmitting: false,
@@ -31,7 +31,7 @@ class RegisterStateOrganisateur {
   }
 
   factory RegisterStateOrganisateur.loading() {
-    return RegisterStateOrganisateur(
+    return const RegisterStateOrganisateur(
       isEmailValid: true,
       isPasswordValid: true,
       isSubmitting: true,
@@ -94,7 +94,8 @@ class RegisterStateOrganisateur {
 
   @override
   String toString() {
-    return '''RegisterState {
+    return '''
+    RegisterState {
       isEmailValid: $isEmailValid,
       isPasswordValid: $isPasswordValid,      
       isSubmitting: $isSubmitting,

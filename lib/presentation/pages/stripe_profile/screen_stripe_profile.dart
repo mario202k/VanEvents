@@ -13,8 +13,9 @@ import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:intl/intl.dart';
 import 'package:shimmer/shimmer.dart';
 import 'package:van_events_project/domain/models/balance.dart';
-import 'package:van_events_project/domain/models/listPayout.dart';
+import 'package:van_events_project/domain/models/list_payout.dart';
 import 'package:van_events_project/domain/models/my_user.dart';
+import 'package:van_events_project/domain/models/payout.dart';
 import 'package:van_events_project/domain/models/transfer.dart';
 import 'package:van_events_project/domain/repositories/stripe_repository.dart';
 import 'package:van_events_project/presentation/pages/stripe_profile/cubit/stripe_profile_cubit.dart';
@@ -26,7 +27,7 @@ import 'package:van_events_project/services/firestore_path.dart';
 class StripeProfile extends HookWidget {
   final String stripeAccount;
 
-  StripeProfile({this.stripeAccount});
+  const StripeProfile({this.stripeAccount});
 
   @override
   Widget build(BuildContext context) {
@@ -38,10 +39,10 @@ class StripeProfile extends HookWidget {
       child: Scaffold(
         backgroundColor: Theme.of(context).colorScheme.background,
         appBar: AppBar(
-          title: Text('Profile stripe'),
+          title: const Text('Profile stripe'),
         ),
         body: SingleChildScrollView(
-          padding: EdgeInsets.symmetric(horizontal: 15),
+          padding: const EdgeInsets.symmetric(horizontal: 15),
           child: BlocProvider<StripeProfileCubit>(
             create: (context) => StripeProfileCubit(context),
             child: BlocListener<StripeProfileCubit, StripeProfileState>(
@@ -51,8 +52,10 @@ class StripeProfile extends HookWidget {
                 } else if (state is StripeProfileFailed) {
                   showSnackBar(context, state.message);
                 } else if (state is StripeProfileSuccess) {
-                  Scaffold.of(context)..hideCurrentSnackBar();
+                  Scaffold.of(context).hideCurrentSnackBar();
+
                 }
+
               },
               //cubit:StripeProfileCubit(context) ,
               child: BlocBuilder<StripeProfileCubit, StripeProfileState>(
@@ -65,15 +68,17 @@ class StripeProfile extends HookWidget {
                   }
 
                   if (state is StripeProfileSuccess) {
-                    final st = state.payoutList.data;
+                    final payoutList = state.payoutList.data;
                     return Column(
                       children: [
                         Wrap(
                           alignment: WrapAlignment.center,
                           crossAxisAlignment: WrapCrossAlignment.center,
-                          direction: Axis.horizontal,
                           children: [
-                            Text(state.result.businessProfile.name, style: Theme.of(context).textTheme.headline5,),
+                            Text(
+                              state.result.businessProfile?.name ?? '',
+                              style: Theme.of(context).textTheme.headline5,
+                            ),
                             FittedBox(
                               child: Container(
                                   decoration: BoxDecoration(
@@ -92,50 +97,39 @@ class StripeProfile extends HookWidget {
                                                 .textTheme
                                                 .bodyText1
                                                 .copyWith(fontSize: 22)),
-                                        state.person.verification.status ==
-                                                'verified'
-                                            ? Icon(FontAwesomeIcons.check)
-                                            : SizedBox()
+                                        if (state.person.verification.status ==
+                                            'verified')
+                                          const Icon(FontAwesomeIcons.check)
+                                        else
+                                          const SizedBox()
                                       ],
                                     ),
                                   )),
                             )
                           ],
                         ),
-                        Divider(),
+                        const Divider(),
                         Card(
                           child: Wrap(
                             crossAxisAlignment: WrapCrossAlignment.center,
                             direction: Axis.vertical,
                             children: [
-                              Text(
-                                'Solde non disponible :',
-                                style: Theme.of(context)
-                                    .textTheme
-                                    .headline5
-                              ),
+                              Text('Solde non disponible :',
+                                  style: Theme.of(context).textTheme.headline5),
                               Text(
                                 toNormalAmount(
                                     toTotalPending(state.balance.pending)),
                                 style: Theme.of(context).textTheme.bodyText1,
                               ),
-                              Text(
-                                'Solde disponible :',
-                                style: Theme.of(context)
-                                    .textTheme
-                                    .headline5
-                              ),
+                              Text('Solde disponible :',
+                                  style: Theme.of(context).textTheme.headline5),
                               Text(
                                 toNormalAmount(
                                     toTotalAvailable(state.balance.available)),
                                 style: Theme.of(context).textTheme.bodyText1,
                               ),
-                              Text(
-                                'En transit vers la banque :',
-                                style: Theme.of(context)
-                                    .textTheme
-                                    .headline5
-                              ),
+                              Text('En transit vers la banque :',
+                                  style: Theme.of(context).textTheme.headline5),
                               Text(
                                 toTotalEnTransit(state.payoutList.data),
                                 style: Theme.of(context).textTheme.bodyText1,
@@ -154,54 +148,42 @@ class StripeProfile extends HookWidget {
                             ],
                           ),
                         ),
-                        Divider(),
-                        Text('Virements',style: Theme.of(context)
-                            .textTheme
-                            .headline5),
+                        const Divider(),
+                        Text('Virements',
+                            style: Theme.of(context).textTheme.headline5),
                         SizedBox(
                           height: 150,
                           child: ListView.builder(
                               scrollDirection: Axis.horizontal,
-                              itemCount: st.length,
+                              itemCount: payoutList.length,
                               itemBuilder: (context, index) {
-                                final payout = st[index];
+                                final payout = payoutList[index];
                                 return Card(
                                   child: Column(
                                     children: [
                                       Text(
-                                        'Montant : ' +
-                                            toNormalAmount(payout.amount),
-                                        style: Theme.of(context)
-                                            .textTheme
-                                            .bodyText1
-                                      ),
+                                          'Montant : ${toNormalAmount(payout['amount'] as int)}',
+                                          style: Theme.of(context)
+                                              .textTheme
+                                              .bodyText1),
                                       Text(
-                                        'Le : ' +
-                                            DateFormat('dd/MM/yyyy').format(
-                                                Timestamp
-                                                        .fromMillisecondsSinceEpoch(
-                                                            state
-                                                                    .payoutList
-                                                                    .data[index]
-                                                                    .created *
-                                                                1000)
-                                                    .toDate()),
-                                        style: Theme.of(context)
-                                            .textTheme
-                                            .bodyText1
-                                      ),
+                                          // ignore: unnecessary_parenthesis
+                                          'Le : ${DateFormat('dd/MM/yyyy').format(Timestamp.fromMillisecondsSinceEpoch((state.payoutList.data[index]['created'] * 1000) as int).toDate())}',
+                                          style: Theme.of(context)
+                                              .textTheme
+                                              .bodyText1),
                                       Container(
                                         decoration: BoxDecoration(
                                           borderRadius:
                                               BorderRadius.circular(10),
-                                          color: payout.status == 'paid'
+                                          color: payout['status'] == 'paid'
                                               ? Colors.greenAccent.shade100
                                               : Colors.grey,
                                         ),
                                         child: Padding(
                                           padding: const EdgeInsets.all(8.0),
                                           child: Text(
-                                            'Status : ' + payout.status,
+                                            'Status : ${payout['status'] }',
                                             style: Theme.of(context)
                                                 .textTheme
                                                 .bodyText2
@@ -216,88 +198,48 @@ class StripeProfile extends HookWidget {
                                 );
                               }),
                         ),
-                        Divider(),
+                        const Divider(),
                         Card(
                           child: Column(
                             mainAxisAlignment: MainAxisAlignment.center,
-                            crossAxisAlignment: CrossAxisAlignment.center,
                             // direction: Axis.vertical,
                             children: [
                               Text(
-                                'Créer le : ' +
-                                    DateFormat('dd/MM/yyyy').format(
-                                        Timestamp.fromMillisecondsSinceEpoch(
-                                                state.person.created * 1000)
-                                            .toDate()),
-                                style: Theme.of(context)
-                                    .textTheme
-                                    .bodyText1
-                              ),
+                                  'Créer le : ${DateFormat('dd/MM/yyyy').format(Timestamp.fromMillisecondsSinceEpoch(state.person.created * 1000).toDate())}',
+                                  style: Theme.of(context).textTheme.bodyText1),
                               Text(
-                                  'SIREN : ' +
-                                      isProvided(
-                                          state.result.company.taxIdProvided),
-                                  style: Theme.of(context)
-                                      .textTheme
-                                      .bodyText1
-                                      ),
+                                  'SIREN : ${isProvided(state.result.company.taxIdProvided)}',
+                                  style: Theme.of(context).textTheme.bodyText1),
                               Text(
-                                  'Site internet : ' +
-                                      isProvided(
-                                          state.result.businessProfile.url !=
-                                              null),
-                                  style: Theme.of(context)
-                                      .textTheme
-                                      .bodyText1
-                                      ),
+                                  'Site internet : ${isProvided(state.result.businessProfile.url != null)}',
+                                  style: Theme.of(context).textTheme.bodyText1),
                               Center(
                                 child: Text(
-                                  'Numéro de téléphone : ' +
-                                      state.result.businessProfile.supportPhone,
-                                  style: Theme.of(context)
-                                      .textTheme
-                                      .bodyText1,
+                                  'Numéro de téléphone : ${state.result.businessProfile.supportPhone}',
+                                  style: Theme.of(context).textTheme.bodyText1,
                                   overflow: TextOverflow.fade,
                                   textAlign: TextAlign.center,
                                 ),
                               ),
-                              Text(
-                                  'Adresse: ' +
-                                      state.result.company.address.line1 +
-                                      ' ' +
-                                      state.result.company.address.postalCode +
-                                      ' ' +
-                                      state.result.company.address.city,
-                                  style: Theme.of(context)
-                                      .textTheme
-                                      .bodyText1,
+                              Text('''
+                              Adresse: ${state.result.company.address.line1} ${state.result.company.address.postalCode} ${state.result.company.address.city} ''',
+                                  style: Theme.of(context).textTheme.bodyText1,
                                   textAlign: TextAlign.center),
-                              Text(
-                                  'Compte Bancaire : ...' +
-                                      state.result.externalAccounts.data
-                                          .first['last4'],
-                                  style: Theme.of(context)
-                                      .textTheme
-                                      .bodyText1,
+                              Text('''
+                              Compte Bancaire : ...${state.result.externalAccounts.data.first['last4']}''',
+                                  style: Theme.of(context).textTheme.bodyText1,
                                   textAlign: TextAlign.center),
-                              Text(
-                                  'Représentant : ' +
-                                      state.person.firstName +
-                                      ' ' +
-                                      state.person.lastName,
-                                  style: Theme.of(context)
-                                      .textTheme
-                                      .bodyText1,
+                              Text('''
+                              Représentant : ${state.person.firstName} ${state.person.lastName}''',
+                                  style: Theme.of(context).textTheme.bodyText1,
                                   textAlign: TextAlign.center),
-                              Text('Status : ' + buildStatus(state),
-                                  style: Theme.of(context)
-                                      .textTheme
-                                      .bodyText1,
+                              Text('Status : ${buildStatus(state)}',
+                                  style: Theme.of(context).textTheme.bodyText1,
                                   textAlign: TextAlign.center),
                             ],
                           ),
                         ),
-                        Divider(),
+                        const Divider(),
                         Text(
                           'Document d\'identité recto',
                           style: Theme.of(context).textTheme.headline5,
@@ -308,7 +250,6 @@ class StripeProfile extends HookWidget {
                                 myUserRead, db, 'front');
                           },
                           child: Consumer(builder: (context, watch, child) {
-
                             if (watch(boolToggleProvider).showSpinner &&
                                 watch(boolToggleProvider).onGoingUpload ==
                                     'idFront') {
@@ -342,7 +283,6 @@ class StripeProfile extends HookWidget {
                                 myUserRead, db, 'back');
                           },
                           child: Consumer(builder: (context, watch, child) {
-
                             if (watch(boolToggleProvider).showSpinner &&
                                 watch(boolToggleProvider).onGoingUpload ==
                                     'idBack') {
@@ -373,12 +313,8 @@ class StripeProfile extends HookWidget {
                         ),
                         InkWell(
                           onTap: () async {
-                            await sendDocument(
-                                boolToggleRead,
-                                context,
-                                myUserRead,
-                                db,
-                                'justificatifDomicile');
+                            await sendDocument(boolToggleRead, context,
+                                myUserRead, db, 'justificatifDomicile');
                           },
                           child: Consumer(builder: (context, watch, child) {
                             if (watch(boolToggleProvider).showSpinner &&
@@ -436,45 +372,42 @@ class StripeProfile extends HookWidget {
         ),
       ),
       errorWidget: (context, url, error) => Material(
+        borderRadius: const BorderRadius.all(
+          Radius.circular(8.0),
+        ),
+        clipBehavior: Clip.hardEdge,
         child: Image.asset(
           'assets/img/img_not_available.jpeg',
           width: 300.0,
           height: 300.0,
           fit: BoxFit.cover,
         ),
-        borderRadius: BorderRadius.all(
-          Radius.circular(8.0),
-        ),
-        clipBehavior: Clip.hardEdge,
       ),
       imageUrl: url ?? urlFromMyUser,
       fit: BoxFit.scaleDown,
     );
   }
 
-  Future sendDocument(
-      BoolToggle boolToggleRead,
-      BuildContext context,
-      MyUser myUserRead,
-      StripeRepository db,
-      String type) async {
-
+  Future sendDocument(BoolToggle boolToggleRead, BuildContext context,
+      MyUser myUserRead, StripeRepository db, String type) async {
     boolToggleRead.setOnGoingUpload(type);
 
-    File file = await Show.showDialogSource(context);
+    final File file = await Show.showDialogSource(context);
 
     boolToggleRead.setShowSpinner();
     if (file != null) {
-      bool rep = await Show.showAreYouSurePhotoModel(context: context,content: file,
+      final bool rep = await Show.showAreYouSurePhotoModel(
+          context: context,
+          content: file,
           title: 'Êtes-vous sûr de vouloir envoyer cette image?');
-      if(rep != null && rep){
-        firebase_storage.TaskSnapshot taskSnapshot = await firebase_storage
-            .FirebaseStorage.instance
-            .ref()
-            .child(MyPath.stripeDocs(myUserRead.id, type))
-            .putFile(file);
+      if (rep != null && rep) {
+        final firebase_storage.TaskSnapshot taskSnapshot =
+            await firebase_storage.FirebaseStorage.instance
+                .ref()
+                .child(MyPath.stripeDocs(myUserRead.id, type))
+                .putFile(file);
 
-        HttpsCallableResult response = await db.uploadFileToStripe(
+        final HttpsCallableResult response = await db.uploadFileToStripe(
             MyPath.stripeDocs(myUserRead.id, type),
             myUserRead.stripeAccount,
             myUserRead.person);
@@ -502,16 +435,13 @@ class StripeProfile extends HookWidget {
     boolToggleRead.setShowSpinner();
   }
 
-
   String buildStatus(StripeProfileSuccess state) =>
       state.person.verification.status == 'verified'
           ? 'Vérifié'
           : 'Non vérifié';
 
   String toNormalAmount(int amount) {
-    return (amount / 100).toStringAsFixed(
-            (amount / 100).truncateToDouble() == (amount / 100) ? 0 : 2) +
-        ' €';
+    return '${(amount / 100).toStringAsFixed((amount / 100).truncateToDouble() == (amount / 100) ? 0 : 2)} €';
   }
 
   void showSnackBar(BuildContext context, String content) {
@@ -523,17 +453,19 @@ class StripeProfile extends HookWidget {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(content),
-              content == 'Chargement du profil...'
-                  ? CircularProgressIndicator()
-                  : SizedBox(),
+              if (content == 'Chargement du profil...')
+                const CircularProgressIndicator()
+              else
+                const SizedBox(),
             ],
           ),
-          duration: Duration(minutes: 1),
+          duration: const Duration(minutes: 1),
         ),
       );
   }
 
   String isProvided(bool taxIdProvided) {
+
     return taxIdProvided ? 'Fournie' : 'Non Fournie';
   }
 
@@ -555,12 +487,12 @@ class StripeProfile extends HookWidget {
     return total;
   }
 
-  String toTotalEnTransit(List<Data> data) {
+  String toTotalEnTransit(List data) {
     int total = 0;
 
     for (int i = 0; i < data.length; i++) {
-      if (data.elementAt(i).status == 'in_transit') {
-        total += data.elementAt(i).amount;
+      if ((data.elementAt(i) as Map)['status'] == 'in_transit') {
+        total += (data.elementAt(i) as Data).amount;
       }
     }
 
@@ -571,7 +503,6 @@ class StripeProfile extends HookWidget {
     int total = 0;
 
     for (final nb in data) {
-      print(nb.amount);
       total += nb.amount;
     }
 

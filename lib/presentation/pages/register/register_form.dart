@@ -37,7 +37,7 @@ class RegisterForm extends HookWidget {
               SnackBar(
                 content: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
+                  children: const [
                     Text('En cours...'),
                     CircularProgressIndicator(),
                   ],
@@ -49,7 +49,7 @@ class RegisterForm extends HookWidget {
         if (state.isSuccess) {
           final result = await Show.showDialogToDismiss(context, 'Email envoyé',
               'Veuillez vérifier vos emails', 'Ok')
-              .then((_)async => await OpenMailApp.openMailApp() );
+              .then((_)async => OpenMailApp.openMailApp() );
 
           if (!result.didOpen && !result.canOpen){
             Show.showDialogToDismiss(context, 'Oops', 'Pas d\'application de messagerie installée', 'Ok');
@@ -75,7 +75,7 @@ class RegisterForm extends HookWidget {
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Text(state.rep),
-                    Icon(Icons.error),
+                    const Icon(Icons.error),
                   ],
                 ),
                 backgroundColor: Theme.of(context).colorScheme.error,
@@ -87,7 +87,7 @@ class RegisterForm extends HookWidget {
         builder: (context, state) {
 
           return Padding(
-            padding: EdgeInsets.all(20.0),
+            padding: const EdgeInsets.all(20.0),
             child: Column(
               children: <Widget>[
                 Consumer(
@@ -97,7 +97,7 @@ class RegisterForm extends HookWidget {
                         backgroundColor: Theme.of(context).colorScheme.primary,
                         backgroundImage: boolToggle.imageProfil != null
                             ? FileImage(boolToggle.imageProfil)
-                            : AssetImage('assets/img/normal_user_icon.png'),
+                            : const AssetImage('assets/img/normal_user_icon.png') as ImageProvider,
                         radius: 50,
                         child: RawMaterialButton(
                           shape: const CircleBorder(),
@@ -224,7 +224,6 @@ class RegisterForm extends HookWidget {
                               cursorColor:
                               Theme.of(context).colorScheme.onBackground,
                               name: 'Mot de passe',
-                              maxLines: 1,
                               obscureText:
                               watch(boolToggleProvider).obscureTextLogin,
                               decoration: InputDecoration(
@@ -239,7 +238,7 @@ class RegisterForm extends HookWidget {
                                       .setObscureTextLogin(),
                                   color: Theme.of(context).colorScheme.onBackground,
                                   iconSize: 20,
-                                  icon: Icon(FontAwesomeIcons.eye),
+                                  icon: const Icon(FontAwesomeIcons.eye),
                                 ),
                               ),
                               focusNode: _nodePassword,
@@ -272,7 +271,6 @@ class RegisterForm extends HookWidget {
                               cursorColor:
                               Theme.of(context).colorScheme.onBackground,
                               name: 'Confirmation',
-                              maxLines: 1,
                               obscureText:
                               watch(boolToggleProvider).obscuretextRegister,
                               decoration: InputDecoration(
@@ -287,7 +285,7 @@ class RegisterForm extends HookWidget {
                                       .setObscureTextRegister(),
                                   color: Theme.of(context).colorScheme.onBackground,
                                   iconSize: 20,
-                                  icon: Icon(FontAwesomeIcons.eye),
+                                  icon: const Icon(FontAwesomeIcons.eye),
                                 ),
                               ),
                               focusNode: _nodeConfirmation,
@@ -331,46 +329,46 @@ class RegisterForm extends HookWidget {
   }
 
   Future<void> _onPressImage(BuildContext context, BoolToggle boolToggleRead) async {
-    return await showDialog(
+    return showDialog(
         context: context,
         builder: (_) => Platform.isAndroid
             ? AlertDialog(
-          title: Text('Source?'),
-          content: Text('Veuillez choisir une source'),
+          title: const Text('Source?'),
+          content: const Text('Veuillez choisir une source'),
           actions: <Widget>[
             FlatButton(
-              child: Text('Caméra'),
               onPressed: () {
                 boolToggleRead.getImageCamera('Profil');
                 Navigator.of(context).pop();
               },
+              child: const Text('Caméra'),
             ),
             FlatButton(
-              child: Text('Galerie'),
               onPressed: () {
                 boolToggleRead.getImageGallery('Profil');
                 Navigator.of(context).pop();
               },
+              child: const Text('Galerie'),
             ),
           ],
         )
             : CupertinoAlertDialog(
-          title: Text('Source?'),
-          content: Text('Veuillez choisir une source'),
+          title: const Text('Source?'),
+          content: const Text('Veuillez choisir une source'),
           actions: <Widget>[
             FlatButton(
-              child: Text('Caméra'),
               onPressed: () {
                 boolToggleRead.getImageCamera('Profil');
                 Navigator.of(context).pop();
               },
+              child: const Text('Caméra'),
             ),
             FlatButton(
-              child: Text('Galerie'),
               onPressed: () {
                 boolToggleRead.getImageGallery('Profil');
                 Navigator.of(context).pop();
               },
+              child: const Text('Galerie'),
             ),
           ],
         ));
@@ -385,8 +383,7 @@ class RegisterForm extends HookWidget {
         RegisterSubmitted(
           email: _fbKey.currentState.fields['Email'].value.toString().trim(),
           password: _fbKey.currentState.fields['Mot de passe'].value.toString().trim(),
-          prenomNom: _fbKey.currentState.fields['Prénom'].value+' '+
-              _fbKey.currentState.fields['Nom'].value.toString().trim(),
+          prenomNom: '${_fbKey.currentState.fields['Prénom'].value} ${_fbKey.currentState.fields['Nom'].value.toString().trim()}',
             boolToggleRead:boolToggleRead,
           myUserRepository: myUserRepository
         ),

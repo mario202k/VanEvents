@@ -17,7 +17,7 @@ import 'package:van_events_project/domain/routing/route.gr.dart';
 import 'package:van_events_project/presentation/widgets/model_screen.dart';
 import 'package:van_events_project/providers/toggle_bool.dart';
 
-import 'GalleryPage.dart';
+import 'gallery_page.dart';
 
 class Details extends HookWidget {
   final MyEvent event;
@@ -26,11 +26,12 @@ class Details extends HookWidget {
 
   @override
   Widget build(BuildContext context) {
-    print('buildDetails');
     final db = context.read(myEventRepositoryProvider);
     final participants = db.participantsEvent(event.id);
-    final boolToggle = useProvider(boolToggleProvider);
+    final boolToggle = context.read(boolToggleProvider);
     final FirebaseMessaging firebaseMessaging = FirebaseMessaging();
+
+    boolToggle.imageProviderDetail.clear();
 
     return Consumer(builder: (context, watch, child) {
       return ModelScreen(
@@ -44,7 +45,6 @@ class Details extends HookWidget {
               return <Widget>[
                 SliverAppBar(
                   expandedHeight: 300,
-                  floating: false,
                   pinned: true,
                   flexibleSpace: FlexibleSpaceBar(
                     centerTitle: true,
@@ -53,32 +53,64 @@ class Details extends HookWidget {
                         overflow: TextOverflow.ellipsis,
                         textAlign: TextAlign.center,
                         style: Theme.of(context).textTheme.headline4),
-                    background: Hero(
-                      tag: event.id,
-                      child: Image(
-                        image:
-                            boolToggle.imageProviderEvent[event.imageFlyerUrl],
-                        fit: BoxFit.cover,
-                      ),
-                    ),
+                    background: boolToggle
+                                .imageProviderEvent[event.imageFlyerUrl] !=
+                            null
+                        ? Hero(
+                            tag: event.id,
+                            child: Image(
+                              image: boolToggle
+                                  .imageProviderEvent[event.imageFlyerUrl],
+                              fit: BoxFit.cover,
+                            ),
+                          )
+                        : CachedNetworkImage(
+                            imageUrl: event.imageFlyerUrl,
+                            placeholder: (context, url) => Shimmer.fromColors(
+                              baseColor: Colors.white,
+                              highlightColor:
+                                  Theme.of(context).colorScheme.primary,
+                              child: Container(
+                                  height: 300,
+                                  width: double.maxFinite,
+                                  color: Colors.white),
+                            ),
+                            imageBuilder: (context, imageProvider) {
+                              return Image(
+                                image: imageProvider,
+                                fit: BoxFit.cover,
+                              );
+                            },
+                            errorWidget: (context, url, error) => Material(
+                              borderRadius: const BorderRadius.all(
+                                Radius.circular(8.0),
+                              ),
+                              clipBehavior: Clip.hardEdge,
+                              child: Image.asset(
+                                'assets/img/img_not_available.jpeg',
+                                width: 300.0,
+                                height: 300.0,
+                                fit: BoxFit.cover,
+                              ),
+                            ),
+                          ),
                   ),
                 ),
               ];
             },
             body: SingleChildScrollView(
-              padding: EdgeInsets.symmetric(horizontal: 15),
-              physics: ClampingScrollPhysics(),
+              padding: const EdgeInsets.symmetric(horizontal: 15),
+              physics: const ClampingScrollPhysics(),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: <Widget>[
-                  SizedBox(
+                  const SizedBox(
                     height: 25,
                   ),
                   Row(
-                    mainAxisSize: MainAxisSize.max,
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: <Widget>[
-                      Icon(
+                      const Icon(
                         Icons.access_time,
                       ),
                       Padding(
@@ -126,14 +158,12 @@ class Details extends HookWidget {
                                       ChatRoomArguments(chatId: event.chatId));
                             });
                           },
-                          icon: FaIcon(FontAwesomeIcons.comments),
-                          label: Text('Chat')),
+                          icon: const FaIcon(FontAwesomeIcons.comments),
+                          label: const Text('Chat')),
                       RaisedButton.icon(
                           onPressed: () async {
                             final availableMaps =
                                 await MapLauncher.installedMaps;
-                            print(
-                                availableMaps); // [AvailableMap { mapName: Google Maps, mapType: google }, ...]
 
                             await availableMaps.first.showMarker(
                               coords: Coords(event.position.latitude,
@@ -142,16 +172,16 @@ class Details extends HookWidget {
                               description: 'event.addressZone',
                             );
                           },
-                          icon: Icon(
+                          icon: const Icon(
                             Icons.map,
                           ),
-                          label: Flexible(child: Text("Y aller"))),
+                          label: const Flexible(child: Text("Y aller"))),
                     ],
                   ),
-                  SizedBox(
+                  const SizedBox(
                     height: 25,
                   ),
-                  Divider(),
+                  const Divider(),
                   Padding(
                     padding: const EdgeInsets.only(top: 16.0, bottom: 8.0),
                     child: Text(
@@ -168,7 +198,7 @@ class Details extends HookWidget {
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: event.genres
-                            ?.map((e) => Text(e,
+                            ?.map((e) => Text(e?.toString() ?? '',
                                 style: Theme.of(context).textTheme.bodyText1))
                             ?.toList() ??
                         [],
@@ -180,23 +210,23 @@ class Details extends HookWidget {
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: event.types
-                            ?.map((e) => Text(e,
+                            ?.map((e) => Text(e?.toString() ?? '',
                                 style: Theme.of(context).textTheme.bodyText1))
                             ?.toList() ??
                         [],
                   ),
-                  SizedBox(
+                  const SizedBox(
                     height: 25,
                   ),
-                  Divider(),
-                  SizedBox(
+                  const Divider(),
+                  const SizedBox(
                     height: 25,
                   ),
                   Text("Photos", style: Theme.of(context).textTheme.headline5),
                   GridView.builder(
                       itemCount: event.imagePhotos.length,
                       shrinkWrap: true,
-                      physics: ClampingScrollPhysics(),
+                      physics: const ClampingScrollPhysics(),
                       gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
                           crossAxisCount: (MediaQuery.of(context).orientation ==
                                   Orientation.landscape)
@@ -236,34 +266,34 @@ class Details extends HookWidget {
                             );
                           },
                           errorWidget: (context, url, error) => Material(
+                            borderRadius: const BorderRadius.all(
+                              Radius.circular(8.0),
+                            ),
+                            clipBehavior: Clip.hardEdge,
                             child: Image.asset(
                               'assets/img/img_not_available.jpeg',
                               width: 300.0,
                               height: 300.0,
                               fit: BoxFit.cover,
                             ),
-                            borderRadius: BorderRadius.all(
-                              Radius.circular(8.0),
-                            ),
-                            clipBehavior: Clip.hardEdge,
                           ),
-                          imageUrl: event.imagePhotos[index],
+                          imageUrl: event.imagePhotos[index] as String,
                           fit: BoxFit.scaleDown,
                         );
                       }),
-                  Divider(),
-                  SizedBox(
+                  const Divider(),
+                  const SizedBox(
                     height: 25,
                   ),
                   Text("Participants",
                       style: Theme.of(context).textTheme.headline5),
-                  Container(
+                  SizedBox(
                     height: 100,
                     child: FutureBuilder<List<Future<MyUser>>>(
                         future: participants,
-                        builder: (context, AsyncSnapshot snapshot) {
+                        builder: (context, snapshot) {
                           if (snapshot.hasError) {
-                            return Center(
+                            return const Center(
                               child: Text('Erreur de connection'),
                             );
                           } else if (snapshot.connectionState ==
@@ -274,7 +304,8 @@ class Details extends HookWidget {
                                       Theme.of(context).colorScheme.secondary)),
                             );
                           }
-                          List<Future<MyUser>> participantsList = snapshot.data;
+                          final List<Future<MyUser>> participantsList =
+                              snapshot.data;
 
                           return participantsList.isNotEmpty
                               ? ListView.builder(
@@ -287,7 +318,7 @@ class Details extends HookWidget {
                                             participantsList.elementAt(index),
                                         builder: (context, snapshot) {
                                           if (snapshot.hasError) {
-                                            return Center(
+                                            return const Center(
                                               child:
                                                   Text('Erreur de connection'),
                                             );
@@ -304,7 +335,7 @@ class Details extends HookWidget {
                                             );
                                           }
 
-                                          MyUser user = snapshot.data;
+                                          final MyUser user = snapshot.data;
 
                                           return Padding(
                                             padding: const EdgeInsets.all(8.0),
@@ -330,7 +361,8 @@ class Details extends HookWidget {
                                                         decoration:
                                                             BoxDecoration(
                                                           borderRadius:
-                                                              BorderRadius.all(
+                                                              const BorderRadius
+                                                                      .all(
                                                                   Radius
                                                                       .circular(
                                                                           80)),
@@ -351,23 +383,24 @@ class Details extends HookWidget {
                                                             Theme.of(context)
                                                                 .colorScheme
                                                                 .primary,
-                                                        child: CircleAvatar(
+                                                        child:
+                                                            const CircleAvatar(
                                                           radius: 40,
                                                         ),
                                                       ),
                                                       errorWidget: (context,
                                                           url, error) {
-                                                        print(url);
-                                                        print(error);
                                                         return Center(
                                                           child: CircleAvatar(
                                                             radius: 40,
                                                             backgroundColor:
-                                                            Theme.of(context)
-                                                                .colorScheme
-                                                                .primary,
-                                                            backgroundImage: AssetImage(
-                                                                'assets/img/normal_user_icon.png'),
+                                                                Theme.of(
+                                                                        context)
+                                                                    .colorScheme
+                                                                    .primary,
+                                                            backgroundImage:
+                                                                const AssetImage(
+                                                                    'assets/img/normal_user_icon.png'),
                                                           ),
                                                         );
                                                       },
@@ -379,8 +412,9 @@ class Details extends HookWidget {
                                                             Theme.of(context)
                                                                 .colorScheme
                                                                 .primary,
-                                                        backgroundImage: AssetImage(
-                                                            'assets/img/normal_user_icon.png'),
+                                                        backgroundImage:
+                                                            const AssetImage(
+                                                                'assets/img/normal_user_icon.png'),
                                                       ),
                                                     ),
                                             ),
@@ -388,10 +422,10 @@ class Details extends HookWidget {
                                         });
                                   },
                                 )
-                              : SizedBox();
+                              : const SizedBox();
                         }),
                   ),
-                  SizedBox(
+                  const SizedBox(
                     height: 60,
                   ),
                 ],
@@ -406,10 +440,10 @@ class Details extends HookWidget {
                         FormulaChoiceArguments(formulas: form, myEvent: event));
               });
             },
-            icon: Icon(
+            icon: const Icon(
               FontAwesomeIcons.cartArrowDown,
             ),
-            label: PulseAnimation(
+            label: const PulseAnimation(
               child: Text(
                 "PARTICIPER",
               ),

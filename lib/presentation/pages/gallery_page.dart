@@ -16,7 +16,7 @@ class GalleryPage extends StatelessWidget {
     return Scaffold(
       backgroundColor: Theme.of(context).colorScheme.background,
       appBar: AppBar(
-        title: Text('Gallery'),
+        title: const Text('Gallery'),
       ),
       body: PhotoViewGallery.builder(
         pageController: PageController(initialPage: initialPage),
@@ -32,7 +32,7 @@ class GalleryPage extends StatelessWidget {
         },
         itemCount: imageList.length,
         loadingBuilder: (context, event) => Center(
-          child: Container(
+          child: SizedBox(
             width: 20.0,
             height: 20.0,
             child: CircularProgressIndicator(

@@ -1,7 +1,6 @@
 import 'dart:async';
 
 import 'package:bloc/bloc.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:van_events_project/domain/models/my_user.dart';
 import 'package:van_events_project/domain/repositories/my_user_repository.dart';
@@ -10,12 +9,8 @@ import 'package:van_events_project/providers/toggle_bool.dart';
 
 
 class RegisterBloc extends Bloc<RegisterEvent, RegisterState> {
-  final BuildContext _context;
 
-  RegisterBloc(this._context) : super(null);
-
-  @override
-  RegisterState get initialState => RegisterState.initial();
+  RegisterBloc() : super(null);
 
   @override
   Stream<RegisterState> mapEventToState(
@@ -36,7 +31,7 @@ class RegisterBloc extends Bloc<RegisterEvent, RegisterState> {
   ) async* {
     yield RegisterState.loading();
 
-    String rep = await myUserRepository
+    final String rep = await myUserRepository
         .signUp(
             image: boolToggleRead.imageProfil,
             email: email,

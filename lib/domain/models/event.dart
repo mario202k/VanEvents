@@ -44,37 +44,29 @@ class MyEvent {
 
   Map<String, dynamic> toMap() {
     return {
-      'id': this.id,
-      'titre': this.titre,
-      'description': this.description,
-      'imageFlyerUrl': this.imageFlyerUrl,
-      'imageBannerUrl': this.imageBannerUrl,
-      'imagePhotos': this.imagePhotos,
-      'dateDebut': this.dateDebut,
-      'dateFin': this.dateFin,
-      'adresseZone': this.adresseZone,
-      'adresseRue': this.adresseRue,
-      'chatId': this.chatId,
-      'status': this.status,
-      'genres': this.genres,
-      'types': this.types,
-      'stripeAccount': this.stripeAccount,
-      'dateFinAffiche': this.dateFinAffiche,
-      'dateDebutAffiche': this.dateDebutAffiche,
-      'position': this.position,
-      'uploadedDate':this.uploadedDate
+      'id': id,
+      'titre': titre,
+      'description': description,
+      'imageFlyerUrl': imageFlyerUrl,
+      'imageBannerUrl': imageBannerUrl,
+      'imagePhotos': imagePhotos,
+      'dateDebut': dateDebut,
+      'dateFin': dateFin,
+      'adresseZone': adresseZone,
+      'adresseRue': adresseRue,
+      'chatId': chatId,
+      'status': status,
+      'genres': genres,
+      'types': types,
+      'stripeAccount': stripeAccount,
+      'dateFinAffiche': dateFinAffiche,
+      'dateDebutAffiche': dateDebutAffiche,
+      'position': position,
+      'uploadedDate': uploadedDate
     };
   }
 
   factory MyEvent.fromMap(Map<String, dynamic> map) {
-    Timestamp dateDebut = map['dateDebut'] ?? '';
-    Timestamp dateFin = map['dateFin'] ?? '';
-    Timestamp dateFinAffiche = map['dateFinAffiche'] ?? null;
-    Timestamp dateDebutAffiche = map['dateDebutAffiche'] ?? null;
-    Timestamp uploadedDate = map['uploadedDate'] ?? null;
-    Map geo = map['position'] as Map;
-    GeoPoint coords = geo['geopoint'];
-
     return MyEvent(
         id: map['id'] as String ?? '',
         titre: map['titre'] as String ?? '',
@@ -82,19 +74,18 @@ class MyEvent {
         imageFlyerUrl: map['imageFlyerUrl'] as String ?? '',
         imageBannerUrl: map['imageBannerUrl'] as String ?? '',
         imagePhotos: map['imagePhotos'] as List,
-        dateDebut: dateDebut.toDate(),
-        dateFin: dateFin.toDate(),
+        dateDebut: (map['dateDebut'] as Timestamp).toDate(),
+        dateFin: (map['dateFin'] as Timestamp).toDate(),
         adresseZone: map['adresseZone'] as List,
-        adresseRue: map['adresseRue'],
+        adresseRue: map['adresseRue'] as List,
         chatId: map['chatId'] as String,
         status: map['status'] as String,
         genres: map['genres'] as List,
         types: map['types'] as List,
-        stripeAccount: map['stripeAccount'],
-        position: coords,
-        uploadedDate : uploadedDate?.toDate() ?? null,
-        dateFinAffiche: dateFinAffiche != null ? dateFinAffiche.toDate() : null,
-        dateDebutAffiche:
-            dateDebutAffiche != null ? dateDebutAffiche.toDate() : null);
+        stripeAccount: map['stripeAccount'] as String,
+        position: map['position']['geopoint'] as GeoPoint,
+        uploadedDate: (map['uploadedDate'] as Timestamp)?.toDate(),
+        dateFinAffiche: (map['dateFinAffiche'] as Timestamp)?.toDate(),
+        dateDebutAffiche: (map['dateDebutAffiche'] as Timestamp)?.toDate());
   }
 }

@@ -31,7 +31,7 @@ class MyTransportRepository {
   MyTransportRepository({this.uid});
 
   Future uploadTransport(MyTransport transport) async {
-    return await _service.setData(
+    return _service.setData(
         path: MyPath.transport(transport.id), data: transport.toMap());
   }
 
@@ -77,38 +77,38 @@ class MyTransportRepository {
   }
 
   Future cancelTransport(String idTransport, bool isCustomer) async {
-    return await _service.updateData(path: MyPath.transport(idTransport), data: {
+    return  _service.updateData(path: MyPath.transport(idTransport), data: {
       'statusTransport': isCustomer ? 'CancelledByCustomer' : 'CancelledByVTC'
     });
   }
 
   Future setTransportAccepted(String transportId, String prix) async {
-    return await _service.setData(
+    return  _service.setData(
         path: MyPath.transport(transportId),
         data: {'statusTransport': 'accepted', 'amount': double.parse(prix)});
   }
 
   Future setTransportRefuserParVtc(String transportId) async {
-    return await _service.updateData(
+    return _service.updateData(
         path: MyPath.transport(transportId),
         data: {'statusTransport': 'cancelledByVTC'});
   }
 
   Future setTransportRefuserParClient(String transportId) async {
-    return await _service.updateData(
+    return  _service.updateData(
         path: MyPath.transport(transportId),
         data: {'statusTransport': 'cancelledByCustomer'});
   }
 
   Future setTransportFactureEnvoyer(String transportId) async {
-    return await _service.updateData(
+    return  _service.updateData(
         path: MyPath.transport(transportId),
         data: {'statusTransport': 'invoiceSent'});
   }
 
   Future setTransportPaymentIntentId(
       String transportId, String paymentIntentId) async {
-    return await _service.setData(path: MyPath.transport(transportId), data: {
+    return  _service.setData(path: MyPath.transport(transportId), data: {
       'paymentIntentId': paymentIntentId,
       'statusTransport': 'holdOnCard'
     });

@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 class RegisterButtonOrganisateur extends StatelessWidget {
   final VoidCallback _onPressed;
 
-  RegisterButtonOrganisateur({Key key, VoidCallback onPressed})
+  const RegisterButtonOrganisateur({Key key, VoidCallback onPressed})
       : _onPressed = onPressed,
         super(key: key);
 

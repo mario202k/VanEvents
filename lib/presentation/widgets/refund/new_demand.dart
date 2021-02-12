@@ -50,30 +50,29 @@ class NewDemand extends HookWidget {
               ),
             ));
   }
-
-
 }
 
-Future refundProcess(BuildContext context, List<Refund> refunds, int index) async {
+Future refundProcess(
+    BuildContext context, List<Refund> refunds, int index) async {
   final response = await Show.showRembourser(context);
   if (response != null && response) {
     final amount = refunds[index].amount.toDouble() / 100;
-    final map =
-    await Show.showRembourserClient(context, amount);
+    final map = await Show.showRembourserClient(context, amount);
 
+    if(map == null){
+      return;
+    }
     String pI = refunds[index].paymentIntent;
-    String reason = map['reason'].toString().substring(
-        map['reason'].toString().indexOf('.') + 1);
-    int myAmount = map['amount'] != null
-        ? (map['amount'] * 100).toInt()
-        : null;
+    String reason = map['reason']
+        .toString()
+        .substring(map['reason'].toString().indexOf('.') + 1);
+    final int myAmount = ((map['amount'] as int) * 100).toInt();
 
     Show.showSnackBar('Chargement...', keyRefundScreen);
     final rep = await context
         .read(stripeRepositoryProvider)
         .refundBillet(pI, reason, myAmount);
-    if (rep != null &&
-        rep.data['status'] == 'succeeded') {
+    if (rep != null && rep.data['status'] == 'succeeded') {
       final billet = await context
           .read(myBilletRepositoryProvider)
           .getBillet(refunds[index].paymentIntent);
@@ -83,26 +82,18 @@ Future refundProcess(BuildContext context, List<Refund> refunds, int index) asyn
           .setStatusRefunded(billet.first.id);
 
       await Show.showDialogToDismiss(
-          context,
-          'Remboursement',
-          'Remboursement effectué.',
-          'Ok');
+          context, 'Remboursement', 'Remboursement effectué.', 'Ok');
 
       final myRefund = Refund.fromStripeMap(
-          rep.data, refunds[index].id);
+          rep.data as Map<dynamic, dynamic>, refunds[index].id);
       context
           .read(stripeRepositoryProvider)
-          .setRefundFromStripe(
-          myRefund, refunds[index].id);
+          .setRefundFromStripe(myRefund, refunds[index].id);
     } else {
-      Show.showDialogToDismiss(
-          context,
-          'Remboursement',
-          'Impossible d\'effectué le remboursement.',
-          'Ok');
+      Show.showDialogToDismiss(context, 'Remboursement',
+          'Impossible d\'effectué le remboursement.', 'Ok');
     }
   } else if (response != null && !response) {
-
     final billet = await context
         .read(myBilletRepositoryProvider)
         .getBillet(refunds[index].paymentIntent);
@@ -111,8 +102,6 @@ Future refundProcess(BuildContext context, List<Refund> refunds, int index) asyn
         .read(myBilletRepositoryProvider)
         .setStatusRefused(billet.first.id);
 
-    context
-        .read(stripeRepositoryProvider)
-        .setRefundRefused(refunds[index]);
+    context.read(stripeRepositoryProvider).setRefundRefused(refunds[index]);
   }
 }

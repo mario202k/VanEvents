@@ -10,7 +10,7 @@ class LoginState {
   final String rep;
 
 
-  LoginState({
+  const LoginState({
 
     @required this.isSubmitting,
     @required this.isSuccess,
@@ -20,7 +20,7 @@ class LoginState {
   });
 
   factory LoginState.initial() {
-    return LoginState(
+    return const LoginState(
       isSubmitting: false,
       isSuccess: false,
       isFirstLogin: false,
@@ -29,7 +29,7 @@ class LoginState {
   }
 
   factory LoginState.loading() {
-    return LoginState(
+    return const LoginState(
       isSubmitting: true,
       isSuccess: false,
       isFirstLogin: false,
@@ -48,7 +48,7 @@ class LoginState {
   }
 
   factory LoginState.success() {
-    return LoginState(
+    return const LoginState(
       isSubmitting: false,
       isSuccess: true,
       isFirstLogin: false,

@@ -13,10 +13,10 @@ class AuthenticationSuccess extends AuthenticationState {
   final User firebaseUser;
   final MyUser myUser;
 
-  const AuthenticationSuccess(this.firebaseUser,this.myUser);
+  const AuthenticationSuccess(this.firebaseUser, this.myUser);
 
   @override
-  List<Object> get props => [firebaseUser,myUser];
+  List<Object> get props => [firebaseUser, myUser];
 
   @override
   String toString() => 'Authenticated { displayName: $firebaseUser }';
@@ -37,7 +37,6 @@ class AuthenticationEmailLinkSuccess extends AuthenticationState {
 }
 
 class AuthenticationCGUCGV extends AuthenticationState {
-
   final User firebaseUser;
 
   const AuthenticationCGUCGV(this.firebaseUser);
@@ -47,13 +46,12 @@ class AuthenticationCGUCGV extends AuthenticationState {
 
   @override
   String toString() => 'Authenticated { displayName: $firebaseUser }';
-
 }
 
 class AuthenticationFailure extends AuthenticationState {
   final bool seenOnboarding;
 
-  const AuthenticationFailure(this.seenOnboarding);
+  const AuthenticationFailure({this.seenOnboarding});
 
   @override
   List<Object> get props => [seenOnboarding];

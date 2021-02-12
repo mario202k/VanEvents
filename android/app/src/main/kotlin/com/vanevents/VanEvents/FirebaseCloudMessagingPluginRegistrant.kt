@@ -1,6 +1,7 @@
 package com.vanevents.VanEvents
 
 import io.flutter.plugin.common.PluginRegistry
+import io.flutter.plugins.firebase.firestore.FlutterFirebaseFirestorePlugin
 import io.flutter.plugins.firebasemessaging.FirebaseMessagingPlugin
 
 object FirebaseCloudMessagingPluginRegistrant {
@@ -9,6 +10,7 @@ object FirebaseCloudMessagingPluginRegistrant {
             return
         }
         FirebaseMessagingPlugin.registerWith(registry.registrarFor("io.flutter.plugins.firebasemessaging.FirebaseMessagingPlugin"))
+//        FlutterFirebaseFirestorePlugin.registerWith(registry.registrarFor("io.flutter.plugins.firebase.firestore.FlutterFirebaseFirestorePlugin"))
     }
 
     private fun alreadyRegisteredWith(registry: PluginRegistry): Boolean {

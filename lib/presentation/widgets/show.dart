@@ -2,7 +2,6 @@ import 'dart:async';
 import 'dart:io';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:flare_flutter/asset_provider.dart';
 import 'package:flare_flutter/flare_actor.dart';
 import 'package:flare_flutter/flare_cache_builder.dart';
 import 'package:flare_flutter/provider/asset_flare.dart';
@@ -19,7 +18,7 @@ import 'package:van_events_project/domain/models/refund.dart';
 import 'package:van_events_project/domain/repositories/my_event_repository.dart';
 import 'package:van_events_project/domain/repositories/my_user_repository.dart';
 import 'package:van_events_project/presentation/pages/refund_screen.dart';
-import 'package:van_events_project/presentation/widgets/lieuQuandAlertDialog.dart';
+import 'package:van_events_project/presentation/widgets/lieu_quand_alertdialog.dart';
 import 'package:van_events_project/providers/toggle_bool.dart';
 import 'package:van_events_project/providers/upload_event.dart';
 
@@ -28,15 +27,15 @@ class Show {
       BuildContext context, String from) async {
     Timer _throttle;
 
-    String str = await showGeneralDialog<String>(
+    final String str = await showGeneralDialog<String>(
         barrierDismissible: true,
         barrierLabel: "Label",
         barrierColor: Colors.black.withOpacity(0.5),
-        transitionDuration: Duration(milliseconds: 500),
+        transitionDuration: const Duration(milliseconds: 500),
         transitionBuilder: (context, anim1, anim2, child) {
           return SlideTransition(
-            position:
-                Tween(begin: Offset(0, 1), end: Offset(0, 0)).animate(anim1),
+            position: Tween(begin: const Offset(0, 1), end: const Offset(0, 0))
+                .animate(anim1),
             child: child,
           );
         },
@@ -46,8 +45,8 @@ class Show {
               child: Container(
 //color: Colors.white,
 //height: 300,
-                margin:
-                    EdgeInsets.only(bottom: 50, left: 12, right: 12, top: 30),
+                margin: const EdgeInsets.only(
+                    bottom: 50, left: 12, right: 12, top: 30),
                 decoration: BoxDecoration(
                   color: Colors.white,
                   borderRadius: BorderRadius.circular(5),
@@ -70,18 +69,18 @@ class Show {
                               from == 'UploadEvent'
                                   ? context
                                       .read(uploadEventProvider)
-                                      .setSuggestions(List<Prediction>())
+                                      .setSuggestions(<Prediction>[])
                                   : context
                                       .read(boolToggleProvider)
-                                      .setSuggestions(List<Prediction>());
+                                      .setSuggestions(<Prediction>[]);
 
                               return;
                             }
 
-                            GoogleMapsPlaces _places =
+                            final GoogleMapsPlaces _places =
                                 GoogleMapsPlaces(apiKey: PLACES_API_KEY);
 
-                            PlacesAutocompleteResponse
+                            final PlacesAutocompleteResponse
                                 placesAutocompleteResponse =
                                 await _places.autocomplete(
                               value.toString(),
@@ -114,55 +113,53 @@ class Show {
                         style: Theme.of(context).textTheme.bodyText1,
                         cursorColor: Theme.of(context).colorScheme.onBackground,
                         name: 'city',
-                        maxLines: 1,
                         decoration: InputDecoration(
 //labelText: 'Ville',
                             hintText: 'Recherche',
-                            border: OutlineInputBorder(
+                            border: const OutlineInputBorder(
                               borderSide: BorderSide.none,
                             ),
-                            focusedBorder: OutlineInputBorder(
+                            focusedBorder: const OutlineInputBorder(
                               borderSide: BorderSide.none,
                             ),
-                            disabledBorder: OutlineInputBorder(
+                            disabledBorder: const OutlineInputBorder(
                               borderSide: BorderSide.none,
                             ),
-                            enabledBorder: OutlineInputBorder(
+                            enabledBorder: const OutlineInputBorder(
                               borderSide: BorderSide.none,
                             ),
-                            errorBorder: OutlineInputBorder(
+                            errorBorder: const OutlineInputBorder(
                               borderSide: BorderSide.none,
                             ),
-                            focusedErrorBorder: OutlineInputBorder(
+                            focusedErrorBorder: const OutlineInputBorder(
                               borderSide: BorderSide.none,
                             ),
                             icon: InkWell(
                               onTap: () {
                                 Navigator.of(context).pop();
                               },
-                              child: Padding(
-                                padding: const EdgeInsets.all(8.0),
+                              child: const Padding(
+                                padding: EdgeInsets.all(8.0),
                                 child: BackButtonIcon(),
                               ),
                             )
 //
                             ),
                         validator: (val) {
-                          RegExp regex = RegExp(
+                          final RegExp regex = RegExp(
                               r'^[a-zA-ZáàâäãåçéèêëíìîïñóòôöõúùûüýÿæœÁÀÂÄÃÅÇÉÈÊËÍÌÎÏÑÓÒÔÖÕÚÙÛÜÝŸÆŒ\-. ]{2,60}$');
 
-                          if (regex.allMatches(val).length == 0) {
+                          if (regex.allMatches(val).isEmpty) {
                             return 'Non valide';
                           }
                           return null;
                         },
                       ),
-                      Divider(),
+                      const Divider(),
                       Consumer(builder: (context, watch, child) {
                         final myWatch = from == 'UploadEvent'
                             ? watch(uploadEventProvider).suggestions
                             : watch(boolToggleProvider).suggestions;
-                        print(myWatch);
                         return Column(
                           mainAxisSize: MainAxisSize.min,
                           children: myWatch
@@ -173,15 +170,15 @@ class Show {
                                             .setSelectedAdress(e.description);
                                         Navigator.of(context).pop(e.placeId);
                                       },
-                                      leading: Icon(Icons.location_on),
+                                      leading: const Icon(Icons.location_on),
                                       title: Text(
-                                        "${e.description}",
+                                        e.description,
                                         style: Theme.of(context)
                                             .textTheme
                                             .bodyText1,
                                       )))
                                   ?.toList() ??
-                              List<Widget>(),
+                              <Widget>[],
                         );
                       })
                     ],
@@ -190,14 +187,14 @@ class Show {
               ),
             ));
 
-    GoogleMapsPlaces _places =
+    final GoogleMapsPlaces _places =
         GoogleMapsPlaces(apiKey: PLACES_API_KEY); //Same API_KEY as above
 
     if (str == null) {
       return null;
     }
 
-    return await _places.getDetailsByPlaceId(str);
+    return _places.getDetailsByPlaceId(str);
   }
 
   static void showSnackBarError(BuildContext context,
@@ -224,8 +221,6 @@ class Show {
   }
 
   static showSnackBar(String val, GlobalKey<ScaffoldState> myScaffold) {
-    print('showSnackBar');
-    print('//////');
     myScaffold.currentState
       ..hideCurrentSnackBar()
       ..showSnackBar(SnackBar(
@@ -239,49 +234,49 @@ class Show {
   }
 
   static Future<File> showDialogSource(BuildContext context) async {
-    return await showDialog<File>(
+    return showDialog<File>(
         context: context,
         builder: (_) => Platform.isAndroid
             ? AlertDialog(
-                title: Text('Source?'),
-                content: Text('Veuillez choisir une source'),
+                title: const Text('Source?'),
+                content: const Text('Veuillez choisir une source'),
                 actions: <Widget>[
                   FlatButton(
-                    child: Text('Caméra'),
                     onPressed: () async {
                       await getImageFileCamera(context);
                     },
+                    child: const Text('Caméra'),
                   ),
                   FlatButton(
-                    child: Text('Galerie'),
                     onPressed: () async {
                       await getImageFileGallery(context);
                     },
+                    child: const Text('Galerie'),
                   ),
                 ],
               )
             : CupertinoAlertDialog(
-                title: Text('Source?'),
-                content: Text('Veuillez choisir une source'),
+                title: const Text('Source?'),
+                content: const Text('Veuillez choisir une source'),
                 actions: <Widget>[
                   FlatButton(
-                    child: Text('Caméra'),
                     onPressed: () async {
                       await getImageFileCamera(context);
                     },
+                    child: const Text('Caméra'),
                   ),
                   FlatButton(
-                    child: Text('Galerie'),
                     onPressed: () async {
                       await getImageFileGallery(context);
                     },
+                    child: const Text('Galerie'),
                   ),
                 ],
               ));
   }
 
   static Future<dynamic> getImageFileGallery(BuildContext context) async {
-    String str =
+    final String str =
         (await ImagePicker().getImage(source: ImageSource.gallery))?.path;
     if (str == null) {
       Navigator.of(context).pop();
@@ -290,7 +285,7 @@ class Show {
   }
 
   static Future<dynamic> getImageFileCamera(BuildContext context) async {
-    String str =
+    final String str =
         (await ImagePicker().getImage(source: ImageSource.camera))?.path;
     if (str == null) {
       Navigator.of(context).pop();
@@ -300,7 +295,7 @@ class Show {
 
   static Future showDialogToDismiss(
       BuildContext context, String title, String content, String button) async {
-    return await showDialog(
+    return showDialog(
         context: context,
         builder: (_) {
           if (!Platform.isIOS) {
@@ -313,13 +308,13 @@ class Show {
                 content,
               ),
               actions: <Widget>[
-                new FlatButton(
-                  child: Text(
-                    button,
-                  ),
+                FlatButton(
                   onPressed: () {
                     Navigator.of(context).pop(Future);
                   },
+                  child: Text(
+                    button,
+                  ),
                 ),
               ],
             );
@@ -334,13 +329,13 @@ class Show {
                 actions: <Widget>[
                   CupertinoDialogAction(
                     isDefaultAction: true,
+                    onPressed: () {
+                      Navigator.of(context).pop(Future);
+                    },
                     child: Text(
                       button[0].toUpperCase() +
                           button.substring(1).toLowerCase(),
                     ),
-                    onPressed: () {
-                      Navigator.of(context).pop(Future);
-                    },
                   )
                 ]);
           }
@@ -362,11 +357,11 @@ class Show {
 
     Widget genreAlertDialog(BuildContext context) {
       return ListView.builder(
-          physics: AlwaysScrollableScrollPhysics(),
+          physics: const AlwaysScrollableScrollPhysics(),
           shrinkWrap: true,
           itemCount: context.read(boolToggleProvider).genre.keys.length,
           itemBuilder: (context, index) {
-            List<String> str =
+            final List<String> str =
                 context.read(boolToggleProvider).genre.keys.toList();
 
             return Consumer(builder: (context, watch, build) {
@@ -386,10 +381,10 @@ class Show {
 
     Widget typeAlertDialog(BuildContext context) {
       return ListView.builder(
-          physics: AlwaysScrollableScrollPhysics(),
+          physics: const AlwaysScrollableScrollPhysics(),
           itemCount: context.read(boolToggleProvider).type.keys.length,
           itemBuilder: (context, index) {
-            List<String> str =
+            final List<String> str =
                 context.read(boolToggleProvider).type.keys.toList();
             return Consumer(builder: (context, watch, child) {
               return CheckboxListTile(
@@ -484,7 +479,7 @@ class Show {
     //       break;
     //   }
     // }
-    List<Widget> containersAlertDialog = [
+    final List<Widget> containersAlertDialog = [
       lieuQuandAlertDialog(context),
       genreAlertDialog(context),
       typeAlertDialog(context)
@@ -509,21 +504,22 @@ class Show {
         barrierDismissible: true,
         barrierLabel: "Label",
         barrierColor: Colors.black.withOpacity(0.5),
-        transitionDuration: Duration(milliseconds: 500),
+        transitionDuration: const Duration(milliseconds: 500),
         transitionBuilder: (context, anim1, anim2, child) {
           return SlideTransition(
-            position:
-                Tween(begin: Offset(0, 1), end: Offset(0, 0)).animate(anim1),
+            position: Tween(begin: const Offset(0, 1), end: const Offset(0, 0))
+                .animate(anim1),
             child: child,
           );
         },
         context: context,
         pageBuilder: (BuildContext context, anim1, anim2) {
           return SingleChildScrollView(
-            physics: AlwaysScrollableScrollPhysics(),
+            physics: const AlwaysScrollableScrollPhysics(),
             child: Container(
               clipBehavior: Clip.hardEdge,
-              margin: EdgeInsets.only(bottom: 50, left: 50, right: 50, top: 50),
+              margin: const EdgeInsets.only(
+                  bottom: 50, left: 50, right: 50, top: 50),
               decoration: BoxDecoration(
                 color: Theme.of(context).colorScheme.surface,
                 borderRadius: BorderRadius.circular(20),
@@ -534,7 +530,7 @@ class Show {
                   Container(
                     color: Theme.of(context).colorScheme.primary,
                     child: TabBar(
-                      tabs: <Widget>[
+                      tabs: const <Widget>[
                         Tab(
                           text: 'Lieu/Quand',
                         ),
@@ -552,7 +548,7 @@ class Show {
                     maxHeight: MediaQuery.of(context).size.height * 0.7,
                     maxWidth: double.maxFinite,
                     child: TabBarView(
-                        physics: AlwaysScrollableScrollPhysics(),
+                        physics: const AlwaysScrollableScrollPhysics(),
                         controller: tabController,
                         children: containersAlertDialog),
                   ),
@@ -562,13 +558,12 @@ class Show {
                       mainAxisAlignment: MainAxisAlignment.end,
                       children: [
                         FlatButton(
-                          child: Text('Annuler'),
                           onPressed: () {
                             Navigator.of(context).pop();
                           },
+                          child: const Text('Annuler'),
                         ),
                         RaisedButton(
-                          child: Text('Ok'),
                           onPressed: () {
                             context.read(myUserRepository).updateMyUserGenre(
                                 context.read(boolToggleProvider).genre);
@@ -600,6 +595,7 @@ class Show {
                                     context.read(boolToggleProvider).date);
                             Navigator.of(context).pop();
                           },
+                          child: const Text('Ok'),
                         ),
                       ],
                     ),
@@ -899,92 +895,96 @@ class Show {
         context: context,
         builder: (_) => Platform.isAndroid
             ? AlertDialog(
-                title: Text('Annuler?'),
-                content: Text('Etes vous sur de vouloir annuler l\'events'),
+                title: const Text('Annuler?'),
+                content:
+                    const Text('Etes vous sur de vouloir annuler l\'events'),
                 actions: <Widget>[
                   FlatButton(
-                    child: Text('Non'),
                     onPressed: () {
                       Navigator.of(context).pop();
                     },
+                    child: const Text('Non'),
                   ),
                   FlatButton(
-                    child: Text('Oui'),
                     onPressed: () {
                       eventRepo.cancelEvent(events.elementAt(index).id);
                     },
+                    child: const Text('Oui'),
                   ),
                 ],
               )
             : CupertinoAlertDialog(
-                title: Text('Annuler?'),
-                content: Text('Etes vous sur de vouloir annuler l\'events'),
+                title: const Text('Annuler?'),
+                content:
+                    const Text('Etes vous sur de vouloir annuler l\'events'),
                 actions: <Widget>[
                   FlatButton(
-                    child: Text('Non'),
                     onPressed: () {
                       Navigator.of(context).pop();
                     },
+                    child: const Text('Non'),
                   ),
                   FlatButton(
-                    child: Text('Oui'),
                     onPressed: () {
                       eventRepo.cancelEvent(events.elementAt(index).id);
                     },
+                    child: const Text('Oui'),
                   ),
                 ],
               ));
   }
 
   static Future<bool> showRembourser(BuildContext context) async {
-    return await showDialog<bool>(
+    return showDialog<bool>(
         context: context,
         builder: (_) => Platform.isAndroid
             ? AlertDialog(
-                title: Text('Rembourser?'),
-                content: Text('Que voulez-vous faire de ce remboursement??'),
+                title: const Text('Rembourser?'),
+                content:
+                    const Text('Que voulez-vous faire de ce remboursement??'),
                 actions: <Widget>[
                   FlatButton(
-                    child: Text('Annuler'),
                     onPressed: () {
                       Navigator.of(context).pop();
                     },
+                    child: const Text('Annuler'),
                   ),
                   FlatButton(
-                    child: Text('Refuser'),
                     onPressed: () {
                       Navigator.of(context).pop(false);
                     },
+                    child: const Text('Refuser'),
                   ),
                   FlatButton(
-                    child: Text('Accepter'),
                     onPressed: () {
                       Navigator.of(context).pop(true);
                     },
+                    child: const Text('Accepter'),
                   ),
                 ],
               )
             : CupertinoAlertDialog(
-                title: Text('Rembourser?'),
-                content: Text('Que voulez-vous faire de ce remboursement??'),
+                title: const Text('Rembourser?'),
+                content:
+                    const Text('Que voulez-vous faire de ce remboursement??'),
                 actions: <Widget>[
                   FlatButton(
-                    child: Text('Annuler'),
                     onPressed: () {
                       Navigator.of(context).pop();
                     },
+                    child: const Text('Annuler'),
                   ),
                   FlatButton(
-                    child: Text('Refuser'),
                     onPressed: () {
                       Navigator.of(context).pop(false);
                     },
+                    child: const Text('Refuser'),
                   ),
                   FlatButton(
-                    child: Text('Accepter'),
                     onPressed: () {
                       Navigator.of(context).pop(true);
                     },
+                    child: const Text('Accepter'),
                   ),
                 ],
               ));
@@ -992,7 +992,7 @@ class Show {
 
   static Future<bool> showAreYouSureModel(
       {BuildContext context, String title, String content}) async {
-    return await showDialog<bool>(
+    return showDialog<bool>(
         context: context,
         builder: (_) => Platform.isAndroid
             ? AlertDialog(
@@ -1000,16 +1000,16 @@ class Show {
                 content: Text(content),
                 actions: <Widget>[
                   FlatButton(
-                    child: Text('Non'),
                     onPressed: () {
                       Navigator.of(context).pop(false);
                     },
+                    child: const Text('Non'),
                   ),
                   FlatButton(
-                    child: Text('Oui'),
                     onPressed: () {
                       Navigator.of(context).pop(true);
                     },
+                    child: const Text('Oui'),
                   ),
                 ],
               )
@@ -1018,16 +1018,16 @@ class Show {
                 content: Text(content),
                 actions: <Widget>[
                   FlatButton(
-                    child: Text('Non'),
                     onPressed: () {
                       Navigator.of(context).pop(false);
                     },
+                    child: const Text('Non'),
                   ),
                   FlatButton(
-                    child: Text('Oui'),
                     onPressed: () {
                       Navigator.of(context).pop(true);
                     },
+                    child: const Text('Oui'),
                   ),
                 ],
               ));
@@ -1036,24 +1036,24 @@ class Show {
   static Future<Map> showRembourserClient(
       BuildContext context, double amoutOfItem) async {
     final GlobalKey<FormBuilderState> _fbKey = GlobalKey<FormBuilderState>();
-    Map response = {
+    final Map response = {
       'reason': RefundReason.requested_by_customer,
       'amount': null
     };
-    List<RefundReason> myList = List.from(RefundReason.values);
+    final List<RefundReason> myList = List.from(RefundReason.values);
     myList.removeWhere(
         (element) => element == RefundReason.expired_uncaptured_charge);
-    return await showDialog<Map>(
+    return showDialog<Map>(
         context: context,
         builder: (_) => Platform.isAndroid
             ? AlertDialog(
-                title: Text('Rembourser'),
+                title: const Text('Rembourser'),
                 content: Column(
                   children: [
                     Consumer(builder: (context, watch, child) {
                       return DropdownButton<RefundReason>(
                           value: watch(boolToggleProvider).reason,
-                          hint: Text('Selectionner une raison'),
+                          hint: Text('Selectionner une raison',style: Theme.of(context).textTheme.bodyText1),
                           items: myList.map((val) {
                             return DropdownMenuItem(
                                 value: val, child: Text(toNormalReason(val)));
@@ -1075,7 +1075,7 @@ class Show {
                                 onChanged: (value) {
                                   context
                                       .read(boolToggleProvider)
-                                      .setAmount(value);
+                                      .setAmount(value as String);
                                   if (value == 'La totalité') {
                                     response.addAll({'amount': null});
                                   }
@@ -1101,11 +1101,10 @@ class Show {
                                       Theme.of(context).colorScheme.onSurface),
                               cursorColor:
                                   Theme.of(context).colorScheme.onSurface,
-                              decoration: InputDecoration(
+                              decoration: const InputDecoration(
                                 labelText: 'Montant',
                               ),
                               validator: (val) {
-                                print(val);
                                 if (context.read(boolToggleProvider).amount ==
                                         'Une partie' &&
                                     (val == null || val.isEmpty) &&
@@ -1122,13 +1121,12 @@ class Show {
                 ),
                 actions: <Widget>[
                   FlatButton(
-                    child: Text('Annulé'),
                     onPressed: () {
-                      Navigator.of(context).pop({});
+                      Navigator.of(context).pop();
                     },
+                    child: const Text('Annulé'),
                   ),
                   FlatButton(
-                    child: Text('Oui'),
                     onPressed: () {
                       if (context.read(boolToggleProvider).amount ==
                               'Une partie' &&
@@ -1141,7 +1139,6 @@ class Show {
                           response.addAll({'amount': chosenAmount});
                           Navigator.of(context).pop(response);
                         } catch (e) {
-                          print(e);
                           Navigator.of(context).pop({});
                         }
                       } else if (context.read(boolToggleProvider).amount ==
@@ -1149,17 +1146,18 @@ class Show {
                         Navigator.of(context).pop(response);
                       }
                     },
+                    child: const Text('Oui'),
                   ),
                 ],
               )
             : CupertinoAlertDialog(
-                title: Text('Rembourser'),
+                title: const Text('Rembourser'),
                 content: Column(
                   children: [
                     Consumer(builder: (context, watch, child) {
                       return DropdownButton<RefundReason>(
                           value: watch(boolToggleProvider).reason,
-                          hint: Text('Selectionner une raison'),
+                          hint: const Text('Selectionner une raison'),
                           items: myList.map((val) {
                             return DropdownMenuItem(
                                 value: val, child: Text(toNormalReason(val)));
@@ -1181,7 +1179,7 @@ class Show {
                                 onChanged: (value) {
                                   context
                                       .read(boolToggleProvider)
-                                      .setAmount(value);
+                                      .setAmount(value as String);
                                   if (value == 'La totalité') {
                                     response.addAll({'amount': null});
                                   }
@@ -1207,7 +1205,7 @@ class Show {
                                       Theme.of(context).colorScheme.onSurface),
                               cursorColor:
                                   Theme.of(context).colorScheme.onSurface,
-                              decoration: InputDecoration(
+                              decoration: const InputDecoration(
                                 labelText: 'Montant',
                               ),
                               validator: (val) {
@@ -1231,13 +1229,12 @@ class Show {
                 ),
                 actions: <Widget>[
                   FlatButton(
-                    child: Text('Annulé'),
                     onPressed: () {
                       Navigator.of(context).pop({});
                     },
+                    child: const Text('Annulé'),
                   ),
                   FlatButton(
-                    child: Text('Ok'),
                     onPressed: () {
                       if (context.read(boolToggleProvider).amount ==
                               'Une partie' &&
@@ -1250,7 +1247,7 @@ class Show {
                           response.addAll({'amount': chosenAmount});
                           Navigator.of(context).pop(response);
                         } catch (e) {
-                          print(e);
+                          debugPrint(e.toString());
                           Navigator.of(context).pop({});
                         }
                       } else if (context.read(boolToggleProvider).amount ==
@@ -1258,6 +1255,7 @@ class Show {
                         Navigator.of(context).pop(response);
                       }
                     },
+                    child: const Text('Ok'),
                   ),
                 ],
               ));
@@ -1265,19 +1263,14 @@ class Show {
 
   static bool isValid(String chosenAmount, double amountOfItem) {
     double chosenAmountTemp;
-    print('isValid');
-    print(chosenAmount);
+
     try {
       chosenAmountTemp = double.parse(chosenAmount.toString());
     } catch (e) {
-      print(e);
+      debugPrint(e.toString());
       return false;
     }
-    print(chosenAmountTemp != null &&
-        (chosenAmountTemp <= amountOfItem || chosenAmountTemp > 0));
-    print(chosenAmountTemp);
-    print(amountOfItem);
-    print('!!!!!');
+
     return chosenAmountTemp != null &&
         chosenAmountTemp < amountOfItem &&
         chosenAmountTemp > 0;
@@ -1285,7 +1278,7 @@ class Show {
 
   static Future<bool> showAreYouSurePhotoModel(
       {BuildContext context, String title, File content}) async {
-    return await showDialog<bool>(
+    return showDialog<bool>(
         context: context,
         builder: (_) => Platform.isAndroid
             ? AlertDialog(
@@ -1295,16 +1288,16 @@ class Show {
                 ),
                 actions: <Widget>[
                   FlatButton(
-                    child: Text('Non'),
                     onPressed: () {
                       Navigator.of(context).pop(false);
                     },
+                    child: const Text('Non'),
                   ),
                   FlatButton(
-                    child: Text('Oui'),
                     onPressed: () {
                       Navigator.of(context).pop(true);
                     },
+                    child: const Text('Oui'),
                   ),
                 ],
               )
@@ -1315,31 +1308,31 @@ class Show {
                 ),
                 actions: <Widget>[
                   FlatButton(
-                    child: Text('Non'),
                     onPressed: () {
                       Navigator.of(context).pop(false);
                     },
+                    child: const Text('Non'),
                   ),
                   FlatButton(
-                    child: Text('Oui'),
                     onPressed: () {
                       Navigator.of(context).pop(true);
                     },
+                    child: const Text('Oui'),
                   ),
                 ],
               ));
   }
 
-  static void showProgress(BuildContext context) async{
+  static Future<void> showProgress(BuildContext context) async {
     await showGeneralDialog<String>(
         barrierDismissible: true,
         barrierLabel: "Label",
         barrierColor: Colors.black.withOpacity(0.5),
-        transitionDuration: Duration(milliseconds: 500),
+        transitionDuration: const Duration(milliseconds: 500),
         transitionBuilder: (context, anim1, anim2, child) {
           return SlideTransition(
-            position:
-            Tween(begin: Offset(0, 1), end: Offset(0, 0)).animate(anim1),
+            position: Tween(begin: const Offset(0, 1), end: const Offset(0, 0))
+                .animate(anim1),
             child: child,
           );
         },
@@ -1348,49 +1341,48 @@ class Show {
           context.read(boolToggleProvider).setProgressContext(context);
 
           return Center(
-          child: Container(
-            margin:
-            EdgeInsets.only( left: 20, right: 20,),
-            constraints: BoxConstraints(
-                maxWidth: 300,
-                minHeight: 300
-            ),
-            decoration: BoxDecoration(
-              color: Theme.of(context).colorScheme.surface,
-              borderRadius: BorderRadius.circular(5),
-            ),
-
-            child: SingleChildScrollView(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  AspectRatio(
-                    aspectRatio: 1,
-                    child: FlareCacheBuilder(
-                        [AssetFlare(bundle: rootBundle, name: 'assets/animations/paymentProcess.flr')],
-                      builder: (context,  isWarm) {
+            child: Container(
+              margin: const EdgeInsets.only(
+                left: 20,
+                right: 20,
+              ),
+              constraints: const BoxConstraints(maxWidth: 300, minHeight: 300),
+              decoration: BoxDecoration(
+                color: Theme.of(context).colorScheme.surface,
+                borderRadius: BorderRadius.circular(5),
+              ),
+              child: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    AspectRatio(
+                      aspectRatio: 1,
+                      child: FlareCacheBuilder([
+                        AssetFlare(
+                            bundle: rootBundle,
+                            name: 'assets/animations/paymentProcess.flr')
+                      ], builder: (context, isWarm) {
                         return !isWarm
                             ? Center(
-                          child: CircularProgressIndicator(
-                              valueColor:
-                              AlwaysStoppedAnimation<Color>(
-                                  Theme.of(context)
-                                      .colorScheme
-                                      .primary)),
-                        )
-                            : FlareActor('assets/animations/paymentProcess.flr',
-                          alignment: Alignment.center,
-                          animation: 'paymentProcess',);
-                      }
+                                child: CircularProgressIndicator(
+                                    valueColor: AlwaysStoppedAnimation<Color>(
+                                        Theme.of(context).colorScheme.primary)),
+                              )
+                            : const FlareActor(
+                                'assets/animations/paymentProcess.flr',
+                                animation: 'paymentProcess',
+                              );
+                      }),
                     ),
-                  ),
-                  Text('Veuillez patienter...',style: Theme.of(context).textTheme.headline6,)
-
-                ],
+                    Text(
+                      'Veuillez patienter...',
+                      style: Theme.of(context).textTheme.headline6,
+                    )
+                  ],
+                ),
               ),
             ),
-          ),
-        );
+          );
         });
   }
 }

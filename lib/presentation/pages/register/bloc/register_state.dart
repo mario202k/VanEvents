@@ -11,7 +11,7 @@ class RegisterState {
 
   bool get isFormValid => isEmailValid && isPasswordValid;
 
-  RegisterState({
+  const RegisterState({
     @required this.isEmailValid,
     @required this.isPasswordValid,
     @required this.isSubmitting,
@@ -21,7 +21,7 @@ class RegisterState {
   });
 
   factory RegisterState.initial() {
-    return RegisterState(
+    return const RegisterState(
       isEmailValid: true,
       isPasswordValid: true,
       isSubmitting: false,
@@ -31,7 +31,7 @@ class RegisterState {
   }
 
   factory RegisterState.loading() {
-    return RegisterState(
+    return const RegisterState(
       isEmailValid: true,
       isPasswordValid: true,
       isSubmitting: true,
@@ -94,7 +94,8 @@ class RegisterState {
 
   @override
   String toString() {
-    return '''RegisterState {
+    return '''
+    RegisterState {
       isEmailValid: $isEmailValid,
       isPasswordValid: $isPasswordValid,      
       isSubmitting: $isSubmitting,

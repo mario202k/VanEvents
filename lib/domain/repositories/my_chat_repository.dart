@@ -1,11 +1,13 @@
 import 'dart:io';
 
-import 'package:async/async.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:cloud_functions/cloud_functions.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:giphy_picker/giphy_picker.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
+import 'package:uuid/uuid.dart';
 import 'package:van_events_project/constants/credentials.dart';
+import 'package:van_events_project/domain/models/call.dart';
 import 'package:van_events_project/domain/models/chat_membres.dart';
 import 'package:van_events_project/domain/models/message.dart';
 import 'package:van_events_project/domain/models/my_chat.dart';
@@ -16,11 +18,8 @@ import 'package:van_events_project/services/firestore_service.dart';
 
 final myChatRepositoryProvider = Provider<MyChatRepository>((ref) {
   final uid = ref.watch(myUserProvider).id;
-  print(uid);
-  print('!!!!!!!!');
   return MyChatRepository(uid: uid);
 });
-
 
 class MyChatRepository {
   final _service = FirestoreService.instance;
@@ -30,7 +29,6 @@ class MyChatRepository {
   MyChatRepository({this.uid, this.chatId});
 
   Stream<List<MyChat>> chatRoomsStream(String uid) {
-
     return _service.collectionStream(
         path: MyPath.chats(),
         builder: (data) => MyChat.fromMap(data),
@@ -82,7 +80,7 @@ class MyChatRepository {
   }
 
   Future<void> sendMessage(MyMessage message) async {
-    return await _service.setData(
+    return _service.setData(
         path: MyPath.message(chatId, message.id), data: message.toMap());
   }
 
@@ -101,22 +99,22 @@ class MyChatRepository {
         .then((value) async {
       if (value != null && value.isNotEmpty) {
         idChatRoom = value.first.id;
-        print(idChatRoom);
-        print('!!!');
+
       } else {
         idChatRoom = _service.getDocId(path: MyPath.chats());
-        print(idChatRoom);
         await _service.setData(path: MyPath.chat(idChatRoom), data: {
           'id': idChatRoom,
           'createdAt': FieldValue.serverTimestamp(),
           'isGroupe': false,
           'membres': {uid: true, friend.id: true},
         }).then((value) async {
-          await _service.setData(path: MyPath.chatMembre(idChatRoom, uid), data: {
-            'id': uid,
-            'lastReading': FieldValue.serverTimestamp(),
-            'isReading': true
-          });
+          await _service.setData(
+              path: MyPath.chatMembre(idChatRoom, uid),
+              data: {
+                'id': uid,
+                'lastReading': FieldValue.serverTimestamp(),
+                'isReading': true
+              });
         }).then((value) async {
           await _service.setData(
               path: MyPath.chatMembre(idChatRoom, friend.id),
@@ -144,20 +142,24 @@ class MyChatRepository {
         .collection('chatMembres')
         .doc(uid)
         .snapshots()
-        .map((membre) => FirebaseFirestore.instance
+        .map((membre) {
+          final mb = ChatMembre.fromMap(membre.data());
+          return FirebaseFirestore.instance
             .collection('chats')
             .doc(chatId)
             .collection('messages')
             .where('date',
-                isGreaterThan: ChatMembre.fromMap(membre.data()).lastReading)
+                isGreaterThan: mb.lastReading)
             .snapshots()
-            .map((docs) => docs.size)
-    );
+            .map((docs) {
+
+
+              return mb.isWriting?0 : docs.size;
+            });
+        });
   }
 
-
   Future<MyChat> getMyChat(String chatId) {
-    print(chatId);
     return _service.getDoc(
         path: MyPath.chat(chatId), builder: (map) => MyChat.fromMap(map));
   }
@@ -177,19 +179,21 @@ class MyChatRepository {
   }
 
   Future addAmongGroupe(String chatId) async {
-    return await _service.setData(path: MyPath.chat(chatId), data: {
+    return _service.setData(path: MyPath.chat(chatId), data: {
       'membres': {uid: true}
     }).then((value) async {
-      return await _service.setData(path: MyPath.chatMembre(chatId, uid), data: {
-        'id': uid,
-        'lastReading': FieldValue.serverTimestamp(),
-        'isReading': true
-      });
+      return _service.setData(
+          path: MyPath.chatMembre(chatId, uid),
+          data: {
+            'id': uid,
+            'lastReading': FieldValue.serverTimestamp(),
+            'isReading': true
+          });
     });
   }
 
   Future setIsReading() async {
-    return await _service.setData(path: MyPath.chatMembre(chatId, uid), data: {
+    return _service.setData(path: MyPath.chatMembre(chatId, uid), data: {
       'lastReading': FieldValue.serverTimestamp(),
       'isReading': true,
       'isWriting': false
@@ -197,7 +201,7 @@ class MyChatRepository {
   }
 
   Future setIsNotReading() async {
-    return await _service.setData(path: MyPath.chatMembre(chatId, uid), data: {
+    return _service.setData(path: MyPath.chatMembre(chatId, uid), data: {
       'lastReading': FieldValue.serverTimestamp(),
       'isReading': false,
       'isWriting': false
@@ -205,15 +209,14 @@ class MyChatRepository {
   }
 
   Future setIsWriting() async {
-    return await _service.setData(path: MyPath.chatMembre(chatId, uid), data: {
+    return _service.setData(path: MyPath.chatMembre(chatId, uid), data: {
       'lastReading': FieldValue.serverTimestamp(),
-      'isReading': false,
       'isWriting': true
     });
   }
 
   void displayAndSendImage(File image, ChatRoomChangeNotifier chatRoomRead) {
-    String messageId = _service.getDocId(path: MyPath.messages(chatId));
+    final String messageId = _service.getDocId(path: MyPath.messages(chatId));
 
     String idTo;
 
@@ -221,7 +224,7 @@ class MyChatRepository {
       idTo = chatRoomRead.friend.id;
     }
 
-    MyMessage myMessage = MyMessage(
+    final MyMessage myMessage = MyMessage(
         id: messageId,
         idTo: idTo,
         idFrom: uid,
@@ -247,7 +250,7 @@ class MyChatRepository {
 
   Future<void> uploadImageChat(ChatRoomChangeNotifier provider, File image,
       String chatId, String idSender, String friendId, String messageId) async {
-    String path = image.path.substring(image.path.lastIndexOf('/') + 1);
+    final String path = image.path.substring(image.path.lastIndexOf('/') + 1);
 
     await _service
         .uploadImg(
@@ -255,7 +258,7 @@ class MyChatRepository {
             path: MyPath.chatImage(chatId, path),
             contentType: 'image/jpeg')
         .then((url) async {
-      MyMessage myMessage = MyMessage(
+      final MyMessage myMessage = MyMessage(
           id: messageId,
           message: url,
           idTo: friendId,
@@ -272,19 +275,19 @@ class MyChatRepository {
     });
   }
 
-  void pickGif(
+  Future<void> pickGif(
       BuildContext context, ChatRoomChangeNotifier chatRoomRead) async {
     final gif =
         await GiphyPicker.pickGif(context: context, apiKey: GIPHY_API_KEY);
 
     if (gif != null) {
-      String messageId = _service.getDocId(path: MyPath.messages(chatId));
+      final String messageId = _service.getDocId(path: MyPath.messages(chatId));
       String idTo;
 
       if (!chatRoomRead.myChat.isGroupe) {
         idTo = chatRoomRead.friend.id;
       }
-      MyMessage myMessage = MyMessage(
+      final MyMessage myMessage = MyMessage(
           id: messageId,
           message: gif.images.original.url,
           idTo: idTo,
@@ -307,14 +310,14 @@ class MyChatRepository {
 
   Future<void> sendTextMessage(ChatRoomChangeNotifier chatRoomRead,
       TextEditingController textEditingController) async {
-    String messageId = _service.getDocId(path: MyPath.messages(chatId));
+    final String messageId = _service.getDocId(path: MyPath.messages(chatId));
 
     String idTo;
 
     if (!chatRoomRead.myChat.isGroupe) {
       idTo = chatRoomRead.friend.id;
     }
-    MyMessage myMessage = MyMessage(
+    final MyMessage myMessage = MyMessage(
         id: messageId,
         message: textEditingController.text.trim(),
         idTo: idTo,
@@ -323,9 +326,7 @@ class MyChatRepository {
         type: chatRoomRead.replyMessage.isEmpty
             ? MyMessageType.text
             : MyMessageType.reply,
-        replyMessageId: chatRoomRead.replyMessageId != null
-            ? chatRoomRead.replyMessageId
-            : '',
+        replyMessageId: chatRoomRead.replyMessageId ?? '',
         replyType: chatRoomRead.replyMessageId != null
             ? MyMessageReplyType.text
             : null);
@@ -339,7 +340,7 @@ class MyChatRepository {
       textEditingController.clear();
 
       await sendMessage(myMessage).catchError((err) {
-        print(err);
+        debugPrint(err.toString());
         chatRoomRead.setShowSendBotton(true);
         chatRoomRead.setTempMessageToError(myMessage.id);
       }).whenComplete(() {
@@ -349,14 +350,48 @@ class MyChatRepository {
       if (myMessage.type == MyMessageType.reply) {
         chatRoomRead.setReplyToNull();
       }
-    } else {
-      print('Text vide ou null');
     }
   }
 
   Future<MyMessage> getMessage(String chatId, String replyMessageId) async {
-    return await _service.getDoc(
+    return _service.getDoc(
         path: MyPath.message(chatId, replyMessageId),
         builder: (map) => MyMessage.fromMap(map));
+  }
+
+  Future<String> sendCall(ChatRoomChangeNotifier chatRoomRead) async {
+    final String callId = _service.getDocId(path: MyPath.calls(chatId));
+
+    final Call myCall = Call(
+      id: callId,
+      date: DateTime.now(),
+      uuid: Uuid().v4(),
+      idFrom: uid,
+      idTo: chatRoomRead.friend.id,
+      hasVideo: false
+    );
+
+    await _service.setData(
+        path: MyPath.call(chatId,callId), data: myCall.toMap());
+    return callId;
+  }
+
+  Future<HttpsCallableResult> getAgoraToken(String channelName) async {
+    HttpsCallableResult agoraResponse;
+    try {
+      final HttpsCallable callable =
+          FirebaseFunctions.instanceFor(region: 'europe-west1').httpsCallable(
+        'getAgoraToken',
+      );
+      agoraResponse = await callable.call(
+        <String, dynamic>{'channelName': channelName, 'uid': uid},
+      );
+    } on FirebaseFunctionsException catch (e) {
+      debugPrint(e.toString());
+    } catch (e) {
+      debugPrint(e.toString());
+    }
+
+    return agoraResponse;
   }
 }

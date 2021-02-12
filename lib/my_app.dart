@@ -13,11 +13,6 @@ import 'package:van_events_project/domain/routing/route.gr.dart';
 import 'package:van_events_project/providers/authentication_cubit/authentication_cubit.dart';
 import 'package:van_events_project/providers/settings_change_notifier.dart';
 import 'package:van_events_project/route_authentication.dart';
-import 'package:van_events_project/services/firebase_cloud_messaging.dart';
-
-Future<dynamic> myBackgroundMessageHandler(Map<String, dynamic> message) async {
-  return NotificationHandler().showNotification(message);
-}
 
 class MyApp extends HookWidget {
 
@@ -27,7 +22,6 @@ class MyApp extends HookWidget {
 
   @override
   Widget build(BuildContext context) {
-    print('buildMyApp');
     final settings = useProvider(settingsProvider);
     settings.initial(sharePref);
     final colorScheme = settings.onGoingcolorScheme;
@@ -44,14 +38,14 @@ class MyApp extends HookWidget {
             child: MaterialApp(
               debugShowCheckedModeBanner: false,
               color: colorScheme.background,
-              localizationsDelegates: [
+              localizationsDelegates: const [
                 // ... app-specific localization delegate[s] here
                 GlobalMaterialLocalizations.delegate,
                 GlobalWidgetsLocalizations.delegate,
                 GlobalCupertinoLocalizations.delegate,
               ],
-              supportedLocales: [
-                const Locale('fr', 'FR'), // English, no country code
+              supportedLocales: const [
+                 Locale('fr', 'FR'), // English, no country code
               ],
               theme: ThemeData(
                 colorScheme: colorScheme,
@@ -166,7 +160,7 @@ class MyApp extends HookWidget {
 
                     shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(20))),
-                bottomSheetTheme: BottomSheetThemeData(backgroundColor: Colors.transparent),
+                bottomSheetTheme: const BottomSheetThemeData(backgroundColor: Colors.transparent),
                 cursorColor: colorScheme.onBackground,
                 floatingActionButtonTheme: FloatingActionButtonThemeData(
                     backgroundColor: colorScheme.secondary,
@@ -179,37 +173,31 @@ class MyApp extends HookWidget {
                   border: OutlineInputBorder(
                       borderSide: BorderSide(
                           color: colorScheme.onBackground,
-                          style: BorderStyle.solid,
                           width: 2),
                       borderRadius: BorderRadius.circular(25.0)),
                   focusedBorder: OutlineInputBorder(
                       borderSide: BorderSide(
                           color: colorScheme.onBackground,
-                          style: BorderStyle.solid,
                           width: 2),
                       borderRadius: BorderRadius.circular(25.0)),
                   disabledBorder: OutlineInputBorder(
                       borderSide: BorderSide(
                           color: colorScheme.onBackground,
-                          style: BorderStyle.solid,
                           width: 2),
                       borderRadius: BorderRadius.circular(25.0)),
                   enabledBorder: OutlineInputBorder(
                       borderSide: BorderSide(
                           color: colorScheme.onBackground,
-                          style: BorderStyle.solid,
                           width: 2),
                       borderRadius: BorderRadius.circular(25.0)),
                   errorBorder: OutlineInputBorder(
                       borderSide: BorderSide(
                           color: colorScheme.error,
-                          style: BorderStyle.solid,
                           width: 2),
                       borderRadius: BorderRadius.circular(25.0)),
                   focusedErrorBorder: OutlineInputBorder(
                       borderSide: BorderSide(
                           color: colorScheme.onBackground,
-                          style: BorderStyle.solid,
                           width: 2),
                       borderRadius: BorderRadius.circular(25.0)),
                   labelStyle: GoogleFonts.poiretOne(

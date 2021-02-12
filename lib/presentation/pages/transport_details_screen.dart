@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
-import 'package:flutter_form_builder/flutter_form_builder.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:intl/intl.dart';
@@ -30,7 +29,7 @@ class TransportDetailScreen extends HookWidget {
       child: Scaffold(
         key: sfkey,
         appBar: AppBar(
-          title: Text('Détails'),
+          title: const Text('Détails'),
         ),
         body: ModelBody(
           child: Column(
@@ -133,10 +132,10 @@ class TransportDetailScreen extends HookWidget {
                     'Prix : ',
                     style: Theme.of(context).textTheme.bodyText1,
                   ),
-                  myUser.typeDeCompte == TypeOfAccount.userNormal?Text(
+                  if (myUser.typeDeCompte == TypeOfAccount.userNormal) Text(
                     getPrix(_myTransport.amount),
                     style: Theme.of(context).textTheme.bodyText1,
-                  ):Text(
+                  ) else Text(
                     getPrix(_myTransport.amount),
                     style: Theme.of(context).textTheme.bodyText1,
                   )
@@ -175,7 +174,7 @@ class TransportDetailScreen extends HookWidget {
                     style: Theme.of(context).textTheme.bodyText1,
                   ),
                   Text(
-                    _myTransport.distance.toStringAsFixed(2) + ' km',
+                    '${_myTransport.distance.toStringAsFixed(2)} km',
                     style: Theme.of(context).textTheme.bodyText1,
                   ),
                 ],
@@ -224,7 +223,6 @@ class TransportDetailScreen extends HookWidget {
   }
 
   String getPath(String car) {
-    print(car);
 
     switch (car) {
       case 'classee':

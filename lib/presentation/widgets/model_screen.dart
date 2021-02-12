@@ -4,7 +4,7 @@ import 'package:flutter/services.dart';
 class ModelScreen extends StatelessWidget {
   final Widget child;
 
-  ModelScreen({Key key, @required this.child})
+  const ModelScreen({Key key, @required this.child})
       : assert(child != null),
         super(key: key);
 

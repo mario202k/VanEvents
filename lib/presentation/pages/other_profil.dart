@@ -11,7 +11,7 @@ import 'package:van_events_project/presentation/widgets/model_screen.dart';
 class OtherProfile extends StatelessWidget {
   final MyUser _myUser;
 
-  OtherProfile(this._myUser);
+  const OtherProfile(this._myUser);
 
   @override
   Widget build(BuildContext context) {
@@ -19,7 +19,7 @@ class OtherProfile extends StatelessWidget {
     return ModelScreen(
       child: Scaffold(
         appBar: AppBar(
-          title: Text('Profil'),
+          title: const Text('Profil'),
         ),
         body: Profil(other: _myUser),
         floatingActionButton:me.id != _myUser.id? FloatingActionButton(
@@ -31,11 +31,11 @@ class OtherProfile extends StatelessWidget {
               ExtendedNavigator.of(context).push(Routes.chatRoom,
                   arguments: ChatRoomArguments(chatId: chatId));
             }).catchError((onError) {
-              print(onError);
+              debugPrint(onError.toString());
             });
           },
-          child: FaIcon(FontAwesomeIcons.comments),
-        ):SizedBox(),
+          child: const FaIcon(FontAwesomeIcons.comments),
+        ):const SizedBox(),
       ),
     );
   }

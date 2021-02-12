@@ -15,7 +15,7 @@ class RegisterScreen extends StatelessWidget {
         appBar: AppBar(title: Text('Inscription',style: Theme.of(context).textTheme.headline4,),),
         body: ModelBody(
           child: BlocProvider<RegisterBloc>(
-            create: (context) => RegisterBloc(context),
+            create: (context) => RegisterBloc(),
             child: RegisterForm(),
           ),
         ),

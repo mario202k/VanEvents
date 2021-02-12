@@ -14,7 +14,6 @@ import 'domain/routing/route.gr.dart';
 class RouteAuthentication extends HookWidget {
   @override
   Widget build(BuildContext context) {
-    print('buildAuthentication');
 
     final myUser = useProvider(myUserProvider);
     final myUserRepo = useProvider(myUserRepository);
@@ -35,8 +34,7 @@ class RouteAuthentication extends HookWidget {
             Navigator.of(context).pushReplacementNamed(Routes.cguCgvAccept,
                 arguments: CguCgvAcceptArguments(uid: state.firebaseUser.uid));
           } else if (state is AuthenticationEmailLinkSuccess) {
-            print('AuthenticationEmailLinkSuccess');
-            print('!!!!!!!!!!!!');
+
             Navigator.of(context).pushReplacementNamed(Routes.loginScreen,
                 arguments: LoginScreenArguments(myEmail: state.myEmail));
           }

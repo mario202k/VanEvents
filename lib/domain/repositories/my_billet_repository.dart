@@ -15,12 +15,12 @@ class MyBilletRepository {
   MyBilletRepository(this.uid);
 
   Future billetValidated(String id) async {
-    return await _service
+    return _service
         .updateData(path: MyPath.billet(id), data: {'status': 'check'});
   }
 
   Future addNewBillet(Billet billet) async {
-    return await _service.setData(
+    return _service.setData(
         path: MyPath.billet(billet.id), data: billet.toMap());
   }
 
@@ -53,13 +53,13 @@ class MyBilletRepository {
   }
 
   Future setToggleisHere(Map participant, String qrResult, int index) async {
-    String key = participant.keys.toList()[index];
-    List val = participant[key];
-    bool isHere = val.removeAt(1);
+    final String key = participant.keys.toList()[index].toString();
+    final List<dynamic> val = participant[key] as List<dynamic>;
+    bool isHere = val.removeAt(1) as bool;
     isHere = !isHere;
     val.insert(1, isHere);
 
-    return await _service.updateData(
+    return _service.updateData(
         path: MyPath.billet(qrResult), data: {'participant.$key': val});
   }
 
@@ -75,7 +75,7 @@ class MyBilletRepository {
   }
 
   Future<List<Billet>> getBillet(String paymentIntentId) async {
-    return await _service.collectionFuture(
+    return _service.collectionFuture(
         path: MyPath.billets(),
         queryBuilder: (query) =>
             query.where('paymentIntentId', isEqualTo: paymentIntentId),

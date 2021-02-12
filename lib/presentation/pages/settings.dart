@@ -19,7 +19,7 @@ class Settings extends HookWidget {
     final myUserRepo = useProvider(myUserRepository);
     return Scaffold(
       appBar: AppBar(
-        title: Text(
+        title: const Text(
           'Paramètres',
         ),
       ),
@@ -30,9 +30,8 @@ class Settings extends HookWidget {
             MyAccountSettings(myUserRepo),
             NotificationsSettings(myUserRepo),
             FlatButton(
-                child: Text('Supprimer mon compte'),
                 onPressed: () async {
-                  bool b = await Show.showAreYouSureModel(
+                  final bool b = await Show.showAreYouSureModel(
                           title: 'Supprimer',
                           content:
                               'Êtes vous sûr de vouloir supprimer votre compte?',
@@ -41,7 +40,6 @@ class Settings extends HookWidget {
 
                   if (b) {
                     await myUserRepo.supprimerCompte().catchError((e) {
-                      print(e);
 
                       Show.showDialogToDismiss(
                           context,
@@ -49,16 +47,15 @@ class Settings extends HookWidget {
                           'Veuillez-vous reconnecter afin de supprimer votre compte.',
                           'Ok');
                     }).whenComplete(() async {
-                      await Show.showDialogToDismiss(
-                          context,
-                          'Supprimer',
-                          'Votre compte est supprimé',
-                          'Ok');
+                      await Show.showDialogToDismiss(context, 'Supprimer',
+                          'Votre compte est supprimé', 'Ok');
 
-                      BlocProvider.of<AuthenticationCubit>(context).authenticationLoggedOut(myUserRepo);
+                      BlocProvider.of<AuthenticationCubit>(context)
+                          .authenticationLoggedOut(myUserRepo);
                     });
                   }
-                })
+                },
+                child: const Text('Supprimer mon compte')),
           ],
         ),
       ),
@@ -90,7 +87,7 @@ class MyTheme extends StatelessWidget {
             ],
           ),
         ),
-        Divider(),
+        const Divider(),
         ...MyThemes.values
             .map((e) => Consumer(builder: (context, watch, child) {
                   final changeNotif = watch(settingsProvider);
@@ -112,7 +109,7 @@ class MyTheme extends StatelessWidget {
 }
 
 class NotificationsSettings extends StatelessWidget {
-  final myUserRepo;
+  final MyUserRepository myUserRepo;
   final List<String> settingsList;
 
   NotificationsSettings(this.myUserRepo)
@@ -141,7 +138,7 @@ class NotificationsSettings extends StatelessWidget {
             ],
           ),
         ),
-        Divider(),
+        const Divider(),
         ...settingsList.map(
           (e) => Consumer(builder: (context, watch, child) {
             final changeNotif = watch(boolToggleProvider);
@@ -192,7 +189,7 @@ class MyAccountSettings extends StatelessWidget {
             ],
           ),
         ),
-        Divider(),
+        const Divider(),
         ...settingsList.map((e) => ListTile(
               leading: Text(
                 e,
@@ -217,7 +214,7 @@ class MyAccountSettings extends StatelessWidget {
                               'Email envoyé',
                               'Veuillez vérifier vos emails',
                               'Ok')
-                          .then((_) async => await OpenMailApp.openMailApp());
+                          .then((_) async => OpenMailApp.openMailApp());
 
                       if (!result.didOpen && !result.canOpen) {
                         Show.showDialogToDismiss(context, 'Oops',

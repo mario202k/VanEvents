@@ -21,8 +21,6 @@ class SettingsChangeNotifier extends ChangeNotifier{
 
     onGoingTheme = myTheme;
     setColorScheme(myTheme);
-    print('setTheme');
-    print(myTheme.toString());
 
     notifyListeners();
 
@@ -39,15 +37,15 @@ class SettingsChangeNotifier extends ChangeNotifier{
     switch(myTheme){
 
       case MyThemes.Dracula:
-        onGoingcolorScheme = ThemingOptions.colorSchemeDracula;
+        onGoingcolorScheme = colorSchemeDracula;
         sharePref.setString('theme', 'Dracula');
         break;
       case MyThemes.Shinny:
-        onGoingcolorScheme = ThemingOptions.colorSchemeShinny;
+        onGoingcolorScheme = colorSchemeShinny;
         sharePref.setString('theme', 'Shinny');
         break;
       case MyThemes.Clubbing:
-        onGoingcolorScheme = ThemingOptions.colorSchemeClubbing;
+        onGoingcolorScheme = colorSchemeClubbing;
         sharePref.setString('theme', 'Clubbing');
         break;
     }
@@ -62,9 +60,7 @@ class SettingsChangeNotifier extends ChangeNotifier{
 
     String theme = sharePref.getString('theme');
 
-    if(theme == null){
-      theme = 'Shinny';
-    }
+    theme ??= 'Shinny';
 
     switch(theme){
       case 'Shinny':

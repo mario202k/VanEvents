@@ -1,11 +1,11 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 enum BilletStatus {
-  up_coming,
+  upComing,
   check,
-  refund_asked,
-  refund_cancelled,
-  refund_refused,
+  refundAsked,
+  refundCancelled,
+  refundRefused,
   refunded,
 }
 
@@ -35,39 +35,37 @@ class Billet {
 
   Map<String, dynamic> toMap() {
     return {
-      'id': this.id,
-      'status': this
-          .status
+      'id': id,
+      'status': status
           .toString()
-          .substring(this.status.toString().indexOf('.') + 1),
-      'uid': this.uid,
-      'eventId': this.eventId,
-      'imageUrl': this.imageUrl,
-      'participant': this.participants,
-      'amount': this.amount,
-      'dateTime': this.dateTime,
-      'organisateur': this.organisateurId,
-      'paymentIntentId':this.paymentIntentId
+          .substring(status.toString().indexOf('.') + 1),
+      'uid': uid,
+      'eventId': eventId,
+      'imageUrl': imageUrl,
+      'participant': participants,
+      'amount': amount,
+      'dateTime': dateTime,
+      'organisateur': organisateurId,
+      'paymentIntentId':paymentIntentId
     };
   }
 
   factory Billet.fromMap(Map<String, dynamic> map) {
-    Timestamp time = map['dateTime'] ?? '';
 
     BilletStatus billetStatus;
 
-    switch (map['status']) {
+    switch (map['status'] as String ) {
       case 'up_coming':
-        billetStatus = BilletStatus.up_coming;
+        billetStatus = BilletStatus.upComing;
         break;
       case 'check':
         billetStatus = BilletStatus.check;
         break;
       case 'refund_asked':
-        billetStatus = BilletStatus.refund_asked;
+        billetStatus = BilletStatus.refundAsked;
         break;
       case 'refund_refused':
-        billetStatus = BilletStatus.refund_refused;
+        billetStatus = BilletStatus.refundRefused;
         break;
       case 'refunded':
         billetStatus = BilletStatus.refunded;
@@ -82,8 +80,8 @@ class Billet {
         imageUrl: map['imageUrl'] as String,
         participants: map['participant'] as Map,
         amount: map['amount'] as int,
-        dateTime: time.toDate(),
-        organisateurId: map['organisateur'],
-        paymentIntentId: map['paymentIntentId']);
+        dateTime: (map['dateTime'] as Timestamp).toDate(),
+        organisateurId: map['organisateur'] as String,
+        paymentIntentId: map['paymentIntentId'] as String);
   }
 }

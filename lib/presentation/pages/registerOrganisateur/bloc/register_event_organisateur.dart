@@ -17,29 +17,29 @@ class RegisterSubmitted extends RegisterEventOrganisateur {
   final String city;
   final String line1;
   final String line2;
-  final String postal_code;
+  final String postalCode;
   final String state;
-  final String account_holder_name;
-  final String account_number;
-  final String SIREN;
-  final String date_of_birth;
+  final String accountHolderName;
+  final String accountNumber;
+  final String siren;
+  final String dateOfBirth;
   final BoolToggle boolToggleRead;
   final StripeRepository stripeRepository;
   final MyUserRepository myUserRepository;
 
-  RegisterSubmitted(
+  const RegisterSubmitted(
       {this.nomSociete,
       this.supportEmail,
       this.phone,
       this.city,
       this.line1,
       this.line2,
-      this.postal_code,
+      this.postalCode,
       this.state,
-      this.account_holder_name,
-      this.account_number,
-      this.SIREN,
-      this.date_of_birth,
+      this.accountHolderName,
+      this.accountNumber,
+      this.siren,
+      this.dateOfBirth,
       this.boolToggleRead,this.stripeRepository,this.myUserRepository});
 
   @override
@@ -50,16 +50,16 @@ class RegisterSubmitted extends RegisterEventOrganisateur {
         city,
         line1,
         line2,
-        postal_code,
+        postalCode,
         state,
-        account_holder_name,
-        account_number,
-        SIREN,
-        date_of_birth
+        accountHolderName,
+        accountNumber,
+        siren,
+        dateOfBirth
       ];
 
   @override
   String toString() {
-    return 'RegisterSubmitted{nomSociete: $nomSociete, supportEmail: $supportEmail, phone: $phone, city: $city, line1: $line1, line2: $line2, postal_code: $postal_code, state: $state, account_holder_name: $account_holder_name, account_number: $account_number, SIREN: $SIREN, date_of_birth: $date_of_birth, boolToggleRead: $boolToggleRead, stripeRepository: $stripeRepository, myUserRepository: $myUserRepository}';
+    return 'RegisterSubmitted{nomSociete: $nomSociete, supportEmail: $supportEmail, phone: $phone, city: $city, line1: $line1, line2: $line2, postal_code: $postalCode, state: $state, account_holder_name: $accountHolderName, account_number: $accountNumber, SIREN: $siren, date_of_birth: $dateOfBirth, boolToggleRead: $boolToggleRead, stripeRepository: $stripeRepository, myUserRepository: $myUserRepository}';
   }
 }

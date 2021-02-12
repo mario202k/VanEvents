@@ -13,7 +13,7 @@ import 'package:van_events_project/providers/toggle_bool.dart';
 class CustomerHandle extends StatelessWidget {
   final MyTransport transport;
 
-  CustomerHandle(this.transport);
+  const CustomerHandle(this.transport);
 
   @override
   Widget build(BuildContext context) {
@@ -24,17 +24,16 @@ class CustomerHandle extends StatelessWidget {
     switch (transport.statusTransport) {
       case StatusTransport.submitted:
         return RaisedButton(
-            child: Text('Annuler'),
             onPressed: () {
               context.read(myTransportRepositoryProvider).cancelTransport(
                   transport.id,
                   context.read(myUserProvider).typeDeCompte ==
                       TypeOfAccount.userNormal);
-            });
+            },
+            child: const Text('Annuler'));
         break;
       case StatusTransport.acceptedByVtc:
         return Column(
-          crossAxisAlignment: CrossAxisAlignment.center,
           children: [
             FloatingActionButton.extended(
               onPressed: () {
@@ -44,11 +43,10 @@ class CustomerHandle extends StatelessWidget {
                     'Vous pourrez payer dans les 6 jours précédants le transport',
                     'Ok');
               },
-              label: Text('À venir'),
-              icon: FaIcon(FontAwesomeIcons.creditCard),
+              label: const Text('À venir'),
+              icon: const FaIcon(FontAwesomeIcons.creditCard),
             ),
             FlatButton(
-                child: Text('Annuler'),
                 onPressed: () async {
                   final rep = await Show.showAreYouSureModel(
                       context: context,
@@ -61,7 +59,8 @@ class CustomerHandle extends StatelessWidget {
                         context.read(myUserProvider).typeDeCompte ==
                             TypeOfAccount.userNormal);
                   }
-                })
+                },
+                child: const Text('Annuler'))
           ],
         );
         break;
@@ -77,7 +76,6 @@ class CustomerHandle extends StatelessWidget {
                     final value = await context
                         .read(stripeRepositoryProvider)
                         .paymentIntentAuthorize(transport.amount, transport.id);
-                    print(value);
 
                     if (value is String) {
                       context.refresh(boolToggleProvider).setShowSpinner();
@@ -97,14 +95,14 @@ class CustomerHandle extends StatelessWidget {
 
                       await context
                           .read(myTransportRepositoryProvider)
-                          .setTransportPaymentIntentId(transport.id, value['id']);
+                          .setTransportPaymentIntentId(transport.id, value['id'] as String);
 
 
                     }
 
                   },
-                  label: Text('Continuer'),
-                  icon: FaIcon(FontAwesomeIcons.creditCard),
+                  label: const Text('Continuer'),
+                  icon: const FaIcon(FontAwesomeIcons.creditCard),
                 ):Center(
                   child: CircularProgressIndicator(
                       valueColor:
@@ -116,7 +114,6 @@ class CustomerHandle extends StatelessWidget {
               }
             ),
             FlatButton(
-                child: Text('Annuler'),
                 onPressed: () async {
                   final rep = await Show.showAreYouSureModel(
                       context: context,
@@ -129,7 +126,8 @@ class CustomerHandle extends StatelessWidget {
                         context.read(myUserProvider).typeDeCompte ==
                             TypeOfAccount.userNormal);
                   }
-                })
+                },
+                child: const Text('Annuler')),
           ],
         );
         break;
@@ -139,13 +137,11 @@ class CustomerHandle extends StatelessWidget {
             Center(
               child: QrImage(
                 data: transport.paymentIntentId,
-                version: QrVersions.auto,
                 size: 320,
                 gapless: false,
               ),
             ),
             FlatButton(
-                child: Text('Annuler'),
                 onPressed: () async {
                   final rep = await Show.showAreYouSureModel(
                       context: context,
@@ -158,7 +154,8 @@ class CustomerHandle extends StatelessWidget {
                         context.read(myUserProvider).typeDeCompte ==
                             TypeOfAccount.userNormal);
                   }
-                })
+                },
+                child: const Text('Annuler'))
           ],
         ); //Display QR code
         break;
@@ -172,17 +169,14 @@ class CustomerHandle extends StatelessWidget {
               child: Stack(
                 children: <Widget>[
                   Align(
-                    alignment: Alignment.center,
                     child: QrImage(
                       data: transport.paymentIntentId,
-                      version: QrVersions.auto,
                       size: 320,
                       gapless: false,
                     ),
                   ),
-                  FlareActor(
+                  const FlareActor(
                     'assets/animations/ok.flr',
-                    alignment: Alignment.center,
                     animation: 'Checkmark Appear',
                   )
                 ],

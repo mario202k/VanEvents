@@ -1,20 +1,16 @@
 import 'dart:io';
 import 'dart:math' as math;
 
-import 'package:async/async.dart';
 import 'package:auto_route/auto_route.dart';
+// import 'package:awesome_notifications/awesome_notifications.dart';
 import 'package:badges/badges.dart';
 import 'package:curved_navigation_bar/curved_navigation_bar.dart';
-import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
-import 'package:van_events_project/domain/models/message.dart';
-import 'package:van_events_project/domain/models/my_chat.dart';
 import 'package:van_events_project/domain/models/my_user.dart';
-import 'package:van_events_project/domain/repositories/my_chat_repository.dart';
 import 'package:van_events_project/domain/routing/route.gr.dart';
 import 'package:van_events_project/presentation/pages/billets.dart';
 import 'package:van_events_project/presentation/pages/chat.dart';
@@ -33,16 +29,14 @@ class BaseScreens extends HookWidget {
 
   @override
   Widget build(BuildContext context) {
-    print('buildBaseScreens');
 
     final _animationController = useAnimationController(
-        duration: Duration(milliseconds: 400), initialValue: 0.0);
-    final myUser = useProvider(myUserProvider);
+        duration: const Duration(milliseconds: 400));
+    final myUser = context.read(myUserProvider);
     NotificationHandler().initializeFcmNotification(myUser.id, context);
     final boolToggle = context.read(boolToggleProvider);
     boolToggle.initial();
     boolToggle.setNbMsgNonLu(context, myUser.id);
-
 
     return ModelScreen(
       child: Stack(
@@ -69,7 +63,7 @@ class BaseScreens extends HookWidget {
                       ? Chat()
                       : nav == 'Billets'
                           ? Billets()
-                          : Profil();
+                          : const Profil();
             }),
           ),
           Align(
@@ -137,7 +131,7 @@ class BaseScreens extends HookWidget {
                             i += nb;
                           }
 
-                          return i != 0
+                          return i != null && i != 0
                               ? Badge(
                                   badgeContent: Text(
                                     '$i',
@@ -158,7 +152,7 @@ class BaseScreens extends HookWidget {
                                         .secondaryVariant,
                                   ),
                                 )
-                              : SizedBox();
+                              : const SizedBox();
                         },
                       ),
                     ],
@@ -186,7 +180,7 @@ class BaseScreens extends HookWidget {
                     child: AnimatedBuilder(
                         animation: _animationController,
                         builder: (context, _) {
-                          return Container(
+                          return SizedBox(
                             width: 120,
                             height: 120,
                             child: Stack(
@@ -207,19 +201,19 @@ class BaseScreens extends HookWidget {
                                         scale: _animationController.value,
                                         child: FloatingActionButton(
                                             heroTag: 1,
-                                            child: Icon(
-                                              FontAwesomeIcons.userFriends,
-                                              color: Theme.of(context)
-                                                  .colorScheme
-                                                  .onSecondary,
-                                            ),
                                             onPressed: () {
                                               ExtendedNavigator.of(context).push(
                                                   Routes.searchUserEvent,
                                                   arguments:
                                                       SearchUserEventArguments(
                                                           isEvent: false));
-                                            }),
+                                            },
+                                            child: Icon(
+                                              FontAwesomeIcons.userFriends,
+                                              color: Theme.of(context)
+                                                  .colorScheme
+                                                  .onSecondary,
+                                            )),
                                       ),
                                     ),
                                   ),
@@ -238,20 +232,20 @@ class BaseScreens extends HookWidget {
                                         scale: _animationController.value,
                                         child: FloatingActionButton(
                                             heroTag: 2,
-                                            child: Icon(
-                                              FontAwesomeIcons.users,
-                                              color: Theme.of(context)
-                                                  .colorScheme
-                                                  .onSecondary,
-                                            ),
                                             onPressed: () {
                                               ExtendedNavigator.of(context).push(
                                                   Routes.searchUserEvent,
                                                   arguments:
                                                       SearchUserEventArguments(
                                                           isEvent: true));
-                                            }
-                                            //ExtendedNavigator.of(context).pushNamed(Routes.uploadEvent),
+                                            },
+
+                                            child: Icon(
+                                              FontAwesomeIcons.users,
+                                              color: Theme.of(context)
+                                                  .colorScheme
+                                                  .onSecondary,
+                                            ),                                            //ExtendedNavigator.of(context).pushNamed(Routes.uploadEvent),
                                             ),
                                       ),
                                     ),
@@ -262,19 +256,26 @@ class BaseScreens extends HookWidget {
                                   right: 0,
                                   child: FloatingActionButton(
                                       heroTag: 3,
+                                      onPressed: () {
+                                        //  AwesomeNotifications().createNotification(
+                                        //     content: NotificationContent(
+                                        //         id: 10,
+                                        //         channelKey: 'basic_channel',
+                                        //         title: 'Simple Notification',
+                                        //         body: 'Simple body'
+                                        //     )
+                                        // );
+                                        // _animationController.isCompleted
+                                        //     ? _animationController.reverse()
+                                        //     : _animationController.forward();
+                                      },
+
                                       child: Icon(
                                         FontAwesomeIcons.search,
                                         color: Theme.of(context)
                                             .colorScheme
                                             .onSecondary,
-                                      ),
-                                      onPressed: () {
-                                        //NotificationHandler().showOverlayWindow();
-                                        _animationController.isCompleted
-                                            ? _animationController.reverse()
-                                            : _animationController.forward();
-                                      }
-                                      //ExtendedNavigator.of(context).pushNamed(Routes.uploadEvent),
+                                      ),                                      //ExtendedNavigator.of(context).pushNamed(Routes.uploadEvent),
                                       ),
                                 ),
                               ],
@@ -282,7 +283,7 @@ class BaseScreens extends HookWidget {
                           );
                         }),
                   )
-                : SizedBox();
+                : const SizedBox();
           }),
           Consumer(builder: (context, watch, _) {
             final nav = watch(navigationProvider).state;
@@ -293,16 +294,16 @@ class BaseScreens extends HookWidget {
                     bottom: 60,
                     child: FloatingActionButton(
                       heroTag: 4,
-                      child: Icon(
-                        FontAwesomeIcons.car,
-                        color: Theme.of(context).colorScheme.onSecondary,
-                      ),
                       onPressed: () {
                         ExtendedNavigator.of(context)
                             .push(Routes.transportScreen);
                       },
+                      child: Icon(
+                        FontAwesomeIcons.car,
+                        color: Theme.of(context).colorScheme.onSecondary,
+                      ),
                     ))
-                : SizedBox();
+                : const SizedBox();
           })
         ],
       ),

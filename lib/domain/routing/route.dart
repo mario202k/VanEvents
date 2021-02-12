@@ -1,18 +1,19 @@
-import 'package:auto_route/auto_route.dart';
 import 'package:auto_route/auto_route_annotations.dart';
 import 'package:van_events_project/presentation/pages/about_screen.dart';
 import 'package:van_events_project/presentation/pages/admin_event.dart';
 import 'package:van_events_project/presentation/pages/admin_organisateur.dart';
 import 'package:van_events_project/presentation/pages/base_screen.dart';
-import 'package:van_events_project/presentation/pages/cguCgv.dart';
+import 'package:van_events_project/presentation/pages/billet_details.dart';
+import 'package:van_events_project/presentation/pages/call_screen.dart';
+import 'package:van_events_project/presentation/pages/cgu_cgv.dart';
 import 'package:van_events_project/presentation/pages/cgu_cgv_accept.dart';
 import 'package:van_events_project/presentation/pages/details.dart';
 import 'package:van_events_project/presentation/pages/formula_choice.dart';
 import 'package:van_events_project/presentation/pages/full_photo.dart';
 import 'package:van_events_project/presentation/pages/login/login_screen.dart';
 import 'package:van_events_project/presentation/pages/monitoring_scanner.dart';
-import 'package:van_events_project/presentation/pages/billet_details.dart';
 import 'package:van_events_project/presentation/pages/other_profil.dart';
+import 'package:van_events_project/presentation/pages/pick_up_screen.dart';
 import 'package:van_events_project/presentation/pages/refund_screen.dart';
 import 'package:van_events_project/presentation/pages/reset_password.dart';
 import 'package:van_events_project/presentation/pages/screen_chat_room.dart';
@@ -58,6 +59,8 @@ import 'package:van_events_project/route_authentication.dart';
   MaterialRoute(page: AboutScreen, fullscreenDialog: true, initial: false),
   MaterialRoute(page: RefundScreen, fullscreenDialog: true, initial: false),
   MaterialRoute(page: OtherProfile, fullscreenDialog: true, initial: false),
+  MaterialRoute(page: PickupScreen, fullscreenDialog: true, initial: false),
+  MaterialRoute(page: CallScreen, fullscreenDialog: true, initial: false),
   //This route returns result of type [bool]
   // CupertinoRoute(page: LoginScreen, fullscreenDialog: true),
   // CustomRoute<bool>(page: LoginScreen, transitionsBuilder: TransitionsBuilders.slideLeftWithFade,durationInMilliseconds: 5000),

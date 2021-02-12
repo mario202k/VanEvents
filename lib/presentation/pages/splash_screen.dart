@@ -2,15 +2,14 @@ import 'package:flare_flutter/flare_actor.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:van_events_project/presentation/pages/login/login_screen.dart';
-import 'package:van_events_project/presentation/widgets/appPageRoute.dart';
+import 'package:van_events_project/presentation/widgets/app_page_route.dart';
 
 
 class MySplashScreen extends StatelessWidget {
-  MySplashScreen();
+  const MySplashScreen();
 
   @override
   Widget build(BuildContext context) {
-    print('MySplashScreen');
 
     return Scaffold(
       backgroundColor: Theme.of(context).colorScheme.background,
@@ -21,7 +20,6 @@ class MySplashScreen extends StatelessWidget {
             tag: 'logo',
             child: FlareActor(
               'assets/animations/logo.flr',
-              alignment: Alignment.center,
               animation: 'start',
               fit: BoxFit.fitHeight,
 
@@ -39,7 +37,7 @@ class MySplashScreen extends StatelessWidget {
                 // );
 
                 Navigator.of(context).pushReplacement(AppPageRoute(
-                    builder: (BuildContext context) => LoginScreen()));
+                    builder: (BuildContext context) => const LoginScreen()));
               },
             ),
           ),

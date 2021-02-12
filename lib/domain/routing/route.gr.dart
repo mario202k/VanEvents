@@ -16,7 +16,8 @@ import '../../presentation/pages/admin_event.dart';
 import '../../presentation/pages/admin_organisateur.dart';
 import '../../presentation/pages/base_screen.dart';
 import '../../presentation/pages/billet_details.dart';
-import '../../presentation/pages/cguCgv.dart';
+import '../../presentation/pages/call_screen.dart';
+import '../../presentation/pages/cgu_cgv.dart';
 import '../../presentation/pages/cgu_cgv_accept.dart';
 import '../../presentation/pages/details.dart';
 import '../../presentation/pages/formula_choice.dart';
@@ -24,6 +25,7 @@ import '../../presentation/pages/full_photo.dart';
 import '../../presentation/pages/login/login_screen.dart';
 import '../../presentation/pages/monitoring_scanner.dart';
 import '../../presentation/pages/other_profil.dart';
+import '../../presentation/pages/pick_up_screen.dart';
 import '../../presentation/pages/refund_screen.dart';
 import '../../presentation/pages/reset_password.dart';
 import '../../presentation/pages/screen_chat_room.dart';
@@ -67,6 +69,8 @@ class Routes {
   static const String aboutScreen = '/about-screen';
   static const String refundScreen = '/refund-screen';
   static const String otherProfile = '/other-profile';
+  static const String pickupScreen = '/pickup-screen';
+  static const String callScreen = '/call-screen';
   static const all = <String>{
     routeAuthentication,
     resetPassword,
@@ -93,6 +97,8 @@ class Routes {
     aboutScreen,
     refundScreen,
     otherProfile,
+    pickupScreen,
+    callScreen,
   };
 }
 
@@ -125,7 +131,10 @@ class MyRouter extends RouterBase {
     RouteDef(Routes.aboutScreen, page: AboutScreen),
     RouteDef(Routes.refundScreen, page: RefundScreen),
     RouteDef(Routes.otherProfile, page: OtherProfile),
+    RouteDef(Routes.pickupScreen, page: PickupScreen),
+    RouteDef(Routes.callScreen, page: CallScreen),
   ];
+
   @override
   Map<Type, AutoRouteFactory> get pagesMap => _pagesMap;
   final _pagesMap = <Type, AutoRouteFactory>{
@@ -230,7 +239,7 @@ class MyRouter extends RouterBase {
     },
     MySplashScreen: (data) {
       return MaterialPageRoute<dynamic>(
-        builder: (context) => MySplashScreen(),
+        builder: (context) => const MySplashScreen(),
         settings: data,
         fullscreenDialog: true,
       );
@@ -292,7 +301,7 @@ class MyRouter extends RouterBase {
     SearchUserEvent: (data) {
       final args = data.getArgs<SearchUserEventArguments>(nullOk: false);
       return MaterialPageRoute<dynamic>(
-        builder: (context) => SearchUserEvent(args.isEvent),
+        builder: (context) => SearchUserEvent(isEvent: args.isEvent),
         settings: data,
         fullscreenDialog: true,
       );
@@ -333,6 +342,32 @@ class MyRouter extends RouterBase {
         fullscreenDialog: true,
       );
     },
+    PickupScreen: (data) {
+      final args = data.getArgs<PickupScreenArguments>(
+        orElse: () => PickupScreenArguments(),
+      );
+      return MaterialPageRoute<dynamic>(
+        builder: (context) => PickupScreen(
+          imageUrl: args.imageUrl,
+          nom: args.nom,
+        ),
+        settings: data,
+        fullscreenDialog: true,
+      );
+    },
+    CallScreen: (data) {
+      final args = data.getArgs<CallScreenArguments>(
+        orElse: () => CallScreenArguments(),
+      );
+      return MaterialPageRoute<dynamic>(
+        builder: (context) => CallScreen(
+          imageUrl: args.imageUrl,
+          nom: args.nom,
+        ),
+        settings: data,
+        fullscreenDialog: true,
+      );
+    },
   };
 }
 
@@ -343,6 +378,7 @@ class MyRouter extends RouterBase {
 /// ChatRoom arguments holder class
 class ChatRoomArguments {
   final String chatId;
+
   ChatRoomArguments({@required this.chatId});
 }
 
@@ -351,18 +387,21 @@ class FullPhotoArguments {
   final Key key;
   final String url;
   final File file;
+
   FullPhotoArguments({this.key, @required this.url, this.file});
 }
 
 /// UploadEvent arguments holder class
 class UploadEventArguments {
   final MyEvent myEvent;
+
   UploadEventArguments({this.myEvent});
 }
 
 /// Details arguments holder class
 class DetailsArguments {
   final MyEvent event;
+
   DetailsArguments({@required this.event});
 }
 
@@ -370,36 +409,42 @@ class DetailsArguments {
 class FormulaChoiceArguments {
   final List<Formule> formulas;
   final MyEvent myEvent;
+
   FormulaChoiceArguments({@required this.formulas, @required this.myEvent});
 }
 
 /// BilletDetails arguments holder class
 class BilletDetailsArguments {
   final String billetId;
+
   BilletDetailsArguments({@required this.billetId});
 }
 
 /// MonitoringScanner arguments holder class
 class MonitoringScannerArguments {
   final String eventId;
+
   MonitoringScannerArguments({@required this.eventId});
 }
 
 /// CguCgvAccept arguments holder class
 class CguCgvAcceptArguments {
   final String uid;
+
   CguCgvAcceptArguments({@required this.uid});
 }
 
 /// CguCgv arguments holder class
 class CguCgvArguments {
   final String cguOuCgv;
+
   CguCgvArguments({@required this.cguOuCgv});
 }
 
 /// StripeProfile arguments holder class
 class StripeProfileArguments {
   final String stripeAccount;
+
   StripeProfileArguments({this.stripeAccount});
 }
 
@@ -407,6 +452,7 @@ class StripeProfileArguments {
 class TransportDetailScreenArguments {
   final MyTransport myTransport;
   final String addressArriver;
+
   TransportDetailScreenArguments(
       {@required this.myTransport, @required this.addressArriver});
 }
@@ -414,17 +460,36 @@ class TransportDetailScreenArguments {
 /// LoginScreen arguments holder class
 class LoginScreenArguments {
   final String myEmail;
+
   LoginScreenArguments({this.myEmail});
 }
 
 /// SearchUserEvent arguments holder class
 class SearchUserEventArguments {
   final bool isEvent;
+
   SearchUserEventArguments({@required this.isEvent});
 }
 
 /// OtherProfile arguments holder class
 class OtherProfileArguments {
   final MyUser myUser;
+
   OtherProfileArguments({@required this.myUser});
+}
+
+/// PickupScreen arguments holder class
+class PickupScreenArguments {
+  final String imageUrl;
+  final String nom;
+
+  PickupScreenArguments({this.imageUrl, this.nom});
+}
+
+/// CallScreen arguments holder class
+class CallScreenArguments {
+  final String imageUrl;
+  final String nom;
+
+  CallScreenArguments({this.imageUrl, this.nom});
 }

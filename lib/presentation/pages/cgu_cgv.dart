@@ -7,7 +7,7 @@ import 'package:van_events_project/presentation/widgets/model_screen.dart';
 class CguCgv extends StatefulWidget {
   final String cguOuCgv;
 
-  CguCgv(this.cguOuCgv);
+  const CguCgv(this.cguOuCgv);
 
   @override
   _CguCgvState createState() => _CguCgvState();
@@ -17,7 +17,7 @@ class _CguCgvState extends State<CguCgv> {
   String cg;
 
   Future<String> loadAsset(BuildContext context) async {
-    return await DefaultAssetBundle.of(context)
+    return DefaultAssetBundle.of(context)
         .loadString('assets/cgucgv/${widget.cguOuCgv}.txt');
   }
 
@@ -37,7 +37,7 @@ class _CguCgvState extends State<CguCgv> {
             child: Column(
               children: <Widget>[
                 Text(
-                  cg != null ? cg : '',
+                  cg ?? '',
                   style: Theme.of(context).textTheme.headline5,
                 )
               ],

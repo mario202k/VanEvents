@@ -22,7 +22,6 @@ import 'custom_drawer.dart';
 class MyDrawer extends HookWidget {
   @override
   Widget build(BuildContext context) {
-    print('buildMyDrawer');
     final myUser = useProvider(myUserProvider);
     final myUserRepo = useProvider(myUserRepository);
     final myUserStream =useProvider(streamMyUserProvider);
@@ -41,15 +40,14 @@ class MyDrawer extends HookWidget {
                     minHeight: constraints.maxHeight),
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  mainAxisSize: MainAxisSize.max,
                   children: <Widget>[
                     Padding(
-                      padding: EdgeInsets.only(
+                      padding: const EdgeInsets.only(
                           top: 30, left: 15, right: 15, bottom: 80),
                       child: Stack(
                         children: <Widget>[
                           FractionalTranslation(
-                            translation: Offset(0.0, 2.1),
+                            translation: const Offset(0.0, 2.1),
                             child: RawMaterialButton(
                               onPressed: () {
                                 // BlocProvider.of<NavigationBloc>(context)
@@ -58,10 +56,10 @@ class MyDrawer extends HookWidget {
                                 CustomDrawer.of(context).close();
                               },
                               elevation: 10,
-                              shape: StadiumBorder(),
+                              shape: const StadiumBorder(),
                               child: Container(
                                 padding:
-                                EdgeInsets.only(left: 20.0, right: 20.0),
+                                const EdgeInsets.only(left: 20.0, right: 20.0),
                                 decoration: BoxDecoration(
                                   borderRadius: BorderRadius.circular(25),
                                   color: Theme.of(context).colorScheme.primary,
@@ -90,7 +88,7 @@ class MyDrawer extends HookWidget {
                                                 //color: Colors.white,
                                                 decoration: BoxDecoration(
                                                     borderRadius:
-                                                        BorderRadius.all(
+                                                    const BorderRadius.all(
                                                             Radius.circular(
                                                                 25)),
                                                     color: Theme.of(context)
@@ -98,12 +96,12 @@ class MyDrawer extends HookWidget {
                                                         .onPrimary),
                                               ),
                                             ),
-                                        error: (err, stack) => SizedBox())),
+                                        error: (err, stack) => const SizedBox())),
                               ),
                             ),
                           ),
                           Align(
-                              alignment: FractionalOffset(0.5, 0.0),
+                              alignment: const FractionalOffset(0.5, 0.0),
                               child: CircleAvatar(
                                 radius: 59,
                                 backgroundColor:
@@ -113,8 +111,8 @@ class MyDrawer extends HookWidget {
                                           backgroundImage: myUser
                                                   .imageUrl.isNotEmpty
                                               ? NetworkImage(myUser.imageUrl)
-                                              : AssetImage(
-                                                  'assets/img/normal_user_icon.png'),
+                                              : const AssetImage(
+                                                  'assets/img/normal_user_icon.png') as ImageProvider,
                                           radius: 57,
                                           backgroundColor: Theme.of(context)
                                               .colorScheme
@@ -171,7 +169,7 @@ class MyDrawer extends HookWidget {
                                 'Chat',
                                 style: Theme.of(context).textTheme.headline3,
                               ),
-                              leading: Icon(
+                              leading: const Icon(
                                 FontAwesomeIcons.comments,
                                 color: Colors.white,
                                 size: 22,
@@ -193,7 +191,7 @@ class MyDrawer extends HookWidget {
                                 'Mes billets',
                                 style: Theme.of(context).textTheme.headline3,
                               ),
-                              leading: Icon(
+                              leading: const Icon(
                                 FontAwesomeIcons.ticketAlt,
                                 color: Colors.white,
                                 size: 22,
@@ -214,7 +212,7 @@ class MyDrawer extends HookWidget {
                                 'Inviter un ami',
                                 style: Theme.of(context).textTheme.headline3,
                               ),
-                              leading: Icon(
+                              leading: const Icon(
                                 FontAwesomeIcons.shareAlt,
                                 color: Colors.white,
                                 size: 22,
@@ -239,7 +237,7 @@ class MyDrawer extends HookWidget {
                                 'Paramètres',
                                 style: Theme.of(context).textTheme.headline3,
                               ),
-                              leading: Icon(
+                              leading: const Icon(
                                 FontAwesomeIcons.cog,
                                 color: Colors.white,
                                 size: 22,
@@ -250,9 +248,8 @@ class MyDrawer extends HookWidget {
                               },
                             ),
                           ),
-                          myUser.typeDeCompte ==
-                              TypeOfAccount.organizer //organisateur
-                              ? Column(
+                          if (myUser.typeDeCompte ==
+                              TypeOfAccount.organizer) Column(
                             children: [
                               Container(
                                 decoration: BoxDecoration(
@@ -269,7 +266,7 @@ class MyDrawer extends HookWidget {
                                         .textTheme
                                         .headline3,
                                   ),
-                                  leading: Icon(
+                                  leading: const Icon(
                                     FontAwesomeIcons.funnelDollar,
                                     color: Colors.white,
                                     size: 22,
@@ -280,7 +277,7 @@ class MyDrawer extends HookWidget {
                                   },
                                 ),
                               ),
-                              SizedBox(
+                              const SizedBox(
                                 height: 1,
                               ),
                               Container(
@@ -298,7 +295,7 @@ class MyDrawer extends HookWidget {
                                         .textTheme
                                         .headline3,
                                   ),
-                                  leading: Icon(
+                                  leading: const Icon(
                                     FontAwesomeIcons.userCog,
                                     color: Colors.white,
                                     size: 22,
@@ -309,7 +306,7 @@ class MyDrawer extends HookWidget {
                                   },
                                 ),
                               ),
-                              SizedBox(
+                              const SizedBox(
                                 height: 1,
                               ),
                               Container(
@@ -327,7 +324,7 @@ class MyDrawer extends HookWidget {
                                         .textTheme
                                         .headline3,
                                   ),
-                                  leading: Icon(
+                                  leading: const Icon(
                                     FontAwesomeIcons.moneyBillWave,
                                     color: Colors.white,
                                     size: 22,
@@ -339,8 +336,7 @@ class MyDrawer extends HookWidget {
                                 ),
                               ),
                             ],
-                          )
-                              :SizedBox(),
+                          ) else const SizedBox(),
                         ],
                       ),
                     ),
@@ -356,7 +352,7 @@ class MyDrawer extends HookWidget {
                             "Se déconnecter",
                             style: Theme.of(context).textTheme.headline3,
                           ),
-                          leading: Icon(
+                          leading: const Icon(
                             FontAwesomeIcons.signOutAlt,
                             size: 18,
                             color: Colors.white,

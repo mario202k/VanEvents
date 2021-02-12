@@ -1,7 +1,7 @@
 class ConnectedAccount {
   String id;
   String object;
-  Business_profile businessProfile;
+  BusinessProfile businessProfile;
   String businessType;
   Capabilities capabilities;
   bool chargesEnabled;
@@ -16,378 +16,526 @@ class ConnectedAccount {
   bool payoutsEnabled;
   Requirements requirements;
   Settings settings;
-  Tos_acceptance tosAcceptance;
+  TosAcceptance tosAcceptance;
   String type;
 
-  static ConnectedAccount fromMap(Map map) {
-    if (map == null) return null;
-    ConnectedAccount connectedAccount = ConnectedAccount();
-    connectedAccount.id = map['id'];
-    connectedAccount.object = map['object'];
-    connectedAccount.businessProfile = Business_profile.fromMap(map['business_profile']);
-    connectedAccount.businessType = map['business_type'];
-    connectedAccount.capabilities = Capabilities.fromMap(map['capabilities']);
-    connectedAccount.chargesEnabled = map['charges_enabled'];
-    connectedAccount.company = Company.fromMap(map['company']);
-    connectedAccount.country = map['country'];
-    connectedAccount.created = map['created'];
-    connectedAccount.defaultCurrency = map['default_currency'];
-    connectedAccount.detailsSubmitted = map['details_submitted'];
-    connectedAccount.email = map['email'];
-    connectedAccount.externalAccounts = ExternalAccounts.fromMap(map['external_accounts']);
-    connectedAccount.metadata = Metadata.fromMap(map['metadata']);
-    connectedAccount.payoutsEnabled = map['payouts_enabled'];
-    connectedAccount.requirements = Requirements.fromMap(map['requirements']);
-    connectedAccount.settings = Settings.fromMap(map['settings']);
-    connectedAccount.tosAcceptance = Tos_acceptance.fromMap(map['tos_acceptance']);
-    connectedAccount.type = map['type'];
-    return connectedAccount;
+  ConnectedAccount(
+      {this.id,
+      this.object,
+      this.businessProfile,
+      this.businessType,
+      this.capabilities,
+      this.chargesEnabled,
+      this.company,
+      this.country,
+      this.created,
+      this.defaultCurrency,
+      this.detailsSubmitted,
+      this.email,
+      this.externalAccounts,
+      this.metadata,
+      this.payoutsEnabled,
+      this.requirements,
+      this.settings,
+      this.tosAcceptance,
+      this.type});
+
+  factory ConnectedAccount.fromMap(Map map) {
+    if (null == map) return null;
+    return ConnectedAccount(
+      id: map['id'] as String,
+      object: map['object'] as String,
+      businessProfile: BusinessProfile.fromMap(map['business_profile'] as Map),
+      businessType: map['businessType'] as String,
+      capabilities: Capabilities.fromMap(map['capabilities'] as Map),
+      chargesEnabled: map['chargesEnabled'] as bool,
+      company: Company.fromMap(map['company'] as Map),
+      country: map['country'] as String,
+      created: map['created'] as int,
+      defaultCurrency: map['defaultCurrency'] as String,
+      detailsSubmitted: map['detailsSubmitted'] as bool,
+      email: map['email'] as String,
+      externalAccounts: ExternalAccounts.fromMap(map['external_accounts'] as Map),
+      metadata: Metadata.fromMap(map['metadata'] as Map),
+      payoutsEnabled: map['payoutsEnabled'] as bool,
+      requirements: Requirements.fromMap(map['requirements'] as Map),
+      settings: Settings.fromMap(map['settings'] as Map),
+      tosAcceptance:TosAcceptance.fromMap(map['tosAcceptance'] as Map),
+      type: map['type'] as String,
+    );
   }
 
   Map toJson() => {
-    "id": id,
-    "object": object,
-    "business_profile": businessProfile,
-    "business_type": businessType,
-    "capabilities": capabilities,
-    "charges_enabled": chargesEnabled,
-    "company": company,
-    "country": country,
-    "created": created,
-    "default_currency": defaultCurrency,
-    "details_submitted": detailsSubmitted,
-    "email": email,
-    "external_accounts": externalAccounts,
-    "metadata": metadata,
-    "payouts_enabled": payoutsEnabled,
-    "requirements": requirements,
-    "settings": settings,
-    "tos_acceptance": tosAcceptance,
-    "type": type,
-  };
+        "id": id,
+        "object": object,
+        "business_profile": businessProfile,
+        "business_type": businessType,
+        "capabilities": capabilities,
+        "charges_enabled": chargesEnabled,
+        "company": company,
+        "country": country,
+        "created": created,
+        "default_currency": defaultCurrency,
+        "details_submitted": detailsSubmitted,
+        "email": email,
+        "external_accounts": externalAccounts,
+        "metadata": metadata,
+        "payouts_enabled": payoutsEnabled,
+        "requirements": requirements,
+        "settings": settings,
+        "tos_acceptance": tosAcceptance,
+        "type": type,
+      };
 }
 
-class Tos_acceptance {
+class TosAcceptance {
   dynamic date;
   dynamic ip;
   dynamic userAgent;
 
-  static Tos_acceptance fromMap(Map map) {
-    if (map == null) return null;
-    Tos_acceptance tos_acceptance = Tos_acceptance();
-    tos_acceptance.date = map['date'];
-    tos_acceptance.ip = map['ip'];
-    tos_acceptance.userAgent = map['user_agent'];
-    return tos_acceptance;
+  TosAcceptance({this.date, this.ip, this.userAgent});
+
+  factory TosAcceptance.fromMap(Map map) {
+    if (null == map) return null;
+    return TosAcceptance(
+      date: map['date'],
+      ip: map['ip'],
+      userAgent: map['user_agent'],
+    );
   }
 
   Map toJson() => {
-    "date": date,
-    "ip": ip,
-    "user_agent": userAgent,
-  };
+        "date": date,
+        "ip": ip,
+        "user_agent": userAgent,
+      };
 }
 
 class Settings {
-  Bacs_debit_payments bacsDebitPayments;
+  BacsDebitPayments bacsDebitPayments;
   Branding branding;
-  Card_payments cardPayments;
+  CardPayments cardPayments;
   Dashboard dashboard;
   Payments payments;
   Payouts payouts;
 
-  static Settings fromMap(Map map) {
-    if (map == null) return null;
-    Settings settings = Settings();
-    settings.bacsDebitPayments = Bacs_debit_payments.fromMap(map['bacs_debit_payments']);
-    settings.branding = Branding.fromMap(map['branding']);
-    settings.cardPayments = Card_payments.fromMap(map['card_payments']);
-    settings.dashboard = Dashboard.fromMap(map['dashboard']);
-    settings.payments = Payments.fromMap(map['payments']);
-    settings.payouts = Payouts.fromMap(map['payouts']);
-    return settings;
+  Settings(
+      {this.bacsDebitPayments,
+      this.branding,
+      this.cardPayments,
+      this.dashboard,
+      this.payments,
+      this.payouts});
+
+  factory Settings.fromMap(Map map) {
+    if (null == map) return null;
+    return Settings(
+      bacsDebitPayments: BacsDebitPayments.fromMap(
+          map['bacs_debit_payments'] as Map),
+      branding: Branding.fromMap(map['branding'] as Map),
+      cardPayments:
+          CardPayments.fromMap(map['card_payments'] as Map),
+      dashboard: Dashboard.fromMap(map['dashboard'] as Map),
+      payments: Payments.fromMap(map['payments'] as Map),
+      payouts: Payouts.fromMap(map['payouts'] as Map),
+    );
   }
 
   Map toJson() => {
-    "bacs_debit_payments": bacsDebitPayments,
-    "branding": branding,
-    "card_payments": cardPayments,
-    "dashboard": dashboard,
-    "payments": payments,
-    "payouts": payouts,
-  };
+        "bacs_debit_payments": bacsDebitPayments,
+        "branding": branding,
+        "card_payments": cardPayments,
+        "dashboard": dashboard,
+        "payments": payments,
+        "payouts": payouts,
+      };
 }
 
 class Payouts {
   bool debitNegativeBalances;
   Schedule schedule;
-  dynamic statementDescriptor;
+  String statementDescriptor;
 
-  static Payouts fromMap(Map map) {
-    if (map == null) return null;
-    Payouts payouts = Payouts();
-    payouts.debitNegativeBalances = map['debit_negative_balances'];
-    payouts.schedule = Schedule.fromMap(map['schedule']);
-    payouts.statementDescriptor = map['statement_descriptor'];
-    return payouts;
+  Payouts(
+      {this.debitNegativeBalances, this.schedule, this.statementDescriptor});
+
+  factory Payouts.fromMap(Map map) {
+    return Payouts(
+      debitNegativeBalances: map['debit_negative_balances'] as bool,
+      schedule: Schedule.fromMap(map['schedule'] as Map),
+      statementDescriptor: map['statement_descriptor'] as String,
+    );
   }
 
   Map toJson() => {
-    "debit_negative_balances": debitNegativeBalances,
-    "schedule": schedule,
-    "statement_descriptor": statementDescriptor,
-  };
+        "debit_negative_balances": debitNegativeBalances,
+        "schedule": schedule,
+        "statement_descriptor": statementDescriptor,
+      };
 }
 
 class Schedule {
   int delayDays;
   String interval;
 
-  static Schedule fromMap(Map map) {
-    if (map == null) return null;
-    Schedule schedule = Schedule();
-    schedule.delayDays = map['delay_days'];
-    schedule.interval = map['interval'];
-    return schedule;
+  Schedule({this.delayDays, this.interval});
+
+  factory Schedule.fromMap(Map map) {
+    return Schedule(
+      delayDays: map['delay_days'] as int,
+      interval: map['interval'] as String,
+    );
   }
 
   Map toJson() => {
-    "delay_days": delayDays,
-    "interval": interval,
-  };
+        "delay_days": delayDays,
+        "interval": interval,
+      };
 }
 
 class Payments {
   String statementDescriptor;
-  dynamic statementDescriptorKana;
-  dynamic statementDescriptorKanji;
+  String statementDescriptorKana;
+  String statementDescriptorKanji;
 
-  static Payments fromMap(Map map) {
-    if (map == null) return null;
-    Payments payments = Payments();
-    payments.statementDescriptor = map['statement_descriptor'];
-    payments.statementDescriptorKana = map['statement_descriptor_kana'];
-    payments.statementDescriptorKanji = map['statement_descriptor_kanji'];
-    return payments;
+  Payments(
+      {this.statementDescriptor,
+      this.statementDescriptorKana,
+      this.statementDescriptorKanji});
+
+  factory Payments.fromMap(Map map) {
+    return Payments(
+      statementDescriptor: map['statement_descriptor'] as String,
+      statementDescriptorKana: map['statement_descriptor_kana'] as String,
+      statementDescriptorKanji: map['statement_descriptor_kanji'] as String,
+    );
   }
 
   Map toJson() => {
-    "statement_descriptor": statementDescriptor,
-    "statement_descriptor_kana": statementDescriptorKana,
-    "statement_descriptor_kanji": statementDescriptorKanji,
-  };
+        "statement_descriptor": statementDescriptor,
+        "statement_descriptor_kana": statementDescriptorKana,
+        "statement_descriptor_kanji": statementDescriptorKanji,
+      };
 }
 
 class Dashboard {
   String displayName;
   String timezone;
 
-  static Dashboard fromMap(Map map) {
-    if (map == null) return null;
-    Dashboard dashboard = Dashboard();
-    dashboard.displayName = map['display_name'];
-    dashboard.timezone = map['timezone'];
-    return dashboard;
+  Dashboard({this.displayName, this.timezone});
+
+  factory Dashboard.fromMap(Map map) {
+    return Dashboard(
+      displayName: map['display_name'] as String,
+      timezone: map['timezone'] as String,
+    );
   }
 
   Map toJson() => {
-    "display_name": displayName,
-    "timezone": timezone,
-  };
+        "display_name": displayName,
+        "timezone": timezone,
+      };
 }
 
-class Card_payments {
-  Decline_on declineOn;
+class CardPayments {
+  DeclineOn declineOn;
   String statementDescriptorPrefix;
 
-  static Card_payments fromMap(Map map) {
-    if (map == null) return null;
-    Card_payments card_payments = Card_payments();
-    card_payments.declineOn = Decline_on.fromMap(map['decline_on']);
-    card_payments.statementDescriptorPrefix = map['statement_descriptor_prefix'];
-    return card_payments;
-  }
+  CardPayments({this.declineOn, this.statementDescriptorPrefix});
+
 
   Map toJson() => {
-    "decline_on": declineOn,
-    "statement_descriptor_prefix": statementDescriptorPrefix,
-  };
+        "decline_on": declineOn,
+        "statement_descriptor_prefix": statementDescriptorPrefix,
+      };
+
+  factory CardPayments.fromMap(Map map) {
+    if (null == map) return null;
+    return CardPayments(
+      declineOn: DeclineOn.fromMap(map['decline_on'] as Map),
+      statementDescriptorPrefix: map['statement_descriptor_prefix']?.toString(),
+    );
+  }
 }
 
-class Decline_on {
+class DeclineOn {
   bool avsFailure;
   bool cvcFailure;
 
-  static Decline_on fromMap(Map map) {
-    if (map == null) return null;
-    Decline_on decline_on = Decline_on();
-    decline_on.avsFailure = map['avs_failure'];
-    decline_on.cvcFailure = map['cvc_failure'];
-    return decline_on;
+  DeclineOn({this.avsFailure, this.cvcFailure});
+
+  factory DeclineOn.fromMap(Map map) {
+    return DeclineOn(
+      avsFailure: map['avs_failure'] as bool,
+      cvcFailure: map['cvc_failure'] as bool,
+    );
   }
 
   Map toJson() => {
-    "avs_failure": avsFailure,
-    "cvc_failure": cvcFailure,
-  };
+        "avs_failure": avsFailure,
+        "cvc_failure": cvcFailure,
+      };
 }
 
 class Branding {
   String icon;
   String logo;
   String primaryColor;
-  dynamic secondaryColor;
+  String secondaryColor;
 
-  static Branding fromMap(Map map) {
-    if (map == null) return null;
-    Branding branding = Branding();
-    branding.icon = map['icon'];
-    branding.logo = map['logo'];
-    branding.primaryColor = map['primary_color'];
-    branding.secondaryColor = map['secondary_color'];
-    return branding;
+  Branding({this.icon, this.logo, this.primaryColor, this.secondaryColor});
+
+  factory Branding.fromMap(Map map) {
+    return Branding(
+      icon: map['icon'] as String,
+      logo: map['logo'] as String,
+      primaryColor: map['primary_color'] as String,
+      secondaryColor: map['secondary_color'] as String,
+    );
   }
 
   Map toJson() => {
-    "icon": icon,
-    "logo": logo,
-    "primary_color": primaryColor,
-    "secondary_color": secondaryColor,
-  };
+        "icon": icon,
+        "logo": logo,
+        "primary_color": primaryColor,
+        "secondary_color": secondaryColor,
+      };
 }
 
-class Bacs_debit_payments {
+class BacsDebitPayments {
+  BacsDebitPayments();
 
-  static Bacs_debit_payments fromMap(Map map) {
-    if (map == null) return null;
-    Bacs_debit_payments bacs_debit_payments = Bacs_debit_payments();
-    return bacs_debit_payments;
+  factory BacsDebitPayments.fromMap(Map map) {
+    if (null == map) return null;
+    return BacsDebitPayments();
   }
 
-  Map toJson() => {
-  };
+  Map toJson() => {};
 }
 
 class Requirements {
   dynamic currentDeadline;
-  List<String> currentlyDue;
+  List currentlyDue;
   String disabledReason;
-  List<dynamic> errors;
-  List<String> eventuallyDue;
-  List<dynamic> pastDue;
-  List<dynamic> pendingVerification;
+  List errors;
+  List eventuallyDue;
+  List pastDue;
+  List pendingVerification;
 
-  static Requirements fromMap(Map map) {
-    if (map == null) return null;
-    Requirements requirements = Requirements();
-    requirements.currentDeadline = map['current_deadline'];
-    requirements.currentlyDue = List()..addAll(
-      (map['currently_due'] as List ?? []).map((o) => o.toString())
+  Requirements(
+      {this.currentDeadline,
+      this.currentlyDue,
+      this.disabledReason,
+      this.errors,
+      this.eventuallyDue,
+      this.pastDue,
+      this.pendingVerification});
+
+  factory Requirements.fromMap(Map map) {
+    if (null == map) return null;
+    return Requirements(
+      currentDeadline: map['current_deadline'] as dynamic,
+      currentlyDue: map['currently_due'] as List,
+      disabledReason: map['disabled_reason'] as String,
+      errors: map['errors'] as List,
+      eventuallyDue: map['eventually_due'] as List,
+      pastDue: map['past_due'] as List,
+      pendingVerification: map['pending_verification'] as List,
     );
-    requirements.disabledReason = map['disabled_reason'];
-    requirements.errors = map['errors'];
-    requirements.eventuallyDue = List()..addAll(
-      (map['eventually_due'] as List ?? []).map((o) => o.toString())
-    );
-    requirements.pastDue = map['past_due'];
-    requirements.pendingVerification = map['pending_verification'];
-    return requirements;
   }
 
+  // factory Requirements.fromMap(Map map) {
+  //   if (null == map) return null;
+  //   var temp;
+  //   return Requirements(
+  //     currentDeadline: map['currentDeadline'],
+  //     currentlyDue: null == (temp = map['currentlyDue'])
+  //         ? []
+  //         : (temp is List ? temp.map((map) => map?.toString()).toList() : []),
+  //     disabledReason: map['disabledReason']?.toString(),
+  //     errors: null == (temp = map['errors'])
+  //         ? []
+  //         : (temp is List ? temp.map((map) => map).toList() : []),
+  //     eventuallyDue: null == (temp = map['eventuallyDue'])
+  //         ? []
+  //         : (temp is List ? temp.map((map) => map?.toString()).toList() : []),
+  //     pastDue: null == (temp = map['pastDue'])
+  //         ? []
+  //         : (temp is List ? temp.map((map) => map).toList() : []),
+  //     pendingVerification: null == (temp = map['pendingVerification'])
+  //         ? []
+  //         : (temp is List ? temp.map((map) => map).toList() : []),
+  //   );
+  // }
+
   Map toJson() => {
-    "current_deadline": currentDeadline,
-    "currently_due": currentlyDue,
-    "disabled_reason": disabledReason,
-    "errors": errors,
-    "eventually_due": eventuallyDue,
-    "past_due": pastDue,
-    "pending_verification": pendingVerification,
-  };
+        "current_deadline": currentDeadline,
+        "currently_due": currentlyDue,
+        "disabled_reason": disabledReason,
+        "errors": errors,
+        "eventually_due": eventuallyDue,
+        "past_due": pastDue,
+        "pending_verification": pendingVerification,
+      };
 }
 
 class Metadata {
+  Map toJson() => {};
 
-  static Metadata fromMap(Map map) {
-    if (map == null) return null;
-    Metadata metadata = Metadata();
-    return metadata;
+  Metadata();
+
+  factory Metadata.fromMap(Map map) {
+    if (null == map) return null;
+    return Metadata();
   }
-
-  Map toJson() => {
-  };
 }
 
 class ExternalAccounts {
   String object;
-  List<dynamic> data;
+  List data;
   bool hasMore;
   String url;
 
-  static ExternalAccounts fromMap(Map map) {
-    if (map == null) return null;
+  ExternalAccounts({this.object, this.data, this.hasMore, this.url});
 
-    ExternalAccounts externalAccounts = ExternalAccounts();
-    externalAccounts.object = map['object'];
-    externalAccounts.data = map['data'];
-    externalAccounts.hasMore = map['has_more'];
-    externalAccounts.url = map['url'];
-    return externalAccounts;
-  }
 
   Map toJson() => {
-    "object": object,
-    "data": data,
-    "has_more": hasMore,
-    "url": url,
-  };
+        "object": object,
+        "data": data,
+        "has_more": hasMore,
+        "url": url,
+      };
+
+  factory ExternalAccounts.fromMap(Map map) {
+    if (null == map) return null;
+    return  ExternalAccounts(
+      object: map['object'] as String,
+      data: map['data'] as List,
+      hasMore: map['has_more'] as bool,
+      url: map['url'] as String,
+    );
+  }
+
+// factory ExternalAccounts.fromMap(Map map) {
+  //   if (null == map) return null;
+  //   var temp;
+  //   return ExternalAccounts(
+  //     object: map['object']?.toString(),
+  //     data: null == (temp = map['data'])
+  //         ? []
+  //         : (temp is List ? temp.map((map) => map).toList() : []),
+  //     hasMore: null == (temp = map['hasMore'])
+  //         ? null
+  //         : (temp is bool
+  //             ? temp
+  //             : (temp is num
+  //                 ? 0 != temp.toInt()
+  //                 : ('true' == temp.toString()))),
+  //     url: map['url']?.toString(),
+  //   );
+  // }
 }
 
 class Company {
   Address address;
   bool directorsProvided;
   bool executivesProvided;
-  dynamic name;
+  String name;
   bool ownersProvided;
   bool taxIdProvided;
   Verification verification;
 
-  static Company fromMap(Map map) {
-    if (map == null) return null;
-    Company company = Company();
-    company.address = Address.fromMap(map['address']);
-    company.directorsProvided = map['directors_provided'];
-    company.executivesProvided = map['executives_provided'];
-    company.name = map['name'];
-    company.ownersProvided = map['owners_provided'];
-    company.taxIdProvided = map['tax_id_provided'];
-    company.verification = Verification.fromMap(map['verification']);
-    return company;
-  }
+  Company(
+      {this.address,
+      this.directorsProvided,
+      this.executivesProvided,
+      this.name,
+      this.ownersProvided,
+      this.taxIdProvided,
+      this.verification});
+
 
   Map toJson() => {
-    "address": address,
-    "directors_provided": directorsProvided,
-    "executives_provided": executivesProvided,
-    "name": name,
-    "owners_provided": ownersProvided,
-    "tax_id_provided": taxIdProvided,
-    "verification": verification,
-  };
+        "address": address,
+        "directors_provided": directorsProvided,
+        "executives_provided": executivesProvided,
+        "name": name,
+        "owners_provided": ownersProvided,
+        "tax_id_provided": taxIdProvided,
+        "verification": verification,
+      };
+
+  factory Company.fromMap(Map map) {
+
+    if (null == map) return null;
+    return Company(
+      address: Address.fromMap(map['address'] as Map),
+      directorsProvided: map['directors_provided'] as bool,
+      executivesProvided: map['executives_provided'] as bool,
+      name: map['name'] as String,
+      ownersProvided: map['owners_provided'] as bool,
+      taxIdProvided: map['tax_id_provided'] as bool,
+      verification: Verification.fromMap(map['verification'] as Map),
+    );
+  }
+
+// factory Company.fromMap(Map map) {
+  //   print(map);
+  //   print(map['taxIdProvided']);
+  //   if (null == map) return null;
+  //   var temp;
+  //   return Company(
+  //     address: Address.fromMap(map['address'] as Map),
+  //     directorsProvided: null == (temp = map['directorsProvided'])
+  //         ? null
+  //         : (temp is bool
+  //             ? temp
+  //             : (temp is num
+  //                 ? 0 != temp.toInt()
+  //                 : ('true' == temp.toString()))),
+  //     executivesProvided: null == (temp = map['executivesProvided'])
+  //         ? null
+  //         : (temp is bool
+  //             ? temp
+  //             : (temp is num
+  //                 ? 0 != temp.toInt()
+  //                 : ('true' == temp.toString()))),
+  //     name: map['name'] as String,
+  //     ownersProvided: null == (temp = map['ownersProvided'])
+  //         ? null
+  //         : (temp is bool
+  //             ? temp
+  //             : (temp is num
+  //                 ? 0 != temp.toInt()
+  //                 : ('true' == temp.toString()))),
+  //     taxIdProvided: null == (temp = map['taxIdProvided'])
+  //         ? null
+  //         : (temp is bool
+  //             ? temp
+  //             : (temp is num
+  //                 ? 0 != temp.toInt()
+  //                 : ('true' == temp.toString()))),
+  //     verification: Verification.fromMap(map['verification'] as Map),
+  //   );
+  // }
 }
 
 class Verification {
   Document document;
 
-  static Verification fromMap(Map map) {
-    if (map == null) return null;
-    Verification verification = Verification();
-    verification.document = Document.fromMap(map['document']);
-    return verification;
+  Verification({this.document});
+
+  factory Verification.fromMap(Map map) {
+    if (null == map) return null;
+    return Verification(
+        document: Document.fromMap(
+      map['document'] as Map,
+    ));
   }
 
   Map toJson() => {
-    "document": document,
-  };
+        "document": document,
+      };
 }
 
 class Document {
@@ -396,109 +544,150 @@ class Document {
   dynamic detailsCode;
   dynamic front;
 
-  static Document fromMap(Map map) {
-    if (map == null) return null;
-    Document document = Document();
-    document.back = map['back'];
-    document.details = map['details'];
-    document.detailsCode = map['details_code'];
-    document.front = map['front'];
-    return document;
+  Document({this.back, this.details, this.detailsCode, this.front});
+
+  factory Document.fromMap(Map map) {
+    if (null == map) return null;
+    return Document(
+      back: map['back'],
+      details: map['details'],
+      detailsCode: map['details_code'],
+      front: map['front'],
+    );
   }
 
   Map toJson() => {
-    "back": back,
-    "details": details,
-    "details_code": detailsCode,
-    "front": front,
-  };
+        "back": back,
+        "details": details,
+        "details_code": detailsCode,
+        "front": front,
+      };
 }
 
 class Address {
   dynamic city;
   String country;
-  dynamic line1;
-  dynamic line2;
+  String line1;
+  String line2;
   dynamic postalCode;
   dynamic state;
 
-  static Address fromMap(Map map) {
-    if (map == null) return null;
-    Address address = Address();
-    address.city = map['city'];
-    address.country = map['country'];
-    address.line1 = map['line1'];
-    address.line2 = map['line2'];
-    address.postalCode = map['postal_code'];
-    address.state = map['state'];
-    return address;
+  Address(
+      {this.city,
+      this.country,
+      this.line1,
+      this.line2,
+      this.postalCode,
+      this.state});
+
+  factory Address.fromMap(Map map) {
+    if (null == map) return null;
+    return Address(
+      city: map['city'] as dynamic,
+      country: map['country'] as String,
+      line1: map['line1'] as String,
+      line2: map['line2'] as String,
+      postalCode: map['postal_code'] as dynamic,
+      state: map['state'] as dynamic,
+    );
   }
 
   Map toJson() => {
-    "city": city,
-    "country": country,
-    "line1": line1,
-    "line2": line2,
-    "postal_code": postalCode,
-    "state": state,
-  };
+        "city": city,
+        "country": country,
+        "line1": line1,
+        "line2": line2,
+        "postal_code": postalCode,
+        "state": state,
+      };
 }
 
 class Capabilities {
   String cardPayments;
   String transfers;
 
-  static Capabilities fromMap(Map map) {
-    if (map == null) return null;
-    Capabilities capabilities = Capabilities();
-    capabilities.cardPayments = map['card_payments'];
-    capabilities.transfers = map['transfers'];
-    return capabilities;
+  Capabilities({this.cardPayments, this.transfers});
+
+  factory Capabilities.fromMap(Map map) {
+    if (null == map) return null;
+    return Capabilities(
+      cardPayments: map['card_payments'] as String,
+      transfers: map['transfers'] as String,
+    );
   }
 
   Map toJson() => {
-    "card_payments": cardPayments,
-    "transfers": transfers,
-  };
+        "card_payments": cardPayments,
+        "transfers": transfers,
+      };
 }
 
-class Business_profile {
+class BusinessProfile {
   String mcc;
   String name;
   String productDescription;
-  Support_address supportAddress;
+  SupportAddress supportAddress;
   String supportEmail;
   String supportPhone;
   dynamic supportUrl;
   dynamic url;
 
-  static Business_profile fromMap(Map map) {
-    if (map == null) return null;
-    Business_profile business_profile = Business_profile();
-    business_profile.mcc = map['mcc'];
-    business_profile.name = map['name'];
-    business_profile.productDescription = map['product_description'];
-    business_profile.supportAddress = Support_address.fromMap(map['support_address']);
-    business_profile.supportEmail = map['support_email'];
-    business_profile.supportPhone = map['support_phone'];
-    business_profile.supportUrl = map['support_url'];
-    business_profile.url = map['url'];
-    return business_profile;
+  BusinessProfile(
+      {this.mcc,
+      this.name,
+      this.productDescription,
+      this.supportAddress,
+      this.supportEmail,
+      this.supportPhone,
+      this.supportUrl,
+      this.url});
+
+  factory BusinessProfile.fromMap(Map map) {
+
+    if (null == map) return null;
+    return BusinessProfile(
+      mcc: map['mcc'] as String,
+      name: map['name'] as String,
+      productDescription: map['product_description'] as String,
+      supportAddress: SupportAddress.fromMap(map['support_address'] as Map),
+      supportEmail: map['support_email'] as String,
+      supportPhone: map['support_phone'] as String,
+      supportUrl: map['support_url'] as String,
+      url: map['url'] as String,
+    );
   }
 
+  // factory BusinessProfile.fromMap(Map map) {
+  //   print(map);
+  //   if (null == map) return null;
+  //   return BusinessProfile(
+  //     mcc: map['mcc']?.toString() ?? '',
+  //     name: map['name']?.toString() ?? '',
+  //     productDescription: map['productDescription']?.toString() ?? '',
+  //     supportAddress:
+  //         SupportAddress.fromMap(map['supportAddress'] as Map),
+  //     supportEmail: map['supportEmail']?.toString() ?? '',
+  //     supportPhone: map['supportPhone']?.toString() ?? '',
+  //     supportUrl: map['supportUrl'],
+  //     url: map['url'],
+  //   );
+  // }
+
+
+
   Map toJson() => {
-    "mcc": mcc,
-    "name": name,
-    "product_description": productDescription,
-    "support_address": supportAddress,
-    "support_email": supportEmail,
-    "support_phone": supportPhone,
-    "support_url": supportUrl,
-    "url": url,
-  };
+        "mcc": mcc,
+        "name": name,
+        "product_description": productDescription,
+        "support_address": supportAddress,
+        "support_email": supportEmail,
+        "support_phone": supportPhone,
+        "support_url": supportUrl,
+        "url": url,
+      };
 }
 
-class Support_address {
+class SupportAddress {
   String city;
   String country;
   String line1;
@@ -506,24 +695,32 @@ class Support_address {
   String postalCode;
   dynamic state;
 
-  static Support_address fromMap(Map map) {
-    if (map == null) return null;
-    Support_address support_address = Support_address();
-    support_address.city = map['city'];
-    support_address.country = map['country'];
-    support_address.line1 = map['line1'];
-    support_address.line2 = map['line2'];
-    support_address.postalCode = map['postal_code'];
-    support_address.state = map['state'];
-    return support_address;
+  SupportAddress(
+      {this.city,
+      this.country,
+      this.line1,
+      this.line2,
+      this.postalCode,
+      this.state});
+
+  factory SupportAddress.fromMap(Map map) {
+    if (null == map) return null;
+    return SupportAddress(
+      city: map['city'] as String,
+      country: map['country'] as String,
+      line1: map['line1'] as String,
+      line2: map['line2'] as dynamic,
+      postalCode: map['postal_code'] as String,
+      state: map['state'] as dynamic,
+    );
   }
 
   Map toJson() => {
-    "city": city,
-    "country": country,
-    "line1": line1,
-    "line2": line2,
-    "postal_code": postalCode,
-    "state": state,
-  };
+        "city": city,
+        "country": country,
+        "line1": line1,
+        "line2": line2,
+        "postal_code": postalCode,
+        "state": state,
+      };
 }

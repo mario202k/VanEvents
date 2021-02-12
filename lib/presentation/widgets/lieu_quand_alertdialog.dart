@@ -42,7 +42,7 @@ class _LieuQuandAlertDialogState extends State<LieuQuandAlertDialog>
     super.dispose();
   }
 
-  _onSearchChanged() {
+  void _onSearchChanged() {
     if (_throttle?.isActive ?? false) {
       _throttle.cancel();
     }
@@ -53,12 +53,11 @@ class _LieuQuandAlertDialogState extends State<LieuQuandAlertDialog>
 
   @override
   Widget build(BuildContext context) {
-    print('build_LieuQuandAlertDialogState');
     return Scrollbar(
       isAlwaysShown: true,
       controller: _scrollController,
       child: SingleChildScrollView(
-        physics: AlwaysScrollableScrollPhysics(),
+        physics: const AlwaysScrollableScrollPhysics(),
         controller: _scrollController,
         child: Column(
           children: [
@@ -79,11 +78,11 @@ class _LieuQuandAlertDialogState extends State<LieuQuandAlertDialog>
                           barrierDismissible: true,
                           barrierLabel: "Label",
                           barrierColor: Colors.black.withOpacity(0.5),
-                          transitionDuration: Duration(milliseconds: 500),
+                          transitionDuration: const Duration(milliseconds: 500),
                           transitionBuilder: (context, anim1, anim2, child) {
                             return SlideTransition(
                               position:
-                                  Tween(begin: Offset(0, 1), end: Offset(0, 0))
+                                  Tween(begin: const Offset(0, 1), end: const Offset(0, 0))
                                       .animate(anim1),
                               child: child,
                             );
@@ -95,7 +94,7 @@ class _LieuQuandAlertDialogState extends State<LieuQuandAlertDialog>
                                 child: Container(
                                   //color: Colors.white,
                                   //height: 300,
-                                  margin: EdgeInsets.only(
+                                  margin: const EdgeInsets.only(
                                       bottom: 50, left: 12, right: 12, top: 30),
                                   decoration: BoxDecoration(
                                     color: Colors.white,
@@ -117,33 +116,32 @@ class _LieuQuandAlertDialogState extends State<LieuQuandAlertDialog>
                                               .colorScheme
                                               .onBackground,
                                           name: 'city',
-                                          maxLines: 1,
                                           decoration: InputDecoration(
                                               //labelText: 'Ville',
                                               hintText: 'Recherche',
-                                              border: OutlineInputBorder(
+                                              border: const OutlineInputBorder(
                                                 borderSide: BorderSide.none,
                                               ),
-                                              focusedBorder: OutlineInputBorder(
+                                              focusedBorder: const OutlineInputBorder(
                                                 borderSide: BorderSide.none,
                                               ),
                                               disabledBorder:
-                                                  OutlineInputBorder(
+                                                  const OutlineInputBorder(
                                                 borderSide: BorderSide.none,
                                               ),
-                                              enabledBorder: OutlineInputBorder(
+                                              enabledBorder: const OutlineInputBorder(
                                                 borderSide: BorderSide.none,
                                               ),
-                                              errorBorder: OutlineInputBorder(
+                                              errorBorder: const OutlineInputBorder(
                                                 borderSide: BorderSide.none,
                                               ),
                                               focusedErrorBorder:
-                                                  OutlineInputBorder(
+                                                  const OutlineInputBorder(
                                                 borderSide: BorderSide.none,
                                               ),
                                               icon: IconButton(
                                                 icon:
-                                                    Icon(Icons.arrow_back_ios),
+                                                    const Icon(Icons.arrow_back_ios),
                                                 onPressed: () {
                                                   Navigator.of(context).pop();
                                                 },
@@ -151,7 +149,7 @@ class _LieuQuandAlertDialogState extends State<LieuQuandAlertDialog>
 //
                                               ),
                                         ),
-                                        Divider(),
+                                        const Divider(),
                                         Consumer(
                                             builder: (context, watch, child) {
                                           return Column(
@@ -169,9 +167,9 @@ class _LieuQuandAlertDialogState extends State<LieuQuandAlertDialog>
                                                           .pop();
                                                     },
                                                     leading:
-                                                        Icon(Icons.location_on),
+                                                        const Icon(Icons.location_on),
                                                     title: Text(
-                                                      "${e.description}",
+                                                      e.description,
                                                       style: Theme.of(context)
                                                           .textTheme
                                                           .headline5,
@@ -213,12 +211,12 @@ class _LieuQuandAlertDialogState extends State<LieuQuandAlertDialog>
                 onChanged: (Lieu value) async {
                   context.read(boolToggleProvider).setLieux(value);
                   if (value == Lieu.aroundMe) {
-                    LocationPermission permission =
+                    final LocationPermission permission =
                         await Geolocator.requestPermission();
 
                     if (permission == LocationPermission.always ||
                         permission == LocationPermission.whileInUse) {
-                      Position position = await Geolocator.getCurrentPosition(
+                      final Position position = await Geolocator.getCurrentPosition(
                           desiredAccuracy: LocationAccuracy.high);
 
 
@@ -251,7 +249,7 @@ class _LieuQuandAlertDialogState extends State<LieuQuandAlertDialog>
                                   ? '100 km'
                                   : 'Partout',
                     )
-                  : SizedBox();
+                  : const SizedBox();
             }),
             Text(
               'Quand',
@@ -259,7 +257,7 @@ class _LieuQuandAlertDialogState extends State<LieuQuandAlertDialog>
             ),
             Consumer(builder: (context, watch, child) {
               final toggle = watch(boolToggleProvider);
-              final myUser = context.read(myUserProvider);
+              // final myUser = context.read(myUserProvider);
               return RadioListTile(
                 value: Quand.date,
                 groupValue: toggle.quand,
@@ -340,32 +338,31 @@ class _LieuQuandAlertDialogState extends State<LieuQuandAlertDialog>
     );
   }
 
-  void getLocationResults(String text, BuildContext context) async {
+  Future<void> getLocationResults(String text, BuildContext context) async {
     if (text.isEmpty) {
-      context.read(boolToggleProvider).setSuggestions(List<Prediction>());
+      context.read(boolToggleProvider).setSuggestions(<Prediction>[]);
       return;
     }
 
-    String baseURL =
+    const String baseURL =
         'https://maps.googleapis.com/maps/api/place/autocomplete/json';
 
-    String components = 'country:fr';
+    const String components = 'country:fr';
 
-    String language = 'fr';
+    const String language = 'fr';
 
-    String types = '(regions)';
+    const String types = '(regions)';
 
-    String request =
+    final String request =
         '$baseURL?input=$text&key=$PLACES_API_KEY&components=$components&language=$language&types=$types';
 
-    Response response = await Dio().get(request);
-    print(response);
+    final Response response = await Dio().get(request);
 
-    final predictions = response.data['predictions'];
+    final predictions = response.data['predictions'] as List<Map<dynamic,dynamic>>;
 
-    List<Prediction> suggestions = List<Prediction>();
+    final List<Prediction> suggestions = <Prediction>[];
 
-    for (dynamic prediction in predictions) {
+    for (final prediction in predictions) {
       // String name = prediction['description'];
 
       suggestions.add(Prediction.fromJson(prediction));
@@ -380,7 +377,7 @@ class _LieuQuandAlertDialogState extends State<LieuQuandAlertDialog>
         context.read(myUserProvider).lieu[0] == 'address') {
       context
           .read(boolToggleProvider)
-          .initSelectedAdress(context.read(myUserProvider).lieu[1] ?? null);
+          .initSelectedAdress(context.read(myUserProvider).lieu[1] as String);
     }
   }
 }

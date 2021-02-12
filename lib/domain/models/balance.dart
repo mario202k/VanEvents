@@ -1,25 +1,24 @@
 class Balance {
   String object;
   List<Available> available;
-  List<Connect_reserved> connectReserved;
+  List<ConnectReserved> connectReserved;
   bool livemode;
   List<Pending> pending;
 
-  static Balance fromMap(Map map) {
-    if (map == null) return null;
-    Balance balance = Balance();
-    balance.object = map['object'];
-    balance.available = List()
-      ..addAll(
-          (map['available'] as List ?? []).map((o) => Available.fromMap(o)));
-    balance.connectReserved = List()
-      ..addAll((map['connect_reserved'] as List ?? [])
-          .map((o) => Connect_reserved.fromMap(o)));
-    balance.livemode = map['livemode'];
-    balance.pending = List()
-      ..addAll((map['pending'] as List ?? []).map((o) => Pending.fromMap(o)));
-    return balance;
+  Balance({this.object, this.available, this.connectReserved, this.livemode,
+      this.pending});
+
+  factory Balance.fromMap(Map map) {
+    return  Balance(
+      object: map['object'] as String,
+      available: [...(map['available'] as List ?? []).map((o) => Available.fromMap(o as Map))],
+      connectReserved: [...(map['connect_reserved'] as List ?? [])
+          .map((o) => ConnectReserved.fromMap(o as Map))],
+      livemode: map['livemode'] as bool,
+      pending: [...(map['pending'] as List ?? []).map((o) => Pending.fromMap(o as Map))],
+    );
   }
+
 
   Map toJson() => {
         "object": object,
@@ -33,16 +32,18 @@ class Balance {
 class Pending {
   int amount;
   String currency;
-  Source_types sourceTypes;
+  SourceTypes sourceTypes;
 
-  static Pending fromMap(Map map) {
-    if (map == null) return null;
-    Pending pending = Pending();
-    pending.amount = map['amount'];
-    pending.currency = map['currency'];
-    pending.sourceTypes = Source_types.fromMap(map['source_types']);
-    return pending;
+  Pending({this.amount, this.currency, this.sourceTypes});
+
+  factory Pending.fromMap(Map map) {
+    return Pending(
+      amount: map['amount'] as int,
+      currency: map['currency'] as String,
+      sourceTypes: SourceTypes.fromMap(map['source_types'] as Map),
+    );
   }
+
 
   Map toJson() => {
         "amount": amount,
@@ -51,14 +52,15 @@ class Pending {
       };
 }
 
-class Source_types {
+class SourceTypes {
   int card;
 
-  static Source_types fromMap(Map map) {
-    if (map == null) return null;
-    Source_types source_types = Source_types();
-    source_types.card = map['card'];
-    return source_types;
+  SourceTypes({this.card});
+
+  factory SourceTypes.fromMap(Map map) {
+    return SourceTypes(
+      card: map['card'] as int,
+    );
   }
 
   Map toJson() => {
@@ -66,16 +68,17 @@ class Source_types {
       };
 }
 
-class Connect_reserved {
+class ConnectReserved {
   int amount;
   String currency;
 
-  static Connect_reserved fromMap(Map map) {
-    if (map == null) return null;
-    Connect_reserved connect_reserved = Connect_reserved();
-    connect_reserved.amount = map['amount'];
-    connect_reserved.currency = map['currency'];
-    return connect_reserved;
+  ConnectReserved({this.amount, this.currency});
+
+  factory ConnectReserved.fromMap(Map map) {
+    return  ConnectReserved(
+      amount: map['amount'] as int,
+      currency: map['currency'] as String,
+    );
   }
 
   Map toJson() => {
@@ -85,17 +88,19 @@ class Connect_reserved {
 }
 
 class Available {
-  int amount;
-  String currency;
-  Source_types sourceTypes;
+  final int amount;
+  final String currency;
+  final SourceTypes sourceTypes;
 
-  static Available fromMap(Map map) {
-    if (map == null) return null;
-    Available available = Available();
-    available.amount = map['amount'];
-    available.currency = map['currency'];
-    available.sourceTypes = Source_types.fromMap(map['source_types']);
-    return available;
+
+  Available({this.amount, this.currency, this.sourceTypes});
+
+  factory Available.fromMap(Map map) {
+    return Available(
+      amount: map['amount'] as int,
+      currency: map['currency'] as String,
+      sourceTypes: map['sourceTypes'] as SourceTypes,
+    );
   }
 
   Map toJson() => {

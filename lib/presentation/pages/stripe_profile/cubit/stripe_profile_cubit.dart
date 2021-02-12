@@ -6,8 +6,8 @@ import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:meta/meta.dart';
 import 'package:van_events_project/domain/models/balance.dart';
 import 'package:van_events_project/domain/models/connected_account.dart';
-import 'package:van_events_project/domain/models/listPayout.dart';
-import 'package:van_events_project/domain/models/listTransfer.dart';
+import 'package:van_events_project/domain/models/list_payout.dart';
+import 'package:van_events_project/domain/models/list_transfer.dart';
 import 'package:van_events_project/domain/models/person.dart';
 import 'package:van_events_project/domain/repositories/stripe_repository.dart';
 
@@ -18,22 +18,22 @@ class StripeProfileCubit extends Cubit<StripeProfileState> {
 
   StripeProfileCubit(this._context) : super(StripeProfileInitial());
 
-  void fetchStripeProfile(String stripeAccount, String person) async {
+  Future<void> fetchStripeProfile(String stripeAccount, String person) async {
     emit(StripeProfileLoading());
     final stripeRepo = _context
         .read(stripeRepositoryProvider);
 
-    HttpsCallableResult httpsCallableResultPayoutList = await stripeRepo
+    final HttpsCallableResult httpsCallableResultPayoutList = await stripeRepo
         .payoutList(stripeAccount);
 
-    HttpsCallableResult httpsCallableResultTransfersList = await stripeRepo
+    final HttpsCallableResult httpsCallableResultTransfersList = await stripeRepo
         .transfersList(stripeAccount);
 
-    HttpsCallableResult httpsCallableResultAccount = await stripeRepo
+    final HttpsCallableResult httpsCallableResultAccount = await stripeRepo
         .retrieveStripeAccount(stripeAccount);
-    HttpsCallableResult httpsCallableResultBalance = await stripeRepo
+    final HttpsCallableResult httpsCallableResultBalance = await stripeRepo
         .organisateurBalance(stripeAccount);
-    HttpsCallableResult httpsCallableResultPerson = await stripeRepo
+    final HttpsCallableResult httpsCallableResultPerson = await stripeRepo
         .retrievePerson(stripeAccount, person);
 
     if (httpsCallableResultAccount == null ||
@@ -44,14 +44,13 @@ class StripeProfileCubit extends Cubit<StripeProfileState> {
       emit(StripeProfileFailed('Impossible de charger le profil'));
       return;
     }
-    print(httpsCallableResultTransfersList.data);
 
     emit(StripeProfileSuccess(
-        payoutList: ListPayout.fromMap(httpsCallableResultPayoutList.data),
-        result: ConnectedAccount.fromMap(httpsCallableResultAccount.data),
-        balance: Balance.fromMap(httpsCallableResultBalance.data),
-        person: Person.fromMap(httpsCallableResultPerson.data),
+        payoutList: ListPayout.fromMap(httpsCallableResultPayoutList.data as Map),
+        result: ConnectedAccount.fromMap(httpsCallableResultAccount.data as Map),
+        balance: Balance.fromMap(httpsCallableResultBalance.data as Map),
+        person: Person.fromMap(httpsCallableResultPerson.data as Map),
         transferList:
-            ListTransfer.fromMap(httpsCallableResultTransfersList.data)));
+            ListTransfer.fromMap(httpsCallableResultTransfersList.data as Map)));
   }
 }

@@ -1,24 +1,18 @@
-import 'dart:io';
 
 import 'package:async/async.dart';
 import 'package:auto_route/auto_route.dart';
 import 'package:cached_network_image/cached_network_image.dart';
-import 'package:carousel_slider/carousel_slider.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:flutter_swiper/flutter_swiper.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
-import 'package:geolocator/geolocator.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:shimmer/shimmer.dart';
 import 'package:van_events_project/domain/models/event.dart';
-import 'package:van_events_project/domain/models/my_user.dart';
 import 'package:van_events_project/domain/repositories/my_event_repository.dart';
 import 'package:van_events_project/domain/repositories/my_user_repository.dart';
 import 'package:van_events_project/domain/routing/route.gr.dart';
-import 'package:van_events_project/presentation/widgets/appPageRoute.dart';
 import 'package:van_events_project/presentation/widgets/model_body.dart';
 import 'package:van_events_project/presentation/widgets/show.dart';
 import 'package:van_events_project/providers/toggle_bool.dart';
@@ -28,7 +22,6 @@ import 'details.dart';
 class HomeEvents extends HookWidget {
   @override
   Widget build(BuildContext context) {
-    print('buildhome_events');
     // AsyncValue<List<MyEvent>> first = useProvider(streamGenreProvider);
     // AsyncValue<List<MyEvent>> second = useProvider(streamTypeProvider);
     //
@@ -47,7 +40,7 @@ class HomeEvents extends HookWidget {
     StreamZip<List<MyEvent>> streamZipMaSelection;
     streamMyUser.whenData((user) {
       streamZipMaSelection = StreamZip([
-        myEventRepo.eventStreamMaSelectionGenre(user?.genres ?? [],
+        myEventRepo.eventStreamMaSelectionGenre(user?.genres as List<String> ?? [],
             user?.lieu ?? [], user?.quand ?? [], user?.geoPoint),
         myEventRepo.eventStreamMaSelectionType(user?.types ?? [],
             user?.lieu ?? [], user?.quand ?? [], user?.geoPoint),
@@ -80,11 +73,11 @@ class HomeEvents extends HookWidget {
               ),
             ),
           ),
-          SizedBox(height: 15,),
+          const SizedBox(height: 15,),
 
           StreamBuilder<List<MyEvent>>(
               stream: eventsAffiche,
-              builder: (context, AsyncSnapshot snap) {
+              builder: (context, snap) {
                 if (snap.connectionState == ConnectionState.waiting) {
                   return Center(
                     child: CircularProgressIndicator(
@@ -92,6 +85,7 @@ class HomeEvents extends HookWidget {
                             Theme.of(context).colorScheme.secondary)),
                   );
                 } else if (snap.hasError) {
+                  debugPrint(snap.error.toString());
                   return Center(
                     child: Text(
                       'Erreur de connexion',
@@ -106,21 +100,19 @@ class HomeEvents extends HookWidget {
                     ),
                   );
                 }
-                List<MyEvent> events = List<MyEvent>();
+                final List<MyEvent> events = <MyEvent>[];
                 events.addAll(snap.data);
                 events.removeWhere((element) =>
                     element.dateDebutAffiche.compareTo(DateTime.now()) > 0);
 
-                return events.isNotEmpty? Container(
+                return events.isNotEmpty? SizedBox(
                   height: 280,
                   child: Swiper(
                       itemCount: events.length,
-                      scrollDirection: Axis.horizontal,
-                      pagination: SwiperPagination(),
-                      control: SwiperControl(),
+                      pagination: const SwiperPagination(),
+                      control: const SwiperControl(),
                       autoplay: true,
                       autoplayDelay: 5000,
-                      duration: 300,
                       itemBuilder: (context, index){
 
                         return FittedBox(
@@ -128,8 +120,7 @@ class HomeEvents extends HookWidget {
                           child: CachedNetworkImage(
                             imageUrl: events[index].imageFlyerUrl,
                             imageBuilder: (context, imageProvider) {
-                              context.read(boolToggleProvider).addEventsPhotos(
-                                  imageProvider, events[index].imageFlyerUrl);
+
                               return InkWell(
                                 onTap: () {
                                   Navigator.of(context).push(MaterialPageRoute(
@@ -144,7 +135,7 @@ class HomeEvents extends HookWidget {
                                 child: Container(
                                     height: 280,
                                     clipBehavior: Clip.hardEdge,
-                                    decoration: BoxDecoration(
+                                    decoration: const BoxDecoration(
                                       color: Colors.amber,
                                       borderRadius:
                                       BorderRadius.all(Radius.circular(25)),
@@ -160,13 +151,13 @@ class HomeEvents extends HookWidget {
                               child: Container(
                                 width: 172,
                                 height: 280,
-                                decoration: BoxDecoration(
+                                decoration: const BoxDecoration(
                                     borderRadius:
                                     BorderRadius.all(Radius.circular(25)),
                                     color: Colors.white),
                               ),
                             ),
-                            errorWidget: (context, url, error) => Icon(Icons.error),
+                            errorWidget: (context, url, error) => const Icon(Icons.error),
                           ),
                         );
                       }),
@@ -236,7 +227,7 @@ class HomeEvents extends HookWidget {
                 //   ),
                 // );
               }),
-          Divider(),
+          const Divider(),
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: <Widget>[
@@ -264,13 +255,13 @@ class HomeEvents extends HookWidget {
                             valueColor: AlwaysStoppedAnimation<Color>(
                                 Theme.of(context).colorScheme.primary)),
                       ),
-                  error: (err, stack) => Icon(Icons.error)),
+                  error: (err, stack) => const Icon(Icons.error)),
             ],
           ),
           // myListEvent(first, second),
           StreamBuilder<List<List<MyEvent>>>(
               stream: streamZipMaSelection,
-              builder: (context, AsyncSnapshot snap) {
+              builder: (context,  snap) {
                 if (snap.connectionState == ConnectionState.waiting) {
                   return Center(
                     child: CircularProgressIndicator(
@@ -278,7 +269,7 @@ class HomeEvents extends HookWidget {
                             Theme.of(context).colorScheme.secondary)),
                   );
                 } else if (snap.hasError) {
-                  print(snap.error);
+                  debugPrint(snap.error.toString());
                   return Center(
                     child: Text(
                       'Erreur de connexion',
@@ -294,7 +285,7 @@ class HomeEvents extends HookWidget {
                   );
                 }
 
-                List<MyEvent> events = List<MyEvent>();
+                final List<MyEvent> events = <MyEvent>[];
                 events.addAll(snap.data[0]);
                 events.addAll(snap.data[1]);
                 if (events.isEmpty) {
@@ -319,7 +310,7 @@ class HomeEvents extends HookWidget {
                   height: 200,
                   child: Center(
                     child: ListView.separated(
-                        separatorBuilder: (context, index) => VerticalDivider(),
+                        separatorBuilder: (context, index) => const VerticalDivider(),
                         shrinkWrap: true,
                         scrollDirection: Axis.horizontal,
                         itemCount: events.length,
@@ -340,7 +331,7 @@ class HomeEvents extends HookWidget {
                                           image: imageProvider,
                                           fit: BoxFit.fill),
                                       borderRadius:
-                                          BorderRadius.all(Radius.circular(25)),
+                                          const BorderRadius.all(Radius.circular(25)),
                                       color: Colors.white),
                                 );
                               },
@@ -352,21 +343,21 @@ class HomeEvents extends HookWidget {
                                   width: 220,
                                   height: 220,
                                   //color: Colors.white,
-                                  decoration: BoxDecoration(
+                                  decoration: const BoxDecoration(
                                       borderRadius:
                                           BorderRadius.all(Radius.circular(25)),
                                       color: Colors.white),
                                 ),
                               ),
                               errorWidget: (context, url, error) =>
-                                  Icon(Icons.error),
+                                  const Icon(Icons.error),
                             ),
                           );
                         }),
                   ),
                 );
               }),
-          Divider(),
+          const Divider(),
           Text(
             'La selection van E.vents',
             style: Theme.of(context).textTheme.headline5,
@@ -387,7 +378,7 @@ class HomeEvents extends HookWidget {
                       style: Theme.of(context).textTheme.bodyText1,
                     ),
                   );
-                } else if (snapshot.data.length == 0) {
+                } else if (snapshot.data.isEmpty) {
                   return Center(
                     child: Text(
                       'Pas d\'évenements',
@@ -395,7 +386,7 @@ class HomeEvents extends HookWidget {
                     ),
                   );
                 }
-                List<MyEvent> events = List<MyEvent>();
+                final List<MyEvent> events = <MyEvent>[];
                 events.addAll(snapshot.data);
 
                 return events.isNotEmpty
@@ -403,7 +394,7 @@ class HomeEvents extends HookWidget {
                         height: 220,
                         child: ListView.separated(
                             separatorBuilder: (context, index) =>
-                                VerticalDivider(),
+                                const VerticalDivider(),
                             scrollDirection: Axis.horizontal,
                             itemCount: events.length,
                             shrinkWrap: true,
@@ -417,6 +408,10 @@ class HomeEvents extends HookWidget {
                                     ? CachedNetworkImage(
                                         imageUrl: events[index].imageFlyerUrl,
                                         imageBuilder: (_, imageProvider) {
+
+                                          context.read(boolToggleProvider).addEventsPhotos(
+                                              imageProvider, events[index].imageFlyerUrl);
+
                                           return Hero(
                                             tag: events[index].id,
                                             child: Container(
@@ -426,7 +421,7 @@ class HomeEvents extends HookWidget {
                                                   image: DecorationImage(
                                                       image: imageProvider,
                                                       fit: BoxFit.fill),
-                                                  borderRadius: BorderRadius.all(
+                                                  borderRadius: const BorderRadius.all(
                                                       Radius.circular(25)),
                                                   color: Colors.white),
                                             ),
@@ -442,16 +437,16 @@ class HomeEvents extends HookWidget {
                                             width: 220,
                                             height: 220,
                                             //color: Colors.white,
-                                            decoration: BoxDecoration(
+                                            decoration:const  BoxDecoration(
                                                 borderRadius: BorderRadius.all(
                                                     Radius.circular(25)),
                                                 color: Colors.white),
                                           ),
                                         ),
                                         errorWidget: (context, url, error) =>
-                                            Icon(Icons.error),
+                                            const Icon(Icons.error),
                                       )
-                                    : SizedBox(),
+                                    : const SizedBox(),
                               );
                             }),
                       )
@@ -469,7 +464,7 @@ class HomeEvents extends HookWidget {
 
   Widget myListEvent(
       AsyncValue<List<MyEvent>> first, AsyncValue<List<MyEvent>> second) {
-    List<MyEvent> events = List<MyEvent>();
+    final List<MyEvent> events = <MyEvent>[];
     events.addAll(first.data.value);
     events.addAll(second.data.value);
 
@@ -486,7 +481,7 @@ class HomeEvents extends HookWidget {
       height: 200,
       child: Center(
         child: ListView.separated(
-            separatorBuilder: (context, index) => VerticalDivider(),
+            separatorBuilder: (context, index) => const VerticalDivider(),
             shrinkWrap: true,
             scrollDirection: Axis.horizontal,
             itemCount: events.length,
@@ -503,7 +498,7 @@ class HomeEvents extends HookWidget {
                     decoration: BoxDecoration(
                         image: DecorationImage(
                             image: imageProvider, fit: BoxFit.fill),
-                        borderRadius: BorderRadius.all(Radius.circular(25)),
+                        borderRadius: const BorderRadius.all( Radius.circular(25)),
                         color: Colors.white),
                   ),
                   placeholder: (context, url) => Shimmer.fromColors(
@@ -513,12 +508,12 @@ class HomeEvents extends HookWidget {
                       width: 220,
                       height: 220,
                       //color: Colors.white,
-                      decoration: BoxDecoration(
+                      decoration: const BoxDecoration(
                           borderRadius: BorderRadius.all(Radius.circular(25)),
                           color: Colors.white),
                     ),
                   ),
-                  errorWidget: (context, url, error) => Icon(Icons.error),
+                  errorWidget: (context, url, error) => const Icon(Icons.error),
                 ),
               );
             }),

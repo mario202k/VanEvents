@@ -5,14 +5,13 @@ import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:van_events_project/domain/repositories/my_user_repository.dart';
 import 'package:van_events_project/domain/routing/route.gr.dart';
-import 'package:van_events_project/presentation/pages/cguCgv.dart';
 import 'package:van_events_project/providers/authentication_cubit/authentication_cubit.dart';
 
 
 class CguCgvAccept extends HookWidget {
   final String uid;
 
-  CguCgvAccept(this.uid);
+  const CguCgvAccept(this.uid);
 
   @override
   Widget build(BuildContext context) {
@@ -21,7 +20,7 @@ class CguCgvAccept extends HookWidget {
     return Scaffold(
       backgroundColor: Theme.of(context).colorScheme.background,
       appBar: AppBar(
-        title: Text('CGU CGV'),
+        title: const Text('CGU CGV'),
       ),
       body: Center(
         child: Column(
@@ -70,7 +69,6 @@ class CguCgvAccept extends HookWidget {
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               children: <Widget>[
                 RaisedButton(
-                    child: Text('Non'),
                     onPressed: () {
 
 
@@ -78,9 +76,9 @@ class CguCgvAccept extends HookWidget {
                           .authenticationLoggedOut(myUserRepo);
                       Navigator.of(context)
                           .pushReplacementNamed(Routes.mySplashScreen);
-                    }),
+                    },
+                    child: const Text('Non')),
                 RaisedButton(
-                    child: Text('Oui'),
                     onPressed: () async {
 
                       await myUserRepo
@@ -90,7 +88,8 @@ class CguCgvAccept extends HookWidget {
                       BlocProvider.of<AuthenticationCubit>(context)
                           .authenticationLoggedIn(myUserRepo);
 
-                    }),
+                    },
+                    child: const Text('Oui')),
               ],
             )
           ],

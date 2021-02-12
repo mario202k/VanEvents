@@ -9,7 +9,7 @@ import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:intl/intl.dart';
 import 'package:open_mail_app/open_mail_app.dart';
-import 'package:van_events_project/presentation/pages/registerOrganisateur/bloc/blocOrganisateur.dart';
+import 'package:van_events_project/presentation/pages/registerOrganisateur/bloc/bloc_organisateur.dart';
 import 'package:van_events_project/presentation/widgets/show.dart';
 import 'package:van_events_project/providers/toggle_bool.dart';
 
@@ -32,10 +32,10 @@ class AboutYou extends HookWidget {
             ..hideCurrentSnackBar()
             ..showSnackBar(
               SnackBar(
-                duration: Duration(minutes: 3),
+                duration: const Duration(minutes: 3),
                 content: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
+                  children: const [
                     Text('En cours...'),
                     CircularProgressIndicator(),
                   ],
@@ -46,7 +46,7 @@ class AboutYou extends HookWidget {
         if (state.isSuccess) {
           final result = await Show.showDialogToDismiss(
                   context, 'Email envoyé', 'Veuillez vérifier vos emails', 'Ok')
-              .then((_) async => await OpenMailApp.openMailApp());
+              .then((_) async => OpenMailApp.openMailApp());
 
           if (!result.didOpen && !result.canOpen) {
             Show.showDialogToDismiss(context, 'Oops',
@@ -71,7 +71,7 @@ class AboutYou extends HookWidget {
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Text(state.rep),
-                    Icon(Icons.error),
+                    const Icon(Icons.error),
                   ],
                 ),
                 backgroundColor: Theme.of(context).colorScheme.error,
@@ -83,7 +83,7 @@ class AboutYou extends HookWidget {
         builder: (context, state) {
           return SingleChildScrollView(
             child: Padding(
-              padding: EdgeInsets.all(20.0),
+              padding: const EdgeInsets.all(20.0),
               child: Column(
                 children: <Widget>[
                   Consumer(builder: (context, watch, child) {
@@ -92,7 +92,7 @@ class AboutYou extends HookWidget {
                         backgroundImage:
                             watch(boolToggleProvider).imageProfil != null
                                 ? FileImage(boolToggleRead.imageProfil)
-                                : AssetImage('assets/img/normal_user_icon.png'),
+                                : const AssetImage('assets/img/normal_user_icon.png') as ImageProvider,
                         radius: 50,
                         child: RawMaterialButton(
                           shape: const CircleBorder(),
@@ -197,7 +197,7 @@ class AboutYou extends HookWidget {
                               Padding(
                                 padding: const EdgeInsets.all(8.0),
                                 child: FormBuilderDateTimePicker(
-                                    locale: Locale('fr'),
+                                    locale: const Locale('fr'),
                                     name: "date_of_birth",
                                     focusNode: listFocusNode[2],
                                     style:
@@ -281,7 +281,6 @@ class AboutYou extends HookWidget {
                                         cursorColor:
                                         Theme.of(context).colorScheme.onBackground,
                                         name: 'Mot de passe',
-                                        maxLines: 1,
                                         obscureText:
                                         watch(boolToggleProvider).obscureTextLogin,
                                         decoration: InputDecoration(
@@ -296,7 +295,7 @@ class AboutYou extends HookWidget {
                                                 .setObscureTextLogin(),
                                             color: Theme.of(context).colorScheme.onBackground,
                                             iconSize: 20,
-                                            icon: Icon(FontAwesomeIcons.eye),
+                                            icon: const Icon(FontAwesomeIcons.eye),
                                           ),
                                         ),
                                         focusNode: listFocusNode[4],
@@ -329,7 +328,6 @@ class AboutYou extends HookWidget {
                                           cursorColor:
                                           Theme.of(context).colorScheme.onBackground,
                                           name: 'Confirmation',
-                                          maxLines: 1,
                                           obscureText:
                                           watch(boolToggleProvider).obscuretextRegister,
                                           decoration: InputDecoration(
@@ -344,7 +342,7 @@ class AboutYou extends HookWidget {
                                                   .setObscureTextRegister(),
                                               color: Theme.of(context).colorScheme.onBackground,
                                               iconSize: 20,
-                                              icon: Icon(FontAwesomeIcons.eye),
+                                              icon: const Icon(FontAwesomeIcons.eye),
                                             ),
                                           ),
                                           focusNode: listFocusNode[5],
@@ -377,23 +375,22 @@ class AboutYou extends HookWidget {
                       ],
                     ),
                   ),
-                  SizedBox(
+                  const SizedBox(
                     height: 12,
                   ),
                   RaisedButton.icon(
                       onPressed: () {
                         if (_fbKeyAboutYou.currentState.validate()) {
                           final state = _fbKeyAboutYou.currentState;
-                          String dob = state.fields['date_of_birth'].value.toString();
+                          final String dob = state.fields['date_of_birth'].value.toString();
 
                           BlocProvider.of<RegisterBlocOrganisateur>(context).aboutYou(
                             nom: state.fields['Nom'].value.toString().trim(),
                             prenom: state.fields['Prénom'].value.toString().trim(),
-                            date_of_birth: dob.substring(0, dob.indexOf(' ')),
+                            dateOfBirth: dob.substring(0, dob.indexOf(' ')),
                             email: state.fields['email'].value.toString().trim(),
                             password: state.fields['Mot de passe'].value.toString().trim(),
                           );
-                          print('!!!!!');
 
                           // _pageController.animateToPage(1,
                           //     duration: Duration(milliseconds: 300),
@@ -403,8 +400,8 @@ class AboutYou extends HookWidget {
                         }
 
                       },
-                      icon: FaIcon(FontAwesomeIcons.arrowRight),
-                      label: Text('Suivant')),
+                      icon: const FaIcon(FontAwesomeIcons.arrowRight),
+                      label: const Text('Suivant')),
                 ],
               ),
             ),
@@ -416,46 +413,46 @@ class AboutYou extends HookWidget {
 
   Future<void> _onPressImage(
       BuildContext context, BoolToggle boolToggleRead) async {
-    return await showDialog(
+    return showDialog(
         context: context,
         builder: (_) => Platform.isAndroid
             ? AlertDialog(
-                title: Text('Source?'),
-                content: Text('Veuillez choisir une source'),
+                title: const Text('Source?'),
+                content: const Text('Veuillez choisir une source'),
                 actions: <Widget>[
                   FlatButton(
-                    child: Text('Caméra'),
                     onPressed: () {
                       boolToggleRead.getImageCamera('Profil');
                       Navigator.of(context).pop();
                     },
+                    child: const Text('Caméra'),
                   ),
                   FlatButton(
-                    child: Text('Galerie'),
                     onPressed: () {
                       boolToggleRead.getImageGallery('Profil');
                       Navigator.of(context).pop();
                     },
+                    child: const Text('Galerie'),
                   ),
                 ],
               )
             : CupertinoAlertDialog(
-                title: Text('Source?'),
-                content: Text('Veuillez choisir une source'),
+                title: const Text('Source?'),
+                content: const Text('Veuillez choisir une source'),
                 actions: <Widget>[
                   FlatButton(
-                    child: Text('Caméra'),
                     onPressed: () {
                       boolToggleRead.getImageCamera('Profil');
                       Navigator.of(context).pop();
                     },
+                    child: const Text('Caméra'),
                   ),
                   FlatButton(
-                    child: Text('Galerie'),
                     onPressed: () {
                       boolToggleRead.getImageGallery('Profil');
                       Navigator.of(context).pop();
                     },
+                    child: const Text('Galerie'),
                   ),
                 ],
               ));

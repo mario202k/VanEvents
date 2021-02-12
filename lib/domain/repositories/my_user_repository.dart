@@ -1,20 +1,19 @@
 import 'dart:async';
 import 'dart:io';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_dynamic_links/firebase_dynamic_links.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/src/widgets/framework.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:google_sign_in/google_sign_in.dart';
-import 'package:hooks_riverpod/all.dart';
+import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:sign_in_with_apple/sign_in_with_apple.dart';
 import 'package:van_events_project/domain/models/about.dart';
 import 'package:van_events_project/domain/models/my_chat.dart';
 import 'package:van_events_project/domain/models/my_user.dart';
-import 'package:van_events_project/domain/routing/route.gr.dart';
-import 'package:van_events_project/presentation/widgets/lieuQuandAlertDialog.dart';
+import 'package:van_events_project/presentation/widgets/lieu_quand_alertdialog.dart';
 import 'package:van_events_project/providers/authentication_cubit/authentication_cubit.dart';
 import 'package:van_events_project/services/firestore_path.dart';
 import 'package:van_events_project/services/firestore_service.dart';
@@ -40,7 +39,7 @@ class MyUserRepository {
   String email;
   User user;
 
-  MyUserRepository({String uid}) : this.uid = uid;
+  MyUserRepository({String id}) : uid = id;
 
   Future<UserCredential> signInWithGoogle() async {
     final GoogleSignInAccount googleUser = await _googleSignIn.signIn();
@@ -51,11 +50,14 @@ class MyUserRepository {
       idToken: googleAuth.idToken,
     );
 
-    return await _firebaseAuth.signInWithCredential(credential);
+    return _firebaseAuth.signInWithCredential(credential);
   }
 
   Future<UserCredential> signInWithApple() async {
     final b = await SignInWithApple.isAvailable();
+    if(!b){
+      return null;
+    }
     // 1. perform the sign-in request
     final appleIdCredential = await SignInWithApple.getAppleIDCredential(
       scopes: [
@@ -81,19 +83,17 @@ class MyUserRepository {
       idToken: appleIdCredential.identityToken,
       accessToken: appleIdCredential.authorizationCode,
     );
-    return await _firebaseAuth.signInWithCredential(credential);
+    return _firebaseAuth.signInWithCredential(credential);
   }
 
   Future<void> checkDynamicLinkData(BuildContext context) async {
     FirebaseDynamicLinks.instance.onLink(
         onSuccess: (PendingDynamicLinkData dynamicLink) async {
-      print(dynamicLink.toString());
       final Uri deepLink = dynamicLink?.link;
-      print('FirebaseDynamicLinks');
       await handleLink(deepLink, context);
     }, onError: (OnLinkErrorException e) async {
-      print('onLinkError');
-      print(e.message);
+      debugPrint('onLinkError');
+      debugPrint(e.message);
     });
     final PendingDynamicLinkData data =
         await FirebaseDynamicLinks.instance.getInitialLink();
@@ -103,13 +103,6 @@ class MyUserRepository {
   }
 
   Future<void> handleLink(Uri link, BuildContext context) async {
-    print(link.toString());
-    print(link.path);
-    print(link.query);
-    print(link.queryParameters);
-    print(link.userInfo);
-    print(email);
-    print(link.path == "/signIn");
 
     if (link != null) {
       final mode = link.queryParameters['mode'];
@@ -137,35 +130,35 @@ class MyUserRepository {
     }
   }
 
-  Future<void> _createDynamicLink(bool short) async {
-    final DynamicLinkParameters parameters = DynamicLinkParameters(
-      uriPrefix: 'https://vanevents.page.link/',
-      link: Uri.parse('https://dynamic.link.example/helloworld'),
-      androidParameters: AndroidParameters(
-        packageName: 'io.flutter.plugins.firebasedynamiclinksexample',
-        minimumVersion: 0,
-      ),
-      dynamicLinkParametersOptions: DynamicLinkParametersOptions(
-        shortDynamicLinkPathLength: ShortDynamicLinkPathLength.short,
-      ),
-      iosParameters: IosParameters(
-        bundleId: 'com.google.FirebaseCppDynamicLinksTestApp.dev',
-        minimumVersion: '0',
-      ),
-    );
-
-    Uri url;
-    if (short) {
-      final ShortDynamicLink shortLink = await parameters.buildShortLink();
-      url = shortLink.shortUrl;
-    } else {
-      url = await parameters.buildUrl();
-    }
-  }
+  // Future<void> _createDynamicLink(bool short) async {
+  //   final DynamicLinkParameters parameters = DynamicLinkParameters(
+  //     uriPrefix: 'https://vanevents.page.link/',
+  //     link: Uri.parse('https://dynamic.link.example/helloworld'),
+  //     androidParameters: AndroidParameters(
+  //       packageName: 'io.flutter.plugins.firebasedynamiclinksexample',
+  //       minimumVersion: 0,
+  //     ),
+  //     dynamicLinkParametersOptions: DynamicLinkParametersOptions(
+  //       shortDynamicLinkPathLength: ShortDynamicLinkPathLength.short,
+  //     ),
+  //     iosParameters: IosParameters(
+  //       bundleId: 'com.google.FirebaseCppDynamicLinksTestApp.dev',
+  //       minimumVersion: '0',
+  //     ),
+  //   );
+  //
+  //   Uri url;
+  //   if (short) {
+  //     final ShortDynamicLink shortLink = await parameters.buildShortLink();
+  //     url = shortLink.shortUrl;
+  //   } else {
+  //     url = await parameters.buildUrl();
+  //   }
+  // }
 
   Future<void> sendSignInLinkToEmail(
-      {email, ActionCodeSettings actionCodeSettings}) async {
-    return await _firebaseAuth.sendSignInLinkToEmail(
+      {String email, ActionCodeSettings actionCodeSettings}) async {
+    return _firebaseAuth.sendSignInLinkToEmail(
         email: email, actionCodeSettings: actionCodeSettings);
   }
 
@@ -201,10 +194,9 @@ class MyUserRepository {
   }
 
   Future setInactive() {
-    print('setInactive');
-    print(uid);
+
     if (uid == null) {
-      return null;
+      return Future.value();
     }
     return _service.setData(
         path: MyPath.user(uid),
@@ -213,7 +205,7 @@ class MyUserRepository {
 
   Future setOnline() {
     if (uid == null) {
-      return null;
+      return Future.value();
     }
     return _service.setData(
         path: MyPath.user(uid),
@@ -239,12 +231,12 @@ class MyUserRepository {
         await _firebaseAuth
             .createUserWithEmailAndPassword(email: email, password: password)
             .then((user) async {
-          String uid = user.user.uid;
+          final String uid = user.user.uid;
           this.uid = uid;
 
           if (image != null) {
             //création du path pour la photo profil
-            String path = image.path.substring(image.path.lastIndexOf('/') + 1);
+            final String path = image.path.substring(image.path.lastIndexOf('/') + 1);
 
             //création de l'url pour la photo profil
             await _service
@@ -255,7 +247,7 @@ class MyUserRepository {
                 .then((url) async {
               //création du user dans la _db
 
-              MyUser myUser = MyUser(
+              final MyUser myUser = MyUser(
                   id: uid,
                   nom: nomPrenom,
                   imageUrl: url,
@@ -276,17 +268,15 @@ class MyUserRepository {
                     .then((value) {
                   rep = 'Un email de validation a été envoyé';
                 }).catchError((e) {
-                  print(e);
                   return 'Impossible d\'envoyer l\'email';
                 });
               });
             }).catchError((e) {
-              print(e);
               return 'Impossible de charger l\'image';
             });
           } else {
             //sans image
-            MyUser myUser = MyUser(
+            final MyUser myUser = MyUser(
                 id: uid,
                 nom: nomPrenom,
                 email: email,
@@ -305,14 +295,12 @@ class MyUserRepository {
                   .then((value) {
                 rep = 'Un email de validation a été envoyé';
               }).catchError((e) {
-                print(e);
                 return 'Impossible d\'envoyer l\'email';
               });
             });
           }
           //rep = 'un email de validation a été envoyé';
         }).catchError((e) {
-          print(e);
           rep = 'Impossible de joindre le serveur';
         });
 
@@ -321,7 +309,7 @@ class MyUserRepository {
         rep = 'L\' email existe déjà';
       }
     }).catchError((e) {
-      print(e);
+      debugPrint(e.toString());
       rep = 'Impossible de joindre le serveur';
     });
 
@@ -357,7 +345,7 @@ class MyUserRepository {
   Future<bool> createOrUpdateUserOnDatabase(User user) async {
     this.user = user;
     setUid(user.uid);
-    bool isAcceptedCGUCGV = false;
+    const bool isAcceptedCGUCGV = false;
 
     if (user.isAnonymous) {
       await _service.setData(path: MyPath.user(user.uid), data: {
@@ -367,11 +355,12 @@ class MyUserRepository {
       });
       return isAcceptedCGUCGV;
     }
-    MyUser fromDb = await _service.getDoc(
+    final MyUser fromDb = await _service.getDoc(
         path: MyPath.user(user.uid), builder: (map) => MyUser.fromMap(map));
 
     await _service.setData(path: MyPath.user(user.uid), data: {
       'id': user.uid,
+      'email' : user.email,
       'lastActivity': FieldValue.serverTimestamp(),
       'nom': fromDb.nom ?? user?.displayName,
       'imageUrl': fromDb.imageUrl ?? user?.photoURL,
@@ -383,22 +372,22 @@ class MyUserRepository {
   }
 
   Future<MyUser> getMyUser(String uid) async {
-    return await _service.getDoc(
+    return  _service.getDoc(
         path: MyPath.user(uid), builder: (data) => MyUser.fromMap(data));
   }
 
   Future setIsAcceptCGUCGV(String uid) async {
-    return await _service.setData(path: MyPath.user(uid), data: {
+    return _service.setData(path: MyPath.user(uid), data: {
       'hasAcceptedCGUCGV': true,
     });
   }
 
-  Future<void> setMyUser(MyUser user) async => await _service.setData(
+  Future<void> setMyUser(MyUser user) async => _service.setData(
         path: MyPath.user(uid),
         data: user.toMap(),
       );
 
-  Future<MyUser> userFuture() async => await _service.getDoc(
+  Future<MyUser> userFuture() async => _service.getDoc(
       path: MyPath.user(uid), builder: (data) => MyUser.fromMap(data));
 
   Stream<MyUser> userStream() => _service.documentStream(
@@ -417,7 +406,7 @@ class MyUserRepository {
     });
   }
 
-  void updateMyUserGenre(Map genre) {
+  void updateMyUserGenre(Map<String, bool> genre) {
     genre.forEach((key, value) {
       _service.updateData(path: MyPath.user(uid), data: {
         'genres':
@@ -481,49 +470,38 @@ class MyUserRepository {
   }
 
   Future setUserPosition(Position position) async {
-    return await _service.updateData(
+    return _service.updateData(
         path: MyPath.user(uid),
         data: {'geoPoint': GeoPoint(position.latitude, position.longitude)});
   }
 
   Future uploadImageProfil(File imageProfil) async {
     //création du path pour le flyer
-    String pathprofil =
+    final String pathprofil =
         imageProfil.path.substring(imageProfil.path.lastIndexOf('/') + 1);
 
-    String urlFlyer = await _service.uploadImg(
+    final String urlFlyer = await _service.uploadImg(
         file: imageProfil,
         path: MyPath.profilImage(uid, pathprofil),
         contentType: 'image/jpeg');
 
-    return await updateUserImageProfil(urlFlyer);
+    return updateUserImageProfil(urlFlyer);
   }
 
   Future updateUserImageProfil(String urlFlyer) async {
-    return await _service.updateData(path: MyPath.user(uid), data: {
+    return _service.updateData(path: MyPath.user(uid), data: {
       'imageUrl': urlFlyer,
     });
   }
 
-  Future uploadLogo(File file) async {
-    String pathlogo = file.path.substring(file.path.lastIndexOf('/') + 1);
-
-    print(pathlogo);
-
-    String urlFlyer = await _service.uploadImg(
-        file: file,
-        path: MyPath.logoImage(pathlogo),
-        contentType: 'image/jpeg');
-    print(urlFlyer);
-  }
 
   Future<void> changePassword() async {
-    return await _firebaseAuth.sendPasswordResetEmail(
+    return _firebaseAuth.sendPasswordResetEmail(
         email: _firebaseAuth.currentUser.email);
   }
 
   Future<void> supprimerCompte() async {
-    return await _firebaseAuth.currentUser.delete();
+    return _firebaseAuth.currentUser.delete();
   }
 
   Future<List<About>> aboutFuture() async {
@@ -549,14 +527,14 @@ class MyUserRepository {
     await _firebaseAuth
         .applyActionCode(actionCode)
         .then((_) {
-      Uri deepLink = Uri.parse(continueUrl);
+      final Uri deepLink = Uri.parse(continueUrl);
 
 
       BlocProvider.of<AuthenticationCubit>(context)
           .authenticationEmailLinkSuccess(deepLink.queryParameters['email']);
         })
         .catchError((e) {
-      print(e);
+      debugPrint(e.toString());
     });
 
 

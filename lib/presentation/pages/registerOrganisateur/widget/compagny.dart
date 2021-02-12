@@ -36,10 +36,10 @@ class Company extends HookWidget {
             ..hideCurrentSnackBar()
             ..showSnackBar(
               SnackBar(
-                duration: Duration(minutes: 3),
+                duration: const Duration(minutes: 3),
                 content: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
+                  children: const [
                     Text('En cours...'),
                     CircularProgressIndicator(),
                   ],
@@ -49,19 +49,19 @@ class Company extends HookWidget {
         }
         if (state.isSuccess) {
           Scaffold.of(context)
-            ..hideCurrentSnackBar();
+            .hideCurrentSnackBar();
           final result = await Show.showDialogToDismiss(
                   context, 'Email envoyé', 'Veuillez vérifier vos emails', 'Ok')
-              .then((_) async => await OpenMailApp.openMailApp());
+              .then((_) async => OpenMailApp.openMailApp());
 
           if (!result.didOpen && !result.canOpen) {
             Scaffold.of(context)
-              ..hideCurrentSnackBar();
+              .hideCurrentSnackBar();
             Show.showDialogToDismiss(context, 'Oops',
                 'Pas d\'application de messagerie installée', 'Ok');
           } else if (!result.didOpen && result.canOpen) {
             Scaffold.of(context)
-              ..hideCurrentSnackBar();
+              .hideCurrentSnackBar();
             showDialog(
               context: context,
               builder: (_) {
@@ -81,7 +81,7 @@ class Company extends HookWidget {
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Text(state.rep),
-                    Icon(Icons.error),
+                    const Icon(Icons.error),
                   ],
                 ),
                 backgroundColor: Theme.of(context).colorScheme.error,
@@ -93,13 +93,13 @@ class Company extends HookWidget {
         builder: (context, state) {
           return SingleChildScrollView(
             child: Padding(
-              padding: EdgeInsets.all(20.0),
+              padding: const EdgeInsets.all(20.0),
               child: Column(
                 children: <Widget>[
                   RaisedButton.icon(onPressed: (){
                     _pageController.jumpToPage(0);
-                  }, icon: FaIcon(FontAwesomeIcons.arrowLeft),
-                      label: Text('Précédent')),
+                  }, icon: const FaIcon(FontAwesomeIcons.arrowLeft),
+                      label: const Text('Précédent')),
                   FormBuilder(
                     key: _fbKey,
                     //autovalidate: false,
@@ -301,10 +301,10 @@ class Company extends HookWidget {
                                     }
                                   },
                                   validator: (val) {
-                                    RegExp regex = RegExp(
+                                    final RegExp regex = RegExp(
                                         r'^[a-zA-ZáàâäãåçéèêëíìîïñóòôöõúùûüýÿæœÁÀÂÄÃÅÇÉÈÊËÍÌÎÏÑÓÒÔÖÕÚÙÛÜÝŸÆŒ\- ]{2,160}$');
 
-                                    if (regex.allMatches(val).length == 0) {
+                                    if (regex.allMatches(val).isEmpty) {
                                       return 'Non valide';
                                     }
                                     return null;
@@ -343,10 +343,10 @@ class Company extends HookWidget {
                                     }
                                   },
                                   validator: (val) {
-                                    RegExp regex = RegExp(
+                                    final RegExp regex = RegExp(
                                         r'^[a-zA-ZáàâäãåçéèêëíìîïñóòôöõúùûüýÿæœÁÀÂÄÃÅÇÉÈÊËÍÌÎÏÑÓÒÔÖÕÚÙÛÜÝŸÆŒ\- ]{2,160}$');
 
-                                    if (regex.allMatches(val).length == 0) {
+                                    if (regex.allMatches(val).isEmpty) {
                                       return 'Non valide';
                                     }
                                     return null;
@@ -557,7 +557,7 @@ class Company extends HookWidget {
                       ],
                     ),
                   ),
-                  SizedBox(
+                  const SizedBox(
                     height: 12,
                   ),
                   Consumer(builder: (context, watch, child) {
@@ -633,7 +633,7 @@ class Company extends HookWidget {
           SnackBar(
             content: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
+              children: const [
                 Text('Veuillez accepter les CGU et CGV'),
               ],
             ),
@@ -648,9 +648,9 @@ class Company extends HookWidget {
 
       BlocProvider.of<RegisterBlocOrganisateur>(context).add(
         RegisterSubmitted(
-            account_holder_name:
+            accountHolderName:
                 state.fields['account_holder_name'].value.toString().trim(),
-            account_number:
+            accountNumber:
                 state.fields['account_number'].value.toString().trim(),
             city: state.fields['city'].value.toString().trim(),
             line1: state.fields['line1'].value.toString().trim(),
@@ -658,10 +658,10 @@ class Company extends HookWidget {
             nomSociete: state.fields['nomSociete'].value.toString().trim(),
             phone:
                 parsePhoneNumber(state.fields['phone'].value.toString().trim()),
-            postal_code: state.fields['postal_code'].value.toString().trim(),
+            postalCode: state.fields['postal_code'].value.toString().trim(),
             state: state.fields['region'].value.toString().trim(),
             supportEmail: state.fields['support_email'].value.toString().trim(),
-            SIREN: state.fields['SIREN'].value.toString().trim(),
+            siren: state.fields['SIREN'].value.toString().trim(),
             stripeRepository: stripeRepo,
             myUserRepository: myUserRepo,
             boolToggleRead: boolToggleRead),

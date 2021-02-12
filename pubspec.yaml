@@ -35,7 +35,6 @@ dependencies:
   cloud_firestore: ^0.14.4
   google_sign_in: ^4.5.9
   auto_route: ^0.6.9
-  firebase_messaging: ^7.0.3
   firebase_core: ^0.5.3
   firebase_analytics: ^6.3.0
   image_picker: ^0.6.7+21
@@ -44,7 +43,6 @@ dependencies:
   curved_navigation_bar: ^0.3.7
   flutter_progress_button: ^1.0.0
   flutter_swiper: ^1.1.6
-  flutter_local_notifications: ^3.0.3
   flutter_circular_chart: ^0.1.0
   flutter_form_builder: ^4.2.0
   intl: ^0.16.1
@@ -89,7 +87,12 @@ dependencies:
   firebase_dynamic_links: ^0.6.3
   open_mail_app: ^0.0.7
   sign_in_with_apple: ^2.5.4
-
+  agora_rtc_engine: ^3.2.1
+  permission_handler: ^5.0.1+1
+  audioplayers: ^0.17.3
+  uuid: ^2.2.2
+  firebase_messaging: ^7.0.3
+  lint: ^1.0.0
 
 dev_dependencies:
   flutter_launcher_icons: ^0.8.1
@@ -146,6 +149,10 @@ flutter:
     - assets/img/normal_user_icon.png
     - assets/img/vanEventsIconRouge.png
     - assets/animations/paymentProcess.flr
+    - assets/sound/TOC_TOC_TOC_.aac
+    - assets/sound/tonaliteRetourAppel.aac
+    - assets/sound/sonnerie.aac
+    - assets/sound/send.aac
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/assets-and-images/#resolution-aware.

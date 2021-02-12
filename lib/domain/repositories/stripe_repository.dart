@@ -1,9 +1,8 @@
 import 'package:cloud_functions/cloud_functions.dart';
 import 'package:flare_flutter/flare_cache.dart';
 import 'package:flare_flutter/provider/asset_flare.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter/src/material/scaffold.dart';
-import 'package:flutter/src/widgets/framework.dart';
 import 'package:flutter_stripe_payment/flutter_stripe_payment.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:van_events_project/constants/credentials.dart';
@@ -44,9 +43,9 @@ class StripeRepository {
         },
       );
     } on FirebaseFunctionsException catch (e) {
-      print(e);
+      debugPrint(e.toString());
     } catch (e) {
-      print(e);
+      debugPrint(e.toString());
     }
     return stripeResponse;
   }
@@ -60,9 +59,9 @@ class StripeRepository {
       );
       stripeResponse = await callable.call();
     } on FirebaseFunctionsException catch (e) {
-      print(e);
+      debugPrint(e.toString());
     } catch (e) {
-      print(e);
+      debugPrint(e.toString());
     }
 
     return stripeResponse;
@@ -79,14 +78,12 @@ class StripeRepository {
     final stripePayment = FlutterStripePayment();
 
     stripePayment.onCancel = () {
-      print("User Cancelled the Payment Method Form");
     };
     stripePayment.setStripeSettings(PK_TEST, 'merchant.com.vanina.vanevents');
 
-    var paymentResponse = await stripePayment.addPaymentMethod();
+    final paymentResponse = await stripePayment.addPaymentMethod();
 
-
-    String paymentMethodId = paymentResponse.paymentMethodId;
+    final String paymentMethodId = paymentResponse.paymentMethodId;
 
     if (paymentResponse.status == PaymentResponseStatus.succeeded) {
       Show.showProgress(context);
@@ -98,7 +95,7 @@ class StripeRepository {
         );
         intentResponse = await callable.call(
           <String, dynamic>{
-            'amount': (amount).toInt(),
+            'amount': amount.toInt(),
             'stripeAccount': stripeAccount,
             'description': description,
             'paymentMethodId': paymentMethodId,
@@ -108,11 +105,11 @@ class StripeRepository {
           },
         );
       } on FirebaseFunctionsException catch (e) {
-        print(e);
+        debugPrint(e.toString());
 
         return 'Paiement refusé';
       } catch (e) {
-        print(e);
+        debugPrint(e.toString());
 
         return 'Paiement refusé';
       }
@@ -125,8 +122,8 @@ class StripeRepository {
         //step 4: there is a need to authenticate
         //StripePayment.setStripeAccount(strAccount);
 
-        var intentResponse = await stripePayment.confirmPaymentIntent(
-            paymentIntentX['client_secret'],
+        final intentResponse = await stripePayment.confirmPaymentIntent(
+            paymentIntentX['client_secret'] as String,
             paymentResponse.paymentMethodId,
             amount);
 
@@ -148,13 +145,12 @@ class StripeRepository {
     final stripePayment = FlutterStripePayment();
 
     stripePayment.onCancel = () {
-      print("User Cancelled the Payment Method Form");
     };
     stripePayment.setStripeSettings(PK_TEST, 'merchant.com.vanina.vanevents');
 
-    var paymentResponse = await stripePayment.addPaymentMethod();
+    final paymentResponse = await stripePayment.addPaymentMethod();
 
-    String paymentMethodId = paymentResponse.paymentMethodId;
+    final String paymentMethodId = paymentResponse.paymentMethodId;
 
     if (paymentResponse.status == PaymentResponseStatus.succeeded) {
       HttpsCallableResult intentResponse;
@@ -171,11 +167,11 @@ class StripeRepository {
           },
         );
       } on FirebaseFunctionsException catch (e) {
-        print(e);
+        debugPrint(e.toString());
 
         return 'Paiement refusé';
       } catch (e) {
-        print(e);
+        debugPrint(e.toString());
 
         return 'Paiement refusé';
       }
@@ -188,8 +184,8 @@ class StripeRepository {
       } else {
         //step 4: there is a need to authenticate
         //StripePayment.setStripeAccount(strAccount);
-        var intentResponse = await stripePayment.confirmPaymentIntent(
-            paymentIntentX['client_secret'],
+        final intentResponse = await stripePayment.confirmPaymentIntent(
+            paymentIntentX['client_secret'] as String,
             paymentResponse.paymentMethodId,
             amount);
 
@@ -211,12 +207,10 @@ class StripeRepository {
     final stripePayment = FlutterStripePayment();
 
     stripePayment.onCancel = () {
-      print("User Cancelled the Payment Method Form");
     };
     stripePayment.setStripeSettings(PK_TEST, 'merchant.com.vanina.vanevents');
 
-    var paymentResponse = await stripePayment.addPaymentMethod();
-    print('coucou!!!!!');
+    final paymentResponse = await stripePayment.addPaymentMethod();
 
     if (paymentResponse.status == PaymentResponseStatus.succeeded) {
       HttpsCallableResult intentResponse;
@@ -234,10 +228,10 @@ class StripeRepository {
           },
         );
       } on FirebaseFunctionsException catch (e) {
-        print(e);
+        debugPrint(e.toString());
         return 'Paiement refusé';
       } catch (e) {
-        print(e);
+        debugPrint(e.toString());
         return 'Paiement refusé';
       }
       final paymentIntentX = intentResponse.data;
@@ -249,8 +243,8 @@ class StripeRepository {
         //step 4: there is a need to authenticate
         //StripePayment.setStripeAccount(strAccount);
 
-        var intentResponse = await stripePayment.confirmPaymentIntent(
-            paymentIntentX['client_secret'],
+        final intentResponse = await stripePayment.confirmPaymentIntent(
+            paymentIntentX['client_secret'] as String,
             paymentResponse.paymentMethodId,
             amount);
 
@@ -263,7 +257,6 @@ class StripeRepository {
         }
       }
     } else {
-      print('!!!!!!!!!!!!!!');
       return 'Paiement annulé';
     }
   }
@@ -284,9 +277,9 @@ class StripeRepository {
         },
       );
     } on FirebaseFunctionsException catch (e) {
-      print(e);
+      debugPrint(e.toString());
     } catch (e) {
-      print(e);
+      debugPrint(e.toString());
     }
 
     return stripeResponse;
@@ -304,9 +297,9 @@ class StripeRepository {
         <String, dynamic>{'stripeAccount': stripeAccount, 'person': person},
       );
     } on FirebaseFunctionsException catch (e) {
-      print(e);
+      debugPrint(e.toString());
     } catch (e) {
-      print(e);
+      debugPrint(e.toString());
     }
 
     return stripeResponse;
@@ -325,9 +318,9 @@ class StripeRepository {
         },
       );
     } on FirebaseFunctionsException catch (e) {
-      print(e);
+      debugPrint(e.toString());
     } catch (e) {
-      print(e);
+      debugPrint(e.toString());
     }
     return stripeResponse;
   }
@@ -345,9 +338,9 @@ class StripeRepository {
         },
       );
     } on FirebaseFunctionsException catch (e) {
-      print(e);
+      debugPrint(e.toString());
     } catch (e) {
-      print(e);
+      debugPrint(e.toString());
     }
     return stripeResponse;
   }
@@ -396,12 +389,10 @@ class StripeRepository {
         },
       );
     } on FirebaseFunctionsException catch (e) {
-      print(e);
-      print(e.details);
-      print(e.message);
-      print(e.stackTrace);
+      debugPrint(e.toString());
+
     } catch (e) {
-      print(e);
+      debugPrint(e.toString());
     }
 
     return stripeResponse;
@@ -416,9 +407,9 @@ class StripeRepository {
       );
       stripeResponse = await callable.call();
     } on FirebaseFunctionsException catch (e) {
-      print(e);
+      debugPrint(e.toString());
     } catch (e) {
-      print(e);
+      debugPrint(e.toString());
     }
 
     return stripeResponse;
@@ -437,9 +428,9 @@ class StripeRepository {
         },
       );
     } on FirebaseFunctionsException catch (e) {
-      print(e);
+      debugPrint(e.toString());
     } catch (e) {
-      print(e);
+      debugPrint(e.toString());
     }
 
     return stripeResponse;
@@ -458,9 +449,9 @@ class StripeRepository {
         },
       );
     } on FirebaseFunctionsException catch (e) {
-      print(e);
+      debugPrint(e.toString());
     } catch (e) {
-      print(e);
+      debugPrint(e.toString());
     }
 
     return stripeResponse;
@@ -479,9 +470,9 @@ class StripeRepository {
         },
       );
     } on FirebaseFunctionsException catch (e) {
-      print(e);
+      debugPrint(e.toString());
     } catch (e) {
-      print(e);
+      debugPrint(e.toString());
     }
 
     return stripeResponse;
@@ -503,12 +494,11 @@ class StripeRepository {
         },
       );
     } on FirebaseFunctionsException catch (e) {
-      print(e);
-      print('llllll');
+      debugPrint(e.toString());
 
       return null;
     } catch (e) {
-      print(e);
+      debugPrint(e.toString());
 
       return null;
     }
@@ -540,11 +530,11 @@ class StripeRepository {
       );
       intentResponse = await callable.call();
     } on FirebaseFunctionsException catch (e) {
-      print(e);
+      debugPrint(e.toString());
 
       return null;
     } catch (e) {
-      print(e);
+      debugPrint(e.toString());
 
       return null;
     }
@@ -561,7 +551,7 @@ class StripeRepository {
   }
 
   Future<void> setNewRefund(Refund refund, String organisateur) async {
-    return await _service.setData(
+    return _service.setData(
         path: MyPath.refund(organisateur, refund.id), data: refund.toMap());
   }
 
@@ -573,19 +563,19 @@ class StripeRepository {
   }
 
   Future<void> setRefundRefused(Refund refund) async {
-    return await _service.updateData(
+    return _service.updateData(
         path: MyPath.refund(uid, refund.id), data: {'status': 'refused'});
   }
 
   Future<List<Refund>> refundListFromFirestore() async {
-    return await _service.collectionFuture(
+    return _service.collectionFuture(
         path: MyPath.refunds(uid),
         queryBuilder: (query)=>query.where('stripeId',isGreaterThan: ''),
         builder: (map) => Refund.fromMap(map));
   }
 
   Future<void> setRefundFromStripe(Refund myRefund, String id) async {
-    return await _service.setData(
+    return _service.setData(
         path: MyPath.refund(uid, id), data: myRefund.toMap());
   }
 }

@@ -18,7 +18,6 @@ import 'package:van_events_project/domain/repositories/stripe_repository.dart';
 import 'package:van_events_project/presentation/pages/upload_event.dart';
 import 'package:van_events_project/presentation/widgets/show.dart';
 
-
 final uploadEventProvider =
     ChangeNotifierProvider<UploadEventChangeNotifier>((ref) {
   return UploadEventChangeNotifier();
@@ -35,7 +34,11 @@ class UploadEventChangeNotifier extends ChangeNotifier {
   List<Formule> formulas;
   PlacesDetailsResponse placesDetailsResponse;
   List<FocusScopeNode> nodes;
-  DateTime dateDebut, dateFin, debutAffiche, finAffiche, finalDebutAffiche,
+  DateTime dateDebut,
+      dateFin,
+      debutAffiche,
+      finAffiche,
+      finalDebutAffiche,
       finalFinAffiche;
   List<CircularSegmentEntry> circularSegmentEntry;
   List<CircularStackEntry> data;
@@ -75,7 +78,6 @@ class UploadEventChangeNotifier extends ChangeNotifier {
   GlobalKey<ScaffoldState> myScaffoldKey;
   String myStripeAccount;
 
-
   void initState(BuildContext context, MyEvent myEvent) {
     initializationDone = false;
     isUpdating = myEvent != null;
@@ -98,21 +100,21 @@ class UploadEventChangeNotifier extends ChangeNotifier {
     nbTotal = 0;
     myScaffoldKey = GlobalKey<ScaffoldState>();
     fbKey = GlobalKey<FormBuilderState>();
-    suggestions = List<Prediction>();
+    suggestions = <Prediction>[];
     isAffiche = false;
     eventCostDiscounted = null;
     eventCost = 0;
     isJusquauJourJ = true;
     nbPhotos = null;
-    data = List<CircularStackEntry>();
-    listIndicator = List<Indicator>();
-    formulesWidgets = List<Widget>();
+    data = <CircularStackEntry>[];
+    listIndicator = <Indicator>[];
+    formulesWidgets = <Widget>[];
     listColors =
         List<int>.generate(Colors.primaries.length, (int index) => index);
     listColors.shuffle();
     nodes = List<FocusScopeNode>.generate(9, (index) => FocusScopeNode());
     flyer = null;
-    images = List<Asset>();
+    images = <Asset>[];
     showSpinnerAppliquer = false;
     showSpinner = false;
     myStripeAccount = context.read(myUserProvider).stripeAccount;
@@ -120,12 +122,16 @@ class UploadEventChangeNotifier extends ChangeNotifier {
     if (isUpdating) {
       initGenre(genres: myEvent.genres);
       initType(types: myEvent.types);
-      daysOld = myEvent.dateFinAffiche.difference(myEvent.dateDebutAffiche).inDays;
+      daysOld =
+          myEvent.dateFinAffiche.difference(myEvent.dateDebutAffiche).inDays;
       initFields();
 
-      context.read(myEventRepositoryProvider).getFormulasList(myEvent.id).then((form) {
+      context
+          .read(myEventRepositoryProvider)
+          .getFormulasList(myEvent.id)
+          .then((form) {
         formulas = form;
-        for (Formule formule in form) {
+        for (final Formule formule in form) {
           addFormule(formule: formule);
         }
       });
@@ -142,7 +148,7 @@ class UploadEventChangeNotifier extends ChangeNotifier {
   }
 
   Future getImageCamera(String type) async {
-    String str =
+    final String str =
         (await ImagePicker().getImage(source: ImageSource.camera))?.path;
     if (str == null) {
       return;
@@ -153,7 +159,7 @@ class UploadEventChangeNotifier extends ChangeNotifier {
   }
 
   Future getImageGallery(String type) async {
-    String str =
+    final String str =
         (await ImagePicker().getImage(source: ImageSource.gallery))?.path;
     if (str == null) {
       return;
@@ -171,14 +177,12 @@ class UploadEventChangeNotifier extends ChangeNotifier {
     notifyListeners();
   }
 
-  setJusquauJourJ(bool val) {
+  void setJusquauJourJ(bool val) {
     isJusquauJourJ = !isJusquauJourJ;
-    if(isJusquauJourJ){
+    if (isJusquauJourJ) {
       debutAffiche = null;
       finAffiche = null;
-    }else{
-
-    }
+    } else {}
     dateAffiche();
     updateDaysAffiche();
     notifyListeners();
@@ -278,12 +282,12 @@ class UploadEventChangeNotifier extends ChangeNotifier {
     List<CircularSegmentEntry> circularSegmentEntry;
 
     if (data.isEmpty) {
-      circularSegmentEntry = List<CircularSegmentEntry>();
+      circularSegmentEntry = <CircularSegmentEntry>[];
     } else {
       circularSegmentEntry = data[0].entries;
     }
     double nb = 1;
-    if(formule != null){
+    if (formule != null) {
       nb = formule.nombreDePersonne.toDouble();
     }
 
@@ -300,18 +304,18 @@ class UploadEventChangeNotifier extends ChangeNotifier {
     }
 
     formulesWidgets.add(CardFormula(
-      circularSegmentEntry.length-1,
+      circularSegmentEntry.length - 1,
       (value) {
-        print('CardFormula');
         //nombe de personne
-        String str = value;
-        int index = int.parse(str.substring(0, str.indexOf('/')));
-        String val = str.substring(str.indexOf('/') + 1);
+        final String str = value.toString();
+        final int index = int.parse(str.substring(0, str.indexOf('/')));
+        final String val = str.substring(str.indexOf('/') + 1);
 
         if (val.isNotEmpty) {
-          double nb = double.parse(val);
+          final double nb = double.parse(val);
           data[0].entries.removeAt(index);
-          List<CircularSegmentEntry> circularSegmentEntry = data[0].entries;
+          final List<CircularSegmentEntry> circularSegmentEntry =
+              data[0].entries;
           data[0].entries.insert(
               index,
               CircularSegmentEntry(nb, Colors.primaries[listColors[index]],
@@ -331,34 +335,27 @@ class UploadEventChangeNotifier extends ChangeNotifier {
 
           nbTotal = 0;
           data[0].entries.forEach((d) {
-            print(d.value.toInt());
             nbTotal += d.value.toInt();
           });
-
         }
         notifyListeners();
       },
       formule: formule,
     ));
-    formulesWidgets.add(Divider());
+    formulesWidgets.add(const Divider());
     listIndicator.add(
       Indicator(
         color: Colors.primaries[listColors[circularSegmentEntry.length - 1]],
         text: 'F${circularSegmentEntry.length}',
         isSquare: false,
-        size: 16,
         textColor: Colors.white,
       ),
     );
-    if(isUpdating && initializationDone){
-
+    if (isUpdating && initializationDone) {
       notifyListeners();
-
-    }else if(listIndicator.length >1 && !isUpdating){
+    } else if (listIndicator.length > 1 && !isUpdating) {
       notifyListeners();
     }
-
-
   }
 
   void deleteFormule() {
@@ -379,21 +376,19 @@ class UploadEventChangeNotifier extends ChangeNotifier {
   void setPlace(PlacesDetailsResponse place) {
     placesDetailsResponse = place;
     rue.text =
-    "${placesDetailsResponse.result?.addressComponents?.firstWhere((element) => element.types.first == 'street_number')?.longName ?? ''} ${placesDetailsResponse.result?.addressComponents?.firstWhere((element) => element.types.first == 'route')?.longName ?? ''}";
+        "${placesDetailsResponse.result?.addressComponents?.firstWhere((element) => element.types.first == 'street_number')?.longName ?? ''} ${placesDetailsResponse.result?.addressComponents?.firstWhere((element) => element.types.first == 'route')?.longName ?? ''}";
 
     codePostal.text = placesDetailsResponse.result?.addressComponents
-        ?.firstWhere((element) => element.types.first == 'postal_code')
-        ?.longName ??
+            ?.firstWhere((element) => element.types.first == 'postal_code')
+            ?.longName ??
         '';
-    ville.text = placesDetailsResponse
-        .result?.addressComponents
-        ?.firstWhere((element) =>
-    element.types.first == 'locality')
-        ?.longName ??
+    ville.text = placesDetailsResponse.result?.addressComponents
+            ?.firstWhere((element) => element.types.first == 'locality')
+            ?.longName ??
         '';
 
     coords.text =
-    "${placesDetailsResponse.result?.geometry?.location?.lat?.toString() ?? ''},${placesDetailsResponse.result?.geometry?.location?.lng?.toString() ?? ''}";
+        "${placesDetailsResponse.result?.geometry?.location?.lat?.toString() ?? ''},${placesDetailsResponse.result?.geometry?.location?.lng?.toString() ?? ''}";
     notifyListeners();
   }
 
@@ -403,14 +398,12 @@ class UploadEventChangeNotifier extends ChangeNotifier {
   }
 
   void dateAffiche() {
-
     if (isAffiche && isJusquauJourJ) {
       finalDebutAffiche = DateTime.now();
       finalFinAffiche = dateFin;
-    }else if (isAffiche && !isJusquauJourJ) {
-
+    } else if (isAffiche && !isJusquauJourJ) {
       finalDebutAffiche = debutAffiche;
-      finalFinAffiche = finAffiche ;
+      finalFinAffiche = finAffiche;
     } else if (!isAffiche) {
       finalDebutAffiche = null;
       finalFinAffiche = null;
@@ -418,7 +411,6 @@ class UploadEventChangeNotifier extends ChangeNotifier {
   }
 
   void updateDaysAffiche() {
-
     if (finalDebutAffiche == null || finalFinAffiche == null) {
       daysAffiche = 0;
     } else {
@@ -435,15 +427,17 @@ class UploadEventChangeNotifier extends ChangeNotifier {
     showSpinnerAppliquer = true;
     notifyListeners();
 
-    await context.read(stripeRepositoryProvider).
-    retrievePromotionCode(codePromo.text.trim()).then((rep) {
+    await context
+        .read(stripeRepositoryProvider)
+        .retrievePromotionCode(codePromo.text.trim())
+        .then((rep) {
       if (rep?.data != null) {
-        print(rep.data);
-        Map promotionCode = rep.data['data'][0];
+        final Map promotionCode = rep.data['data'][0] as Map;
         //check restriction
-        int minimumAmount = promotionCode['restrictions']['minimum_amount'];
+        final int minimumAmount =
+            promotionCode['restrictions']['minimum_amount'] as int;
         if (minimumAmount != null) {
-          double min = minimumAmount / 100;
+          final double min = minimumAmount / 100;
           if (eventCost >= min) {
             applyPercentOff(promotionCode, context);
           } else {
@@ -467,9 +461,9 @@ class UploadEventChangeNotifier extends ChangeNotifier {
 
   void applyPercentOff(Map promotionCode, BuildContext context) {
     if (promotionCodeId != promotionCode['id']) {
-      promotionCodeId = promotionCode['id'];
-      percentOff = promotionCode['coupon']['percent_off'];
-      amountOff = promotionCode['coupon']['amount_off'];
+      promotionCodeId = promotionCode['id'] as String;
+      percentOff = promotionCode['coupon']['percent_off'] as int;
+      amountOff = promotionCode['coupon']['amount_off'] as int;
 
       if (percentOff != null) {
         setEventCostDiscounted(eventCost - eventCost * (percentOff / 100));
@@ -522,49 +516,46 @@ class UploadEventChangeNotifier extends ChangeNotifier {
     fbKey.currentState.save();
 
     if (fbKey.currentState.validate()) {
-      String coordsString =
-          fbKey.currentState.fields['Coordonnée'].value;
-      String latitude =
+      final String coordsString =
+          fbKey.currentState.fields['Coordonnée'].value as String;
+      final String latitude =
           coordsString.substring(0, coordsString.indexOf(',')).trim();
-      String longitude =
+      final String longitude =
           coordsString.substring(coordsString.indexOf(',') + 1).trim();
 
-      Coords coords = Coords(double.parse(latitude), double.parse(longitude));
+      final Coords coords =
+          Coords(double.parse(latitude), double.parse(longitude));
 
-      List<Formule> formules = List<Formule>();
+      final List<Formule> formules = <Formule>[];
 
       formulesWidgets.forEach((f) {
         if (f is CardFormula) {
           if (f.fbKey.currentState.validate()) {
             formules.add(Formule(
-                title: f.fbKey.currentState.fields['Nom'].value,
-                prix: double.parse(f
-                    .fbKey.currentState.fields['Prix'].value
-                    .toString()),
-                nombreDePersonne: int.parse(f
-                    .fbKey
-                    .currentState
-                    .fields['Nombre de personne par formule']
-                    .value),
+                title: f.fbKey.currentState.fields['Nom'].value as String,
+                prix: double.parse(
+                    f.fbKey.currentState.fields['Prix'].value.toString()),
+                nombreDePersonne: int.parse(f.fbKey.currentState
+                    .fields['Nombre de personne par formule'].value as String),
                 id: f.numero.toString()));
           } else {
             Show.showSnackBar(
-                'Corriger la formule n°${f.numero+1}', myScaffoldKey);
+                'Corriger la formule n°${f.numero + 1}', myScaffoldKey);
             return;
           }
         }
       });
 
       if (formules.length == formulesWidgets.length / 2) {
-        if ((eventCostDiscounted != null ? eventCostDiscounted : eventCost) <
-            0.5) {
-          await upload(formules, coords,context);
+        if ((eventCostDiscounted ?? eventCost) < 0.5) {
+          await upload(formules, coords, context);
           return;
         }
 
-        await context.read(stripeRepositoryProvider)
+        await context
+            .read(stripeRepositoryProvider)
             .paymentIntentUploadEvents(
-                eventCostDiscounted != null ? eventCostDiscounted : eventCost,
+                eventCostDiscounted ?? eventCost,
                 title.text,
                 eventCostDiscounted != null ? promotionCodeId : null)
             .then((value) async {
@@ -580,7 +571,7 @@ class UploadEventChangeNotifier extends ChangeNotifier {
             Show.showDialogToDismiss(context, 'Yes!', 'Paiement accepté', 'Ok');
             Show.showSnackBar('Chargement de l\'événement...', myScaffoldKey);
 
-            await upload(formules, coords,context);
+            await upload(formules, coords, context);
             showSpinner = false;
             notifyListeners();
             return;
@@ -591,7 +582,6 @@ class UploadEventChangeNotifier extends ChangeNotifier {
       //Navigator.pop(context);
     } else {
       //print(_fbKey.currentState.value);
-      print("validation failed");
       Show.showSnackBar('Formulaire non valide', myScaffoldKey);
     }
 
@@ -600,33 +590,34 @@ class UploadEventChangeNotifier extends ChangeNotifier {
   }
 
   Future upload(
-      List<Formule> formules, Coords coords,BuildContext context) async {
-    await context.read(myEventRepositoryProvider)
+      List<Formule> formules, Coords coords, BuildContext context) async {
+    await context
+        .read(myEventRepositoryProvider)
         .uploadEvent(
-      oldId: myEvent?.id,
-      oldIdChatRoom: myEvent?.chatId,
-      myOldEvent: myEvent,
-      type: type,
-      genre: genre,
-      titre: title.text,
-      formules: formules,
-      adresse: placesDetailsResponse?.result?.addressComponents,
-      coords: coords,
-      dateDebut: dateDebut,
-      dateFin: dateFin,
-      dateDebutAffiche: isAffiche ? finalDebutAffiche : null,
-      dateFinAffiche: isAffiche ? finalFinAffiche : null,
-      description: description.text,
-      flyer: flyer,
-      images: images,
-      stripeAccount: myEvent?.stripeAccount ?? myStripeAccount,
-    )
+          oldId: myEvent?.id,
+          oldIdChatRoom: myEvent?.chatId,
+          myOldEvent: myEvent,
+          type: type,
+          genre: genre,
+          titre: title.text,
+          formules: formules,
+          adresse: placesDetailsResponse?.result?.addressComponents,
+          coords: coords,
+          dateDebut: dateDebut,
+          dateFin: dateFin,
+          dateDebutAffiche: isAffiche ? finalDebutAffiche : null,
+          dateFinAffiche: isAffiche ? finalFinAffiche : null,
+          description: description.text,
+          flyer: flyer,
+          images: images,
+          stripeAccount: myEvent?.stripeAccount ?? myStripeAccount,
+        )
         .then((rep) {
       showSpinner = false;
       Show.showSnackBar('Event ajouter', myScaffoldKey);
       notifyListeners();
     }).catchError((e) {
-      print(e);
+      debugPrint(e.toString());
       Show.showSnackBar('Impossible d\'ajouter l\'Event', myScaffoldKey);
       showSpinner = false;
       notifyListeners();
@@ -639,16 +630,15 @@ class UploadEventChangeNotifier extends ChangeNotifier {
   }
 
   Future<void> loadAssets() async {
-    print("loadAssets");
-    List<Asset> resultList = List<Asset>();
+    List<Asset> resultList = <Asset>[];
 
     try {
       resultList = await MultiImagePicker.pickImages(
         maxImages: 20,
         enableCamera: true,
         selectedAssets: images,
-        cupertinoOptions: CupertinoOptions(takePhotoIcon: "chat"),
-        materialOptions: MaterialOptions(
+        cupertinoOptions: const CupertinoOptions(takePhotoIcon: "chat"),
+        materialOptions: const MaterialOptions(
           actionBarColor: "#abcdef",
           actionBarTitle: "Example App",
           allViewTitle: "All Photos",
@@ -657,7 +647,7 @@ class UploadEventChangeNotifier extends ChangeNotifier {
         ),
       );
     } on Exception catch (e) {
-      print(e);
+      debugPrint(e.toString());
     }
 
     images.clear();
@@ -665,31 +655,25 @@ class UploadEventChangeNotifier extends ChangeNotifier {
     images.addAll(resultList);
     eventCostChanges();
     notifyListeners();
-
   }
 
   void eventCostChanges() {
-
     if (isUpdating &&
             myEvent != null &&
             myEvent.imagePhotos.length <= images.length ||
         isUpdating && daysOld != null && daysAffiche >= daysOld) {
-
       eventCostChangeWithoutNotif(
           images.length - myEvent.imagePhotos.length >= 0
               ? images.length - myEvent.imagePhotos.length
               : 0,
           daysAffiche - daysOld >= 0 ? daysAffiche - daysOld : 0);
     } else if (!isUpdating) {
-
       eventCostChangeWithoutNotif(images.length, daysAffiche);
     }
     //notifyListeners();
   }
 
   void eventCostChangeWithoutNotif(int nbPhotos, int day) {
-    print('eventCostChangeWithoutNotif');
-
     this.nbPhotos = nbPhotos;
     if (nbPhotos >= 1) {
       nbPhotos--;
@@ -698,7 +682,7 @@ class UploadEventChangeNotifier extends ChangeNotifier {
     eventCost = ((nbPhotos ?? 0) * 0.5 + (day ?? 0) * 0.2).toDouble();
   }
 
-  clearPromoCode() {
+  void clearPromoCode() {
     codePromo.clear();
     amountOff = null;
     percentOff = null;
@@ -716,9 +700,8 @@ class UploadEventChangeNotifier extends ChangeNotifier {
     description.text = myEvent.description;
     title.text = myEvent.titre;
     rue.text = myEvent.adresseRue.join(' ');
-    codePostal.text = myEvent.adresseZone[3];
-    ville.text = myEvent.adresseZone[0];
-    coords.text = myEvent.position.latitude.toString()+','+myEvent.position.longitude.toString();
-
+    codePostal.text = myEvent.adresseZone[3]?.toString() ?? '';
+    ville.text = myEvent.adresseZone[0]?.toString() ?? '';
+    coords.text = '${myEvent.position.latitude},${myEvent.position.longitude}';
   }
 }

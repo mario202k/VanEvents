@@ -1,7 +1,6 @@
 import 'dart:async';
 import 'package:bloc/bloc.dart';
 import 'package:cloud_functions/cloud_functions.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:van_events_project/domain/models/my_user.dart';
 import 'package:van_events_project/domain/repositories/my_user_repository.dart';
@@ -13,19 +12,15 @@ import 'package:van_events_project/providers/toggle_bool.dart';
 
 class RegisterBlocOrganisateur
     extends Bloc<RegisterEventOrganisateur, RegisterStateOrganisateur> {
-  final BuildContext _context;
 
   String nom;
   String prenom;
-  String date_of_birth;
+  String dateOfBirth;
   String email;
   String password;
 
-  RegisterBlocOrganisateur(this._context) : super(null);
+  RegisterBlocOrganisateur() : super(null);
 
-  @override
-  RegisterStateOrganisateur get initialState =>
-      RegisterStateOrganisateur.initial();
 
   @override
   Stream<RegisterStateOrganisateur> mapEventToState(
@@ -40,15 +35,15 @@ class RegisterBlocOrganisateur
           event.city,
           event.line1,
           event.line2,
-          event.postal_code,
+          event.postalCode,
           event.state,
-          event.account_holder_name,
-          event.account_number,
+          event.accountHolderName,
+          event.accountNumber,
           password,
           nom,
           prenom,
-          event.SIREN,
-          date_of_birth, event.boolToggleRead,event.stripeRepository,event.myUserRepository);
+          event.siren,
+          dateOfBirth, event.boolToggleRead,event.stripeRepository,event.myUserRepository);
     }
   }
 
@@ -60,20 +55,20 @@ class RegisterBlocOrganisateur
       String city,
       String line1,
       String line2,
-      String postal_code,
+      String postalCode,
       String state,
-      String account_holder_name,
-      String account_number,
+      String accountHolderName,
+      String accountNumber,
       String password,
       String nom,
       String prenom,
-      String SIREN,
-      String date_of_birth,
+      String siren,
+      String dateOfBirth,
       BoolToggle boolToggleRead,
       StripeRepository stripeRepository,MyUserRepository myUserRepository) async* {
     yield RegisterStateOrganisateur.loading();
 
-    HttpsCallableResult stripeRep =
+    final HttpsCallableResult stripeRep =
         await stripeRepository
             .createStripeAccount(
                 nomSociete,
@@ -83,31 +78,31 @@ class RegisterBlocOrganisateur
                 city,
                 line1,
                 line2,
-                postal_code,
+                postalCode,
                 state,
-                account_holder_name,
-                account_number,
+                accountHolderName,
+                accountNumber,
                 nom,
                 prenom,
-                SIREN,
-                date_of_birth);
+                siren,
+                dateOfBirth);
 
     if (stripeRep != null) {
 
-      String rep = await myUserRepository.signUp(
+      final String rep = await myUserRepository.signUp(
           image: boolToggleRead.imageProfil,
           email: email,
           password: password,
           typeDeCompte: TypeOfAccount.organizer,
-          stripeAccount: stripeRep.data['stripeAccount'],
-          person: stripeRep.data['person'],
-          nomPrenom: prenom + ' ' + nom);
+          stripeAccount: stripeRep.data['stripeAccount'] as String,
+          person: stripeRep.data['person'] as String,
+          nomPrenom: '$prenom $nom');
 
       if (rep == 'Un email de validation a été envoyé') {
         yield RegisterStateOrganisateur.success(rep);
       } else {
 
-        stripeRepository.deleteStripeAccount(stripeRep.data['stripeAccount']);
+        stripeRepository.deleteStripeAccount(stripeRep.data['stripeAccount'] as String);
 
         yield RegisterStateOrganisateur.failure(rep);
       }
@@ -117,10 +112,10 @@ class RegisterBlocOrganisateur
     }
   }
 
-  void aboutYou({String nom, String prenom, String date_of_birth, String email, String password}) {
+  void aboutYou({String nom, String prenom, String dateOfBirth, String email, String password}) {
     this.nom = nom;
     this.prenom = prenom;
-    this.date_of_birth = date_of_birth;
+    this.dateOfBirth = dateOfBirth;
     this.email = email;
     this.password = password;
   }

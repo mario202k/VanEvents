@@ -16,13 +16,13 @@ class GoogleLoginButton extends HookWidget {
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(30.0),
       ),
-      icon: Icon(FontAwesomeIcons.google, color: Colors.white),
+      icon: const Icon(FontAwesomeIcons.google, color: Colors.white),
       onPressed: () {
         BlocProvider.of<LoginBloc>(context).add(
           LoginWithGooglePressed(myUserRepo),
         );
       },
-      label: Text('avec Google', style: TextStyle(color: Colors.white)),
+      label: const Text('avec Google', style: TextStyle(color: Colors.white)),
       color: Colors.redAccent,
     );
   }

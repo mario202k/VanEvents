@@ -1,9 +1,10 @@
-import 'package:flutter_circular_chart/flutter_circular_chart.dart';
+import 'dart:async';
+
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:flutter_circular_chart/flutter_circular_chart.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:majascan/majascan.dart';
-import 'dart:async';
-import 'package:flutter/services.dart';
 import 'package:van_events_project/domain/models/billet.dart';
 import 'package:van_events_project/domain/repositories/my_billet_repository.dart';
 import 'package:van_events_project/presentation/widgets/model_screen.dart';
@@ -12,7 +13,7 @@ import 'package:van_events_project/presentation/widgets/show.dart';
 class MonitoringScanner extends StatefulWidget {
   final String eventId;
 
-  MonitoringScanner(this.eventId);
+  const MonitoringScanner(this.eventId);
 
   @override
   _MonitoringScannerState createState() => _MonitoringScannerState();
@@ -21,7 +22,7 @@ class MonitoringScanner extends StatefulWidget {
 class _MonitoringScannerState extends State<MonitoringScanner> {
   GlobalKey qrKey = GlobalKey();
   final GlobalKey<AnimatedCircularChartState> _chartKey =
-      new GlobalKey<AnimatedCircularChartState>();
+      GlobalKey<AnimatedCircularChartState>();
   int nbAttendu;
   int nbPresent;
   Map participants;
@@ -33,7 +34,7 @@ class _MonitoringScannerState extends State<MonitoringScanner> {
   void initState() {
     nbAttendu = 0;
     nbPresent = 0;
-    billets = List<Billet>();
+    billets = <Billet>[];
     super.initState();
   }
 
@@ -51,7 +52,7 @@ class _MonitoringScannerState extends State<MonitoringScanner> {
         backgroundColor: Theme.of(context).colorScheme.background,
         key: _scaffoldKey,
         appBar: AppBar(
-          title: Text('Monitoring'),
+          title: const Text('Monitoring'),
         ),
         body: LayoutBuilder(builder: (context, constraints) {
           return SingleChildScrollView(
@@ -63,8 +64,8 @@ class _MonitoringScannerState extends State<MonitoringScanner> {
                   stream: db.streamBilletsAdmin(widget.eventId),
                   builder: (context, snapshot) {
                     if (snapshot.hasError) {
-                      print(snapshot.error);
-                      return Center(
+                      debugPrint(snapshot.error.toString());
+                      return const Center(
                         child: Text('Erreur de connexion'),
                       );
                     } else if (snapshot.connectionState ==
@@ -85,29 +86,29 @@ class _MonitoringScannerState extends State<MonitoringScanner> {
                         ongoingBillet = billets[i];
                       }
 
-                      if (billets[i].status == BilletStatus.up_coming ||
+                      if (billets[i].status == BilletStatus.upComing ||
                           billets[i].status == BilletStatus.check) {
                         for (int j = 0;
                             j < billets[i].participants.length;
                             j++) {
                           expected++;
 
-                          if (billets[i].participants.values.toList()[j][1]) {
+                          if (billets[i].participants.values.toList()[j][1] != null && billets[i].participants.values.toList()[j][1] as bool) {
                             present++;
                           }
                         }
                       }
                     }
 
-                    double totalAttendu =
+                    final double totalAttendu =
                         expected.toDouble() - present.toDouble();
 
-                    List<CircularStackEntry> data = <CircularStackEntry>[
-                      new CircularStackEntry(
+                    final List<CircularStackEntry> data = <CircularStackEntry>[
+                      CircularStackEntry(
                         <CircularSegmentEntry>[
-                          new CircularSegmentEntry(totalAttendu, Colors.red,
+                          CircularSegmentEntry(totalAttendu, Colors.red,
                               rankKey: 'Attendu'),
-                          new CircularSegmentEntry(
+                          CircularSegmentEntry(
                               present.toDouble(), Colors.green,
                               rankKey: 'Present'),
                         ],
@@ -119,7 +120,7 @@ class _MonitoringScannerState extends State<MonitoringScanner> {
                       _chartKey.currentState.updateData(data);
                     }
 
-                    int total = totalAttendu.toInt();
+                    final int total = totalAttendu.toInt();
 
                     return billets.isNotEmpty
                         ? Column(
@@ -130,14 +131,14 @@ class _MonitoringScannerState extends State<MonitoringScanner> {
                                     child: Center(
                                         child: Text(
                                       'Present : $present',
-                                      style: TextStyle(color: Colors.green),
+                                      style: const TextStyle(color: Colors.green),
                                     )),
                                   ),
                                   Expanded(
                                       child: Center(
                                           child: Text(
                                     'Attendu : $total',
-                                    style: TextStyle(color: Colors.red),
+                                    style: const TextStyle(color: Colors.red),
                                   )))
                                 ],
                               ),
@@ -145,17 +146,15 @@ class _MonitoringScannerState extends State<MonitoringScanner> {
                                 key: _chartKey,
                                 size: const Size(300.0, 300.0),
                                 initialChartData: data,
-                                chartType: CircularChartType.Radial,
                                 //percentageValues: true,
                                 holeLabel: '${(100 * present) / expected} %',
-                                labelStyle: new TextStyle(
+                                labelStyle: TextStyle(
                                   color: Colors.blueGrey[600],
                                   fontWeight: FontWeight.bold,
                                   fontSize: 24.0,
                                 ),
                               ),
-                              ongoingBillet != null
-                                  ? SizedBox(
+                              if (ongoingBillet != null) SizedBox(
                                       height: 200,
                                       child: ListView.builder(
                                         scrollDirection: Axis.horizontal,
@@ -163,11 +162,11 @@ class _MonitoringScannerState extends State<MonitoringScanner> {
                                             ongoingBillet.participants.length,
                                         itemBuilder:
                                             (BuildContext context, int index) {
-                                          String key = ongoingBillet
+                                          final String key = ongoingBillet
                                               .participants.keys
-                                              .toList()[index];
-                                          bool isHere = ongoingBillet
-                                              .participants[key][1];
+                                              .toList()[index].toString();
+                                          final bool isHere = ongoingBillet
+                                              .participants[key][1] as bool;
                                           return SizedBox(
                                             width: 250,
                                             child: GestureDetector(
@@ -176,7 +175,7 @@ class _MonitoringScannerState extends State<MonitoringScanner> {
                                                       myBilletRepositoryProvider)
                                                   .setToggleisHere(
                                                       ongoingBillet
-                                                          .participants,
+                                                          .participants as Map<String, List<dynamic>>,
                                                       qrResult,
                                                       index),
                                               child: Card(
@@ -199,7 +198,7 @@ class _MonitoringScannerState extends State<MonitoringScanner> {
                                                     ),
                                                     Text(
                                                       ongoingBillet
-                                                          .participants[key][0],
+                                                          .participants[key][0] as String,
                                                       style: TextStyle(
                                                           fontSize: 20,
                                                           color: isHere
@@ -213,10 +212,8 @@ class _MonitoringScannerState extends State<MonitoringScanner> {
                                           );
                                         },
                                       ),
-                                    )
-                                  : SizedBox(),
-                              ongoingBillet != null
-                                  ? RaisedButton(
+                                    ) else const SizedBox(),
+                              if (ongoingBillet != null) RaisedButton(
                                       onPressed: () => context
                                           .read(myBilletRepositoryProvider)
                                           .toutValider(ongoingBillet),
@@ -225,8 +222,7 @@ class _MonitoringScannerState extends State<MonitoringScanner> {
                                         style:
                                             Theme.of(context).textTheme.button,
                                       ),
-                                    )
-                                  : SizedBox(),
+                                    ) else const SizedBox(),
                             ],
                           )
                         : Center(
@@ -257,7 +253,7 @@ class _MonitoringScannerState extends State<MonitoringScanner> {
     );
   }
 
-  isValide(String data) {
+  bool isValide(String data) {
     bool rep = false;
     for (int i = 0; i < billets.length; i++) {
       if (billets[i].paymentIntentId == data) {
@@ -315,7 +311,7 @@ class _MonitoringScannerState extends State<MonitoringScanner> {
       //db.showSnackBar("You pressed the back button before scanning anything", context);
 
     } catch (ex) {
-      print(ex);
+      debugPrint(ex.toString());
       Show.showDialogToDismiss(context, 'OOps!', "Erreur inconnue", 'ok');
       //db.showSnackBar("Unknown Error $ex", context);
     }

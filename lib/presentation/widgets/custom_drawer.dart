@@ -22,7 +22,7 @@ class CustomDrawerState extends State<CustomDrawer>
     with WidgetsBindingObserver, SingleTickerProviderStateMixin {
   final double maxSlide = 300.0;
   AnimationController _animationController;
-  bool _canBeDragged = false;
+  // bool _canBeDragged = false;
 
 
   @override
@@ -30,7 +30,7 @@ class CustomDrawerState extends State<CustomDrawer>
     super.initState();
     _animationController = AnimationController(
       vsync: this,
-      duration: Duration(milliseconds: 650),
+      duration: const Duration(milliseconds: 650),
     );
   }
 
@@ -76,7 +76,6 @@ class CustomDrawerState extends State<CustomDrawer>
 
   @override
   Widget build(BuildContext context) {
-    print('buildCustomDrawer');
 
     return WillPopScope(
       onWillPop: () async {
@@ -146,7 +145,7 @@ class CustomDrawerState extends State<CustomDrawer>
                     top: 8.0 + MediaQuery.of(context).padding.top,
                     left: 4.0 + _animationController.value * maxSlide,
                     child: IconButton(
-                      icon: Icon(Icons.menu),
+                      icon: const Icon(Icons.menu),
                       onPressed: toggleDrawer,
                       color: Colors.white,
                     ),

@@ -8,9 +8,15 @@ import Stripe from 'stripe';
 
 export const stripeSecret = functions.config().stripe.secret;
 
+export const agoraAppId = functions.config().agora.appid;
+
+export const agoraPrimaryCertificate = functions.config().agora.primarycertificate;
+
 const stripe = new Stripe(stripeSecret, {
     apiVersion: '2020-08-27', typescript: true
 });
+
+
 
 exports.retrievePromotionCode = functions.region('europe-west1').https.onCall(async (data, context) => {
 
@@ -74,7 +80,7 @@ exports.paymentIntentBillet = functions.region('europe-west1').https.onCall(asyn
     const customer = await getOrCreateCustomer(uid);
     const nbParticipant = assert(data, 'nbParticipant');
     const nbEvents: number = data['nbEvents'];
-    const nbOrganizer:number = data['nbOrganizer'];
+    const nbOrganizer: number = data['nbOrganizer'];
 
     const paymentIntent = await stripe.paymentIntents.create({
         amount: amount,
@@ -86,13 +92,12 @@ exports.paymentIntentBillet = functions.region('europe-west1').https.onCall(asyn
         confirm: true,
         receipt_email: user!.email,
         description: description,
-        application_fee_amount: (nbEvents == 1 && nbOrganizer <=10)? 0 : 100 * nbParticipant,
+        application_fee_amount: (nbEvents == 1 && nbOrganizer <= 10) ? 0 : 100 * nbParticipant,
         on_behalf_of: stripeAccount,
         transfer_data: {
             destination: stripeAccount
         }
     });
-
 
 
     console.log(paymentIntent.status);
@@ -609,6 +614,42 @@ exports.notificationTransport = functions.region('europe-west1').firestore
 
     });
 
+exports.sendCall = functions.region('europe-west1').firestore
+    .document('chats/{chatId}/calls/{callId}')
+    .onCreate(async (snap, context) => {
+
+        const doc = snap.data()
+        const idFrom = doc!.idFrom;
+        const idTo = doc!.idTo;
+        const uuid = doc!.uuid;
+        const hasVideo = doc!.hasVideo;
+
+        // Get push token user to (receive)
+        const querySnapshot = await db.collection('users').doc(idTo).collection('tokens').get();
+
+        const tokens = querySnapshot.docs.map((snap: { id: any; }) => snap.id);
+
+        // Get info user from (sent)
+        const userFrom = await db.collection('users').doc(idFrom).get();
+
+        const payload: admin.messaging.MessagingPayload = {
+            notification :{
+                title : ''
+            },
+            data: {
+                uuid: uuid,
+                caller_id: `${userFrom.data()!.email}`,
+                caller_name: `${userFrom.data()!.nom}`,
+                caller_id_type: "email",
+                has_video: hasVideo,
+                imageUrl: `${userFrom.data()!.imageUrl}`
+            }
+        };
+
+        return fcm.sendToDevice(tokens, payload);
+
+    });
+
 exports.sendMessages = functions.region('europe-west1').firestore
     .document('chats/{chatId}/messages/{message}')
     .onCreate(async (snap, context) => {
@@ -627,6 +668,9 @@ exports.sendMessages = functions.region('europe-west1').firestore
         const replyMessageId = doc!.replyMessageId
         const replyType = doc!.replyType
 
+        // Get info user from (sent)
+        const userFrom = await db.collection('users').doc(idFrom).get();
+
 
         if (idTo != null) {
             // Get push token user to (receive)
@@ -634,18 +678,12 @@ exports.sendMessages = functions.region('europe-west1').firestore
 
             const tokens = querySnapshot.docs.map((snap: { id: any; }) => snap.id);
 
-            // Get info user from (sent)
-            const userFrom = await db.collection('users').doc(idFrom).get();
             console.log(`Found user from: ${userFrom.data()!.nom}`)
 
-            const payload: admin.messaging.MessagingPayload = {
-                notification: {
-                    title: `Nouveau message de: ${userFrom.data()!.nom}`,
-                    body: contentMessage,
-                    badge: '1',
-                    tag: chatId,
-                    click_action: 'FLUTTER_NOTIFICATION_CLICK' // required only for onResume or onLaunch callbacks
-                },
+            // Get info user from (sent)
+            console.log(`Found user from: ${userFrom.data()!.nom}`)
+            const payload : admin.messaging.MessagingPayload = {
+
                 data: {
                     chatId: chatId,
                     id: doc!.id,
@@ -655,6 +693,8 @@ exports.sendMessages = functions.region('europe-west1').firestore
                     date: date.toJSON().toString(),
                     replyMessageId: replyMessageId,
                     replyType: replyType.toString(),
+                    title: `${userFrom.data()!.nom}`,
+                    body: contentMessage,
                 }
             };
 
@@ -662,17 +702,9 @@ exports.sendMessages = functions.region('europe-west1').firestore
 
         } else {
             // Get info user from (sent)
-            const userFrom = await db.collection('users').doc(idFrom).get();
             console.log(`Found user from: ${userFrom.data()!.nom}`)
+            const payload : admin.messaging.MessagingPayload = {
 
-            const payload: admin.messaging.MessagingPayload = {
-                notification: {
-                    title: `Nouveau message de: ${userFrom.data()!.nom}`,
-                    body: contentMessage,
-                    badge: '1',
-                    tag: chatId,
-                    click_action: 'FLUTTER_NOTIFICATION_CLICK' // required only for onResume or onLaunch callbacks
-                },
                 data: {
                     chatId: chatId,
                     id: doc!.id,
@@ -681,13 +713,12 @@ exports.sendMessages = functions.region('europe-west1').firestore
                     date: date.toJSON().toString(),
                     replyMessageId: replyMessageId,
                     replyType: replyType.toString(),
+                    title: `${userFrom.data()!.nom}`,
+                    body: contentMessage,
                 }
             };
-
             return fcm.sendToTopic(chatId, payload);
-
         }
-
     });
 
 exports.refundTransport = functions.region('europe-west1').https.onCall(async (data, context) => {
@@ -699,7 +730,7 @@ exports.refundTransport = functions.region('europe-west1').https.onCall(async (d
     console.log(amount);
 
 
-    return amount != null? stripe.refunds.create({
+    return amount != null ? stripe.refunds.create({
         payment_intent: paymentIntentId,
         amount: amount,
         reason: reason,
@@ -720,18 +751,18 @@ exports.refundBillet = functions.region('europe-west1').https.onCall(async (data
     console.log(amount);
 
 
-    return amount != null? stripe.refunds.create({
+    return amount != null ? stripe.refunds.create({
         payment_intent: paymentIntentId,
         amount: amount,
         reason: reason,
-        refund_application_fee:true,
-        reverse_transfer : true
+        refund_application_fee: true,
+        reverse_transfer: true
 
     }) : stripe.refunds.create({
         payment_intent: paymentIntentId,
         reason: reason,
-        refund_application_fee:true,
-        reverse_transfer : true
+        refund_application_fee: true,
+        reverse_transfer: true
     });
 
 });
@@ -739,7 +770,7 @@ exports.refundBillet = functions.region('europe-west1').https.onCall(async (data
 exports.refundList = functions.region('europe-west1').https.onCall(async (data, context) => {
 
     return stripe.refunds.list({
-        limit : 100,
+        limit: 100,
     });
 
 });
@@ -773,3 +804,59 @@ exports.sendNewEvent = functions.region('europe-west1').firestore
         return fcm.sendToTopic('newEvent', payload);
 
     });
+
+
+exports.getAgoraToken = functions.region('europe-west1').https.onCall(async (data, context) => {
+
+    const agora = require('agora-access-token')
+
+    const appID = agoraAppId;
+    const appCertificate = agoraPrimaryCertificate;
+    const channelName = assert(data, 'channelName');
+    const account = assert(data, 'uid');
+    const role = agora.RtcRole.PUBLISHER;
+
+    const expirationTimeInSeconds = 3600
+
+    const currentTimestamp = Math.floor(Date.now() / 1000)
+
+    const privilegeExpiredTs = currentTimestamp + expirationTimeInSeconds
+
+    return agora.RtcTokenBuilder.buildTokenWithAccount(appID, appCertificate, channelName, account, role, privilegeExpiredTs);
+
+});
+
+
+// exports.sendApnsMessage = functions.region('europe-west1').https.onCall(async (data, context) => {
+//     const config = {
+//         production: false, /* change this when in production */
+//         token: {
+//             key: "./AuthKey_7C2RDQ9J4M.p8",
+//             keyId: "7C2RDQ9J4M",
+//             teamId: "R52PK5Z22B"
+//         }
+//     }
+//     const apn = require("apn")
+//     const apnProvider = new apn.Provider(config)
+//     const notification = new apn.Notification()
+//     notification.expiry = Math.floor(Date.now() / 1000) + 3600; // Expires 1 hour from now.
+//     notification.badge = 1
+//     notification.topic = 'com.vanina.vanevents'
+//     notification.alert = contentMessage
+//     notification.payload = {
+//         aps: {
+//             alert: {
+//                 uuid: '',
+//         incoming_caller_id: '',
+//         incoming_caller_name: '',
+// }
+// }
+// }
+//     return apnProvider.send(notification, tokens).then((result: any) => {
+//         // For one-shot notification tasks you may wish to shutdown the connection
+//         // after everything is sent, but only call shutdown if you need your
+//         // application to terminate.
+//         apnProvider.shutdown();
+//         console.log(result.failed);
+//     });
+// });

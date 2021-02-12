@@ -29,7 +29,7 @@ class MyEventRepository {
 
   Future<List<String>> loadPhotos(
       List<Asset> images, String idEvent, MyEvent old) async {
-    List<String> urlPhotos = List<String>();
+    final List<String> urlPhotos = <String>[];
 
     if (old != null) {
       for (int i = 0; i < old.imagePhotos.length; i++) {
@@ -42,9 +42,10 @@ class MyEventRepository {
     for (int i = 0; i < images.length; i++) {
       final byteData = await images[i].getByteData();
 
-      File file = await File('${(await getTemporaryDirectory()).path}/$i.jpg')
-          .writeAsBytes(byteData.buffer
-              .asUint8List(byteData.offsetInBytes, byteData.lengthInBytes));
+      final File file =
+          await File('${(await getTemporaryDirectory()).path}/$i.jpg')
+              .writeAsBytes(byteData.buffer
+                  .asUint8List(byteData.offsetInBytes, byteData.lengthInBytes));
 
       urlPhotos.add(await _service.uploadImg(
           file: file,
@@ -75,18 +76,18 @@ class MyEventRepository {
       String oldId,
       String oldIdChatRoom,
       MyEvent myOldEvent}) async {
-    Map<String, bool> types = Map<String, bool>();
-    Map<String, bool> genres = Map<String, bool>();
+    final Map<String, bool> types = <String, bool>{};
+    final Map<String, bool> genres = <String, bool>{};
     types.addAll(type);
     genres.addAll(genre);
 
     types.removeWhere((key, value) => value == false);
     genres.removeWhere((key, value) => value == false);
 
-    GeoFirePoint myLocation =
+    final GeoFirePoint myLocation =
         geo.point(latitude: coords.latitude, longitude: coords.longitude);
 
-    List<AddressComponent> rue = List<AddressComponent>();
+    final List<AddressComponent> rue = <AddressComponent>[];
     if (adresse != null) {
       rue.addAll(adresse);
 
@@ -106,10 +107,7 @@ class MyEventRepository {
 
     // _service.getDocId(path: Path.events());
 
-    print("coucou");
-    String docId = oldId ?? _service.getDocId(path: MyPath.events());
-
-    print(docId);
+    final String docId = oldId ?? _service.getDocId(path: MyPath.events());
 
     await _service.setData(path: MyPath.event(docId), data: {
       "id": docId,
@@ -147,13 +145,13 @@ class MyEventRepository {
             file: flyer, path: MyPath.flyer(docId), contentType: 'image/jpeg');
       }
 
-      List<String> urlPhotos = await loadPhotos(images, docId, myOldEvent);
+      final List<String> urlPhotos =
+          await loadPhotos(images, docId, myOldEvent);
 
-      print('creation chat room');
       //creation id chat
       //création d'un chatRoom
 
-      String idChatRoom =
+      final String idChatRoom =
           oldIdChatRoom ?? _service.getDocId(path: MyPath.chats());
 
       await _service.setData(data: {
@@ -226,7 +224,7 @@ class MyEventRepository {
   }
 
   Future<List<Formule>> getFormulasList(String id) async {
-    return await _service.collectionFuture(
+    return _service.collectionFuture(
         path: MyPath.formules(id), builder: (data) => Formule.fromMap(data));
   }
 
@@ -275,23 +273,23 @@ class MyEventRepository {
     }
 
     if (listLieu.isEmpty && listQuand.isNotEmpty) {
-      switch (listQuand[0]) {
+      switch (listQuand[0] as String) {
         case 'date':
           final date = (listQuand[1] as Timestamp)?.toDate() ?? DateTime.now();
-          final dateTimePlusUn = date.add(Duration(days: 1));
+          final dateTimePlusUn = date.add(const Duration(days: 1));
 
           return dateCompriType(types, date, dateTimePlusUn);
           break;
         case 'ceSoir':
           final date = DateTime.now();
-          final dateTimePlusUn = date.add(Duration(days: 1));
+          final dateTimePlusUn = date.add(const Duration(days: 1));
 
           return dateCompriType(types, date, dateTimePlusUn);
           break;
         case 'demain':
           final date = DateTime.now();
-          date.add(Duration(days: 1));
-          final dateTimePlusUn = date.add(Duration(days: 1));
+          date.add(const Duration(days: 1));
+          final dateTimePlusUn = date.add(const Duration(days: 1));
 
           return dateCompriType(types, date, dateTimePlusUn);
           break;
@@ -302,21 +300,21 @@ class MyEventRepository {
     }
 
     if (listQuand.isEmpty && listLieu.isNotEmpty) {
-      switch (listLieu[0]) {
+      switch (listLieu[0] as String) {
         case 'address':
           return addresZoneType(types, listLieu);
           break;
         case 'aroundMe':
           if (position != null) {
-            Query ref = _service.getQuery(
+            final Query ref = _service.getQuery(
                 path: MyPath.events(),
                 queryBuilder: (query) =>
                     query.where('types', arrayContainsAny: types));
 
-            GeoFirePoint center = geo.point(
+            final GeoFirePoint center = geo.point(
                 latitude: position.latitude, longitude: position.longitude);
 
-            Stream<List<DocumentSnapshot>> stream = geo
+            final Stream<List<DocumentSnapshot>> stream = geo
                 .collection(collectionRef: ref)
                 .within(
                     center: center,
@@ -333,13 +331,13 @@ class MyEventRepository {
       }
     }
 
-    switch (listLieu[0]) {
+    switch (listLieu[0] as String) {
       case 'address':
-        switch (listQuand[0]) {
+        switch (listQuand[0] as String) {
           case 'date':
             final date =
                 (listQuand[1] as Timestamp)?.toDate() ?? DateTime.now();
-            final dateTimePlusUn = date?.add(Duration(days: 1)) ?? null;
+            final dateTimePlusUn = date?.add(const Duration(days: 1));
 
             adzonDateComType(types, listLieu, date, dateTimePlusUn);
 
@@ -353,7 +351,7 @@ class MyEventRepository {
             break;
           case 'ceSoir':
             final date = DateTime.now();
-            final dateTimePlusUn = date.add(Duration(days: 1));
+            final dateTimePlusUn = date.add(const Duration(days: 1));
 
             adzonDateComType(types, listLieu, date, dateTimePlusUn);
 
@@ -362,10 +360,9 @@ class MyEventRepository {
                 : map23Types(types, date, dateTimePlusUn);
             break;
           case 'demain':
-            print('Types!!!!!!!');
             final date = DateTime.now();
-            date.add(Duration(days: 1));
-            final dateTimePlusUn = date.add(Duration(days: 1));
+            date.add(const Duration(days: 1));
+            final dateTimePlusUn = date.add(const Duration(days: 1));
 
             adzonDateComType(types, listLieu, date, dateTimePlusUn);
 
@@ -383,22 +380,22 @@ class MyEventRepository {
         break;
 
       case 'aroundMe':
-        switch (listQuand[0]) {
+        switch (listQuand[0] as String) {
           case 'date':
             final date =
                 (listQuand[1] as Timestamp)?.toDate() ?? DateTime.now();
-            final dateTimePlusUn = date.add(Duration(days: 1));
+            final dateTimePlusUn = date.add(const Duration(days: 1));
 
             if (position != null) {
-              Query ref = _service.getQuery(
+              final Query ref = _service.getQuery(
                   path: MyPath.events(),
                   queryBuilder: (query) =>
                       query.where('types', arrayContainsAny: types));
 
-              GeoFirePoint center = geo.point(
+              final GeoFirePoint center = geo.point(
                   latitude: position.latitude, longitude: position.longitude);
 
-              Stream<List<DocumentSnapshot>> stream = geo
+              final Stream<List<DocumentSnapshot>> stream = geo
                   .collection(collectionRef: ref)
                   .within(
                       center: center,
@@ -421,18 +418,18 @@ class MyEventRepository {
 
           case 'ceSoir':
             final date = DateTime.now();
-            final dateTimePlusUn = date.add(Duration(days: 1));
+            final dateTimePlusUn = date.add(const Duration(days: 1));
 
             if (position != null) {
-              Query ref = _service.getQuery(
+              final Query ref = _service.getQuery(
                   path: MyPath.events(),
                   queryBuilder: (query) =>
                       query.where('types', arrayContainsAny: types));
 
-              GeoFirePoint center = geo.point(
+              final GeoFirePoint center = geo.point(
                   latitude: position.latitude, longitude: position.longitude);
 
-              Stream<List<DocumentSnapshot>> stream = geo
+              final Stream<List<DocumentSnapshot>> stream = geo
                   .collection(collectionRef: ref)
                   .within(
                       center: center,
@@ -455,19 +452,19 @@ class MyEventRepository {
             break;
           case 'demain':
             final date = DateTime.now();
-            date.add(Duration(days: 1));
-            final dateTimePlusUn = date.add(Duration(days: 1));
+            date.add(const Duration(days: 1));
+            final dateTimePlusUn = date.add(const Duration(days: 1));
 
             if (position != null) {
-              Query ref = _service.getQuery(
+              final Query ref = _service.getQuery(
                   path: MyPath.events(),
                   queryBuilder: (query) =>
                       query.where('types', arrayContainsAny: types));
 
-              GeoFirePoint center = geo.point(
+              final GeoFirePoint center = geo.point(
                   latitude: position.latitude, longitude: position.longitude);
 
-              Stream<List<DocumentSnapshot>> stream = geo
+              final Stream<List<DocumentSnapshot>> stream = geo
                   .collection(collectionRef: ref)
                   .within(
                       center: center,
@@ -487,15 +484,15 @@ class MyEventRepository {
             break;
           default:
             if (position != null) {
-              Query ref = _service.getQuery(
+              final Query ref = _service.getQuery(
                   path: MyPath.events(),
                   queryBuilder: (query) =>
                       query.where('types', arrayContainsAny: types));
 
-              GeoFirePoint center = geo.point(
+              final GeoFirePoint center = geo.point(
                   latitude: position.latitude, longitude: position.longitude);
 
-              Stream<List<DocumentSnapshot>> stream = geo
+              final Stream<List<DocumentSnapshot>> stream = geo
                   .collection(collectionRef: ref)
                   .within(
                       center: center,
@@ -529,8 +526,8 @@ class MyEventRepository {
   }
 
   Stream<List<MyEvent>> map2adreType(List types, List listLieu) {
-    return collectionStreamTypes(types).map((event) =>
-        event.where((event) => event.adresseZone.contains(listLieu[1])));
+    return collectionStreamTypes(types).map((event) => List.of(event
+        .where((event) => event.adresseZone.contains(listLieu[1] as String))));
   }
 
   void adreZonType(List types, List listLieu) {
@@ -539,7 +536,6 @@ class MyEventRepository {
 
   Stream<List<MyEvent>> map23Types(
       List types, DateTime date, DateTime dateTimePlusUn) {
-    print('map23Types');
     return _service
         .collectionStream(
             path: MyPath.events(),
@@ -553,7 +549,6 @@ class MyEventRepository {
 
   Stream<List<MyEvent>> map2Types(
       List types, List listLieu, DateTime date, DateTime dateTimePlusUn) {
-    print('map2Types');
     return _service
         .collectionStream(
             path: MyPath.events(),
@@ -579,12 +574,12 @@ class MyEventRepository {
                 query.where('types', arrayContainsAny: types),
             builder: (map) => MyEvent.fromMap(map))
         .map((event) =>
-            event.where((event) => event.adresseZone.contains(listLieu[1])));
+        List.of(event.where((event) => event.adresseZone.contains(listLieu[1]))));
   }
 
   Stream<List<MyEvent>> allTypes(List types) {
     if (types.contains(null)) {
-      return Stream.empty();
+      return const Stream.empty();
     }
     return _service.collectionStream(
         path: MyPath.events(),
@@ -598,7 +593,7 @@ class MyEventRepository {
   }
 
   Stream<List<MyEvent>> eventStreamMaSelectionGenre(
-      List genres, List listLieu, List listQuand, GeoPoint position) {
+      List<String> genres, List listLieu, List listQuand, GeoPoint position) {
     if (genres.isEmpty) {
       genres = ['none'];
     }
@@ -608,23 +603,23 @@ class MyEventRepository {
     }
 
     if (listLieu.isEmpty && listQuand.isNotEmpty) {
-      switch (listQuand[0]) {
+      switch (listQuand[0] as String) {
         case 'date':
           final date = (listQuand[1] as Timestamp)?.toDate() ?? DateTime.now();
-          final dateTimePlusUn = date.add(Duration(days: 1));
+          final dateTimePlusUn = date.add(const Duration(days: 1));
 
           return dateCompriGenre(genres, date, dateTimePlusUn);
           break;
         case 'ceSoir':
           final date = DateTime.now();
-          final dateTimePlusUn = date.add(Duration(days: 1));
+          final dateTimePlusUn = date.add(const Duration(days: 1));
 
           return dateCompriGenre(genres, date, dateTimePlusUn);
           break;
         case 'demain':
           final date = DateTime.now();
-          date.add(Duration(days: 1));
-          final dateTimePlusUn = date.add(Duration(days: 1));
+          date.add(const Duration(days: 1));
+          final dateTimePlusUn = date.add(const Duration(days: 1));
 
           return dateCompriGenre(genres, date, dateTimePlusUn);
           break;
@@ -635,21 +630,21 @@ class MyEventRepository {
     }
 
     if (listQuand.isEmpty && listLieu.isNotEmpty) {
-      switch (listLieu[0]) {
+      switch (listLieu[0] as String) {
         case 'address':
           return addresZoneGenre(genres, listLieu);
           break;
         case 'aroundMe':
           if (position != null) {
-            Query ref = _service.getQuery(
+            final Query ref = _service.getQuery(
                 path: MyPath.events(),
                 queryBuilder: (query) =>
                     query.where('genres', arrayContainsAny: genres));
 
-            GeoFirePoint center = geo.point(
+            final GeoFirePoint center = geo.point(
                 latitude: position.latitude, longitude: position.longitude);
 
-            Stream<List<DocumentSnapshot>> stream = geo
+            final Stream<List<DocumentSnapshot>> stream = geo
                 .collection(collectionRef: ref)
                 .within(
                     center: center,
@@ -666,13 +661,13 @@ class MyEventRepository {
       }
     }
 
-    switch (listLieu[0]) {
+    switch (listLieu[0] as String) {
       case 'address':
-        switch (listQuand[0]) {
+        switch (listQuand[0] as String) {
           case 'date':
             final date =
                 (listQuand[1] as Timestamp)?.toDate() ?? DateTime.now();
-            final dateTimePlusUn = date?.add(Duration(days: 1)) ?? null;
+            final dateTimePlusUn = date?.add(const Duration(days: 1));
 
             adzonDateComGenre(genres, listLieu, date, dateTimePlusUn);
 
@@ -686,7 +681,7 @@ class MyEventRepository {
             break;
           case 'ceSoir':
             final date = DateTime.now();
-            final dateTimePlusUn = date.add(Duration(days: 1));
+            final dateTimePlusUn = date.add(const Duration(days: 1));
 
             adzonDateComGenre(genres, listLieu, date, dateTimePlusUn);
 
@@ -695,10 +690,9 @@ class MyEventRepository {
                 : map23Genres(genres, date, dateTimePlusUn);
             break;
           case 'demain':
-            print('!!!!!!!!!!!!!!!!');
             final date = DateTime.now();
-            date.add(Duration(days: 1));
-            final dateTimePlusUn = date.add(Duration(days: 1));
+            date.add(const Duration(days: 1));
+            final dateTimePlusUn = date.add(const Duration(days: 1));
 
             adzonDateComGenre(genres, listLieu, date, dateTimePlusUn);
 
@@ -716,22 +710,22 @@ class MyEventRepository {
         break;
 
       case 'aroundMe':
-        switch (listQuand[0]) {
+        switch (listQuand[0] as String) {
           case 'date':
             final date =
                 (listQuand[1] as Timestamp)?.toDate() ?? DateTime.now();
-            final dateTimePlusUn = date.add(Duration(days: 1));
+            final dateTimePlusUn = date.add(const Duration(days: 1));
 
             if (position != null) {
-              Query ref = _service.getQuery(
+              final Query ref = _service.getQuery(
                   path: MyPath.events(),
                   queryBuilder: (query) =>
                       query.where('genres', arrayContainsAny: genres));
 
-              GeoFirePoint center = geo.point(
+              final GeoFirePoint center = geo.point(
                   latitude: position.latitude, longitude: position.longitude);
 
-              Stream<List<DocumentSnapshot>> stream = geo
+              final Stream<List<DocumentSnapshot>> stream = geo
                   .collection(collectionRef: ref)
                   .within(
                       center: center,
@@ -745,25 +739,25 @@ class MyEventRepository {
                       dateCompriEntre(element, date, dateTimePlusUn))
                   .toList());
             } else {
-              return collectionStreamGenres(genres).map((event) => event.where(
-                  (element) => dateCompriEntre(element, date, dateTimePlusUn)));
+              return collectionStreamGenres(genres).map((event) => List.of(event.where(
+                  (element) => dateCompriEntre(element, date, dateTimePlusUn))));
             }
             break;
 
           case 'ceSoir':
             final date = DateTime.now();
-            final dateTimePlusUn = date.add(Duration(days: 1));
+            final dateTimePlusUn = date.add(const Duration(days: 1));
 
             if (position != null) {
-              Query ref = _service.getQuery(
+              final Query ref = _service.getQuery(
                   path: MyPath.events(),
                   queryBuilder: (query) =>
                       query.where('genres', arrayContainsAny: genres));
 
-              GeoFirePoint center = geo.point(
+              final GeoFirePoint center = geo.point(
                   latitude: position.latitude, longitude: position.longitude);
 
-              Stream<List<DocumentSnapshot>> stream = geo
+              final Stream<List<DocumentSnapshot>> stream = geo
                   .collection(collectionRef: ref)
                   .within(
                       center: center,
@@ -777,26 +771,26 @@ class MyEventRepository {
                       dateCompriEntre(element, date, dateTimePlusUn))
                   .toList());
             } else {
-              return collectionStreamGenres(genres).map((event) => event.where(
-                  (element) => dateCompriEntre(element, date, dateTimePlusUn)));
+              return collectionStreamGenres(genres).map((event) => List.of(event.where(
+                  (element) => dateCompriEntre(element, date, dateTimePlusUn))));
             }
 
             break;
           case 'demain':
             final date = DateTime.now();
-            date.add(Duration(days: 1));
-            final dateTimePlusUn = date.add(Duration(days: 1));
+            date.add(const Duration(days: 1));
+            final dateTimePlusUn = date.add(const Duration(days: 1));
 
             if (position != null) {
-              Query ref = _service.getQuery(
+              final Query ref = _service.getQuery(
                   path: MyPath.events(),
                   queryBuilder: (query) =>
                       query.where('genres', arrayContainsAny: genres));
 
-              GeoFirePoint center = geo.point(
+              final GeoFirePoint center = geo.point(
                   latitude: position.latitude, longitude: position.longitude);
 
-              Stream<List<DocumentSnapshot>> stream = geo
+              final Stream<List<DocumentSnapshot>> stream = geo
                   .collection(collectionRef: ref)
                   .within(
                       center: center,
@@ -816,15 +810,15 @@ class MyEventRepository {
             break;
           default:
             if (position != null) {
-              Query ref = _service.getQuery(
+              final Query ref = _service.getQuery(
                   path: MyPath.events(),
                   queryBuilder: (query) =>
                       query.where('genres', arrayContainsAny: genres));
 
-              GeoFirePoint center = geo.point(
+              final GeoFirePoint center = geo.point(
                   latitude: position.latitude, longitude: position.longitude);
 
-              Stream<List<DocumentSnapshot>> stream = geo
+              final Stream<List<DocumentSnapshot>> stream = geo
                   .collection(collectionRef: ref)
                   .within(
                       center: center,
@@ -858,10 +852,8 @@ class MyEventRepository {
   }
 
   Stream<List<MyEvent>> map2adreGenre(List genres, List listLieu) {
-    print('collectionStreamGenres');
-    print('!!!!!!');
     return collectionStreamGenres(genres).map((event) =>
-        event.where((event) => event.adresseZone.contains(listLieu[1])));
+        List.of(event.where((event) => event.adresseZone.contains(listLieu[1]))));
   }
 
   void adreZonGenre(List genres, List listLieu) {
@@ -883,7 +875,6 @@ class MyEventRepository {
 
   Stream<List<MyEvent>> map2Genres(
       List genres, List listLieu, DateTime date, DateTime dateTimePlusUn) {
-    print('map2Genres');
     return _service
         .collectionStream(
             path: MyPath.events(),
@@ -902,6 +893,8 @@ class MyEventRepository {
   }
 
   Stream<List<MyEvent>> addresZoneGenre(List genres, List listLieu) {
+
+
     return _service
         .collectionStream(
             path: MyPath.events(),
@@ -909,12 +902,13 @@ class MyEventRepository {
                 query.where('genres', arrayContainsAny: genres),
             builder: (map) => MyEvent.fromMap(map))
         .map((event) =>
-            event.where((event) => event.adresseZone.contains(listLieu[1])));
+            List.of(event.where((event) => event.adresseZone.contains(listLieu[1] as String)))
+    );
   }
 
   Stream<List<MyEvent>> allGenres(List genres) {
     if (genres.contains(null)) {
-      return Stream.empty();
+      return const Stream.empty();
     }
 
     return _service.collectionStream(
@@ -930,14 +924,14 @@ class MyEventRepository {
   }
 
   Future<int> nbEvents(String stripeAccount) async {
-    return await _service.nbDocuments(
+    return _service.nbDocuments(
         path: MyPath.events(),
         queryBuilder: (query) =>
             query.where('stripeAccount', isEqualTo: stripeAccount));
   }
 
   Future<int> nbOrganizer() async {
-    return await _service.nbDocuments(
+    return _service.nbDocuments(
         path: MyPath.users(),
         queryBuilder: (query) =>
             query.where('typeDeCompte', isEqualTo: 'TypeOfAccount.organizer'));

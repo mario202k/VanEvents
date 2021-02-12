@@ -18,7 +18,7 @@ import 'package:van_events_project/presentation/widgets/model_screen.dart';
 class SearchUserEvent extends StatefulWidget {
   final bool isEvent;
 
-  SearchUserEvent(this.isEvent);
+  const SearchUserEvent({this.isEvent});
 
   @override
   _SearchUserEventState createState() => _SearchUserEventState();
@@ -45,14 +45,14 @@ class _SearchUserEventState extends State<SearchUserEvent> {
         child: Scaffold(
           backgroundColor: Theme.of(context).colorScheme.background,
       appBar: PreferredSize(
-        preferredSize: Size.fromHeight(77),
+        preferredSize: const Size.fromHeight(77),
         child: AppBar(
           automaticallyImplyLeading: false,
           flexibleSpace: Row(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               IconButton(
-                icon: BackButtonIcon(),color: Theme.of(context).colorScheme.onPrimary,
+                icon: const BackButtonIcon(),color: Theme.of(context).colorScheme.onPrimary,
                 onPressed: () {
                   ExtendedNavigator.of(context).pop();
                 },
@@ -69,13 +69,11 @@ class _SearchUserEventState extends State<SearchUserEvent> {
                         enabledBorder: OutlineInputBorder(
                             borderSide: BorderSide(
                                 color: Theme.of(context).colorScheme.onPrimary,
-                                style: BorderStyle.solid,
                                 width: 2),
                             borderRadius: BorderRadius.circular(25.0)),
                         focusedBorder: OutlineInputBorder(
                             borderSide: BorderSide(
                                 color: Theme.of(context).colorScheme.onPrimary,
-                                style: BorderStyle.solid,
                                 width: 2),
                             borderRadius: BorderRadius.circular(25.0)),
                         labelText: 'Recherche',
@@ -144,19 +142,19 @@ class _SearchUserEventState extends State<SearchUserEvent> {
                     baseColor: Theme.of(context).colorScheme.onPrimary,
                     highlightColor:
                     Theme.of(context).colorScheme.primary,
-                    child: CircleAvatar(
+                    child: const CircleAvatar(
                       radius: 25,
                     ),
                   ),
                   errorWidget: (context, url, error) =>
-                      Icon(Icons.error),
+                      const Icon(Icons.error),
                 )
                     : CircleAvatar(
                   radius: 25,
                   backgroundColor:
                   Theme.of(context).colorScheme.primary,
                   backgroundImage:
-                  AssetImage('assets/img/normal_user_icon.png'),
+                  const AssetImage('assets/img/normal_user_icon.png'),
                 ),
                 onTap: () async {
                   final db = context.read(myChatRepositoryProvider);
@@ -167,7 +165,7 @@ class _SearchUserEventState extends State<SearchUserEvent> {
                   }
                 },
               ),
-            ): SizedBox():SizedBox();
+            ): const SizedBox():const SizedBox();
           },
           listeners: [
             refreshChangeListener,
@@ -206,7 +204,7 @@ class _SearchUserEventState extends State<SearchUserEvent> {
       ExtendedNavigator.of(context).push(Routes.chatRoom,
           arguments: ChatRoomArguments(chatId: chatId));
     }).catchError((onError) {
-      print(onError);
+      debugPrint(onError.toString());
     });
 
 

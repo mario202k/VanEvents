@@ -10,7 +10,7 @@ enum StatusTransport {
   refunded,//Done
   cancelledByVTC,//Done
   cancelledByCustomer,//Done
-  Error//Done Capture too late etc...
+  error//Done Capture too late etc...
 }
 
 class MyTransport {
@@ -44,36 +44,32 @@ class MyTransport {
       this.eventId});
 
   Map<String, dynamic> toMap() {
-    GeoFirePoint myLocation = Geoflutterfire().point(
-        latitude: this.position.latitude, longitude: this.position.longitude);
+    final GeoFirePoint myLocation = Geoflutterfire().point(
+        latitude: position.latitude, longitude: position.longitude);
     return {
-      'id':this.id,
-      'car': this.car,
-      'adresseZone': this.adresseZone,
-      'adresseRue': this.adresseRue,
+      'id':id,
+      'car': car,
+      'adresseZone': adresseZone,
+      'adresseRue': adresseRue,
       'position': myLocation.data,
-      'distance': this.distance,
-      'nbPersonne': this.nbPersonne,
-      'dateTime': this.dateTime,
-      'paymentIntentId': this.paymentIntentId,
-      'amount': this.amount,
-      'statusTransport': this
-          .statusTransport
+      'distance': distance,
+      'nbPersonne': nbPersonne,
+      'dateTime': dateTime,
+      'paymentIntentId': paymentIntentId,
+      'amount': amount,
+      'statusTransport': statusTransport
           .toString()
-          .substring(this.statusTransport.toString().indexOf('.') + 1),
-      'userId': this.userId,
-      'eventId': this.eventId
+          .substring(statusTransport.toString().indexOf('.') + 1),
+      'userId': userId,
+      'eventId': eventId
     };
   }
 
   factory MyTransport.fromMap(Map<String, dynamic> map) {
-    Timestamp dateDebut = map['dateTime'];
-    Map geo = map['position'] as Map;
-    GeoPoint coords = geo['geopoint'];
 
     StatusTransport myStatusTransport;
 
-    for (StatusTransport statusTransport in StatusTransport.values) {
+    for (final StatusTransport statusTransport in StatusTransport.values) {
       if (statusTransport
               .toString()
               .substring(statusTransport.toString().indexOf('.') + 1) ==
@@ -86,15 +82,15 @@ class MyTransport {
       car: map['car'] as String ?? '',
       adresseZone: map['adresseZone'] as List ?? [],
       adresseRue: map['adresseRue'] as List ?? [],
-      position: coords,
+      position: map['position']['geopoint'] as GeoPoint,
       distance: map['distance'] as double,
       nbPersonne: map['nbPersonne'] as String,
-      dateTime: dateDebut.toDate(),
+      dateTime: (map['dateTime'] as Timestamp).toDate(),
       paymentIntentId: map['paymentIntentId'] as String,
       amount: map['amount'] as double,
       statusTransport: myStatusTransport,
-      eventId: map['eventId'],
-      userId: map['userId'],
+      eventId: map['eventId'] as String,
+      userId: map['userId'] as String,
     );
   }
 }

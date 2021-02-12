@@ -15,46 +15,50 @@ class MyPath {
 
   static String messages(String chatId) => 'chats/$chatId/messages';
 
-  static eventPhotos(String idEvent, String name) =>
+  static String calls(String chatId) => 'chats/$chatId/calls';
+
+  static String call(String chatId, String callId) => 'chats/$chatId/calls/$callId';
+
+  static String eventPhotos(String idEvent, String name) =>
       'eventsImages/$idEvent/$name';
 
-  static transport(String id) => 'transports/$id';
+  static String transport(String id) => 'transports/$id';
 
-  static transports() => 'transports';
+  static String transports() => 'transports';
 
-  static flyer(String docId) => 'flyer/$docId';
+  static String flyer(String docId) => 'flyer/$docId';
 
-  static chats() => 'chats';
+  static String chats() => 'chats';
 
-  static formules(String eventId) => 'events/$eventId/formules';
+  static String formules(String eventId) => 'events/$eventId/formules';
 
-  static formule(String eventId, String formuleId) =>
+  static String formule(String eventId, String formuleId) =>
       'events/$eventId/formules/$formuleId';
 
-  static billets() => 'billets';
+  static String billets() => 'billets';
 
-  static message(String chatId, String id) => 'chats/$chatId/messages/$id';
+  static String message(String chatId, String id) => 'chats/$chatId/messages/$id';
 
-  static chat(String idChatRoom) => 'chats/$idChatRoom';
+  static String chat(String idChatRoom) => 'chats/$idChatRoom';
 
-  static chatMembre(String idChatRoom, String uid) =>
+  static String chatMembre(String idChatRoom, String uid) =>
       'chats/$idChatRoom/chatMembres/$uid';
 
-  static billet(String id) => 'billets/$id';
+  static String billet(String id) => 'billets/$id';
 
-  static chatImage(String chatId, String nom) => 'chatsImages/$chatId/$nom';
+  static String chatImage(String chatId, String nom) => 'chatsImages/$chatId/$nom';
 
-  static profilImage(String uid, String pathprofil) =>
+  static String profilImage(String uid, String pathprofil) =>
       'imageProfil/$uid/$pathprofil';
 
-  static signInUrl(String email) =>
+  static String signInUrl(String email) =>
       'https://myvanevents.page.link/signIn?email=$email';
 
-  static androidPackageName() => 'com.vanevents.VanEvents';
+  static String androidPackageName() => 'com.vanevents.VanEvents';
 
-  static iOSBundleId() => 'com.vanevents.VanEvents';
+  static String iOSBundleId() => 'com.vanevents.VanEvents';
 
-  static actionCodeSettingsSignIn(String email) => ActionCodeSettings(
+  static ActionCodeSettings actionCodeSettingsSignIn(String email) => ActionCodeSettings(
       url: signInUrl(email),
       androidInstallApp: true,
       androidMinimumVersion: '9',
@@ -62,14 +66,14 @@ class MyPath {
       iOSBundleId: iOSBundleId(),dynamicLinkDomain: 'myvanevents.page.link',
       handleCodeInApp: true);
 
-  static logoImage(String pathlogo) => 'imageLogo/$pathlogo';
+  static String logoImage(String pathlogo) => 'imageLogo/$pathlogo';
 
   static String redirecUri() =>'https://equatorial-spangle-llama.glitch.me/callbacks/sign_in_with_apple';
 
-  static serviceId() => 'com.vanevent.VanEvents';
+  static String serviceId() => 'com.vanevent.VanEvents';
 
   static String stripeDocs(String id, String front)  => 'imageStripeDoc/$id/$front';
 
-  static abouts() => 'about';
+  static String abouts() => 'about';
 
 }

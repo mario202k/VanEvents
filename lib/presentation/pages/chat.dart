@@ -20,16 +20,15 @@ import 'package:van_events_project/providers/toggle_bool.dart';
 class Chat extends HookWidget {
   @override
   Widget build(BuildContext context) {
-    print('buildChat');
     final myChatRepo = context.read(myChatRepositoryProvider);
     return ModelBody(
-      child: StreamBuilder<List<Object>>(
+      child: StreamBuilder<List<MyChat>>(
         stream: myChatRepo.chatRoomsStream(myChatRepo.uid),
         //qui ont deja discuter
-        initialData: [],
+        initialData: const [],
         builder: (context, snapshot) {
           if (snapshot.hasError) {
-            return Center(
+            return const Center(
               child: Text('Erreur de connexion'),
             );
           } else if (snapshot.connectionState == ConnectionState.waiting) {
@@ -39,32 +38,32 @@ class Chat extends HookWidget {
                       Theme.of(context).colorScheme.secondary)),
             );
           }
-          List<MyChat> myChat = snapshot.data;
+          final List<MyChat> myChat = snapshot.data;
           return myChat.isNotEmpty
               ? ListView.separated(
-                  physics: ClampingScrollPhysics(),
+                  physics: const ClampingScrollPhysics(),
                   shrinkWrap: true,
-                  separatorBuilder: (context, index) => Divider(),
+                  separatorBuilder: (context, index) => const Divider(),
                   itemCount: myChat.length,
                   itemBuilder: (context, index) {
-                    MyChat chat = myChat.elementAt(index);
+                    final MyChat chat = myChat.elementAt(index);
 
                     final streamUserFriend =
                         context.read(myUserRepository).chatMyUsersStream(chat);
 //
-                    Stream<MyMessage> lastMsg = context
+                    final Stream<MyMessage> lastMsg = context
                         .read(myChatRepositoryProvider)
                         .getLastChatMessage(chat.id);
 
-                    Stream<int> msgNonLu = context
+                    final Stream<int> msgNonLu = context
                         .read(myChatRepositoryProvider)
                         .getNbChatMessageNonLu(chat.id);
                     MyUser participant = MyUser();
 
                     return Slidable(
-                      actionPane: SlidableDrawerActionPane(),
+                      actionPane: const SlidableDrawerActionPane(),
                       actionExtentRatio: 0.15,
-                      actions: <Widget>[
+                      actions: const <Widget>[
                         // IconSlideAction(
                         //   caption: 'Call',
                         //   color: Theme.of(context).colorScheme.secondary,
@@ -77,15 +76,15 @@ class Chat extends HookWidget {
                           stream: streamUserFriend,
                           builder: (context, snapshot) {
                             if (!snapshot.hasData || snapshot.data == null) {
-                              return SizedBox();
+                              return const SizedBox();
                             }
 
-                            List<MyUser> users = List<MyUser>();
+                            List<MyUser> users = <MyUser>[];
 
                             users = snapshot.data;
 
                             if (!chat.isGroupe && users.isNotEmpty) {
-                              for (MyUser myUser in users) {
+                              for (final MyUser myUser in users) {
                                 if (myUser.id != myChatRepo.uid) {
                                   participant = myUser;
                                 }
@@ -155,7 +154,7 @@ class Chat extends HookWidget {
                       height: 50,
                       width: 50,
                       decoration: BoxDecoration(
-                        borderRadius: BorderRadius.all(Radius.circular(50)),
+                        borderRadius: const BorderRadius.all(Radius.circular(50)),
                         image: DecorationImage(
                           image: imageProvider,
                           fit: BoxFit.cover,
@@ -167,18 +166,17 @@ class Chat extends HookWidget {
                   placeholder: (context, url) => Shimmer.fromColors(
                     baseColor: Colors.white,
                     highlightColor: Theme.of(context).colorScheme.primary,
-                    child: CircleAvatar(
+                    child: const CircleAvatar(
                       radius: 25,
                     ),
                   ),
                   errorWidget: (context, url, error) {
-                    print(url);
-                    print(error);
-                    return Icon(Icons.error);
+                    debugPrint(url);
+                    debugPrint(error.toString());
+                    return const Icon(Icons.error);
                   },
                 ),
-                !chat.isGroupe
-                    ? Positioned(
+                if (!chat.isGroupe) Positioned(
                         bottom: 0,
                         right: 0,
                         child: Container(
@@ -186,13 +184,12 @@ class Chat extends HookWidget {
                           width: 12,
                           decoration: BoxDecoration(
                               shape: BoxShape.circle,
-                              border: Border.all(color: Colors.black, width: 1),
+                              border: Border.all(),
                               color: friend?.isLogin ?? false
                                   ? Colors.green
                                   : Colors.orange),
                         ),
-                      )
-                    : SizedBox()
+                      ) else const SizedBox()
               ],
             )
           : Stack(
@@ -202,10 +199,9 @@ class Chat extends HookWidget {
                   radius: 25,
                   backgroundColor: Theme.of(context).colorScheme.primary,
                   backgroundImage:
-                      AssetImage('assets/img/normal_user_icon.png'),
+                      const AssetImage('assets/img/normal_user_icon.png'),
                 ),
-                !chat.isGroupe
-                    ? Positioned(
+                if (!chat.isGroupe) Positioned(
                         bottom: 0,
                         right: 0,
                         child: Container(
@@ -213,13 +209,12 @@ class Chat extends HookWidget {
                           width: 12,
                           decoration: BoxDecoration(
                               shape: BoxShape.circle,
-                              border: Border.all(color: Colors.black, width: 1),
+                              border: Border.all(),
                               color: friend?.isLogin ?? false
                                   ? Colors.green
                                   : Colors.orange),
                         ),
-                      )
-                    : SizedBox()
+                      ) else const SizedBox()
               ],
             ),
       trailing: Column(
@@ -228,9 +223,9 @@ class Chat extends HookWidget {
               stream: lastMsg,
               builder: (context, snapshot) {
                 if (!snapshot.hasData) {
-                  return SizedBox();
+                  return const SizedBox();
                 }
-                MyMessage lastMessage = snapshot.data;
+                final MyMessage lastMessage = snapshot.data;
 
                 return lastMessage.date != null
                     ? Text(
@@ -240,16 +235,16 @@ class Chat extends HookWidget {
                             : DateFormat('dd/MM/yyyy').format(lastMessage.date),
                         style: Theme.of(context).textTheme.bodyText1,
                       )
-                    : SizedBox();
+                    : const SizedBox();
               }),
           Consumer(builder: (context, watch, child) {
             final i = watch(boolToggleProvider).chatNbMsgNonLu[chat.id];
 
-            return i != 0
+            return i != null && i != 0
                 ? Badge(
                     badgeContent: Text(
                       '$i',
-                      style: Theme.of(context).textTheme.caption,
+                      style: Theme.of(context).textTheme.caption.copyWith(color: Theme.of(context).colorScheme.onSecondary),
                     ),
                     badgeColor: Theme.of(context).colorScheme.secondary,
                     child: Icon(
@@ -257,7 +252,7 @@ class Chat extends HookWidget {
                       color: Theme.of(context).colorScheme.onBackground,
                     ),
                   )
-                : SizedBox();
+                : const SizedBox();
           }),
         ],
       ),
@@ -282,25 +277,31 @@ class Chat extends HookWidget {
             : message.type == MyMessageType.image
                 ? Row(
                     children: <Widget>[
-                      Icon(FontAwesomeIcons.photoVideo),
-                      SizedBox(
+                      const Icon(FontAwesomeIcons.photoVideo),
+                      const SizedBox(
                         width: 10,
                       ),
-                      Text(
-                        'Image',
-                        style: Theme.of(context).textTheme.bodyText1,
+                      Flexible(
+                        child: Text(
+                          'Image',
+                          overflow: TextOverflow.ellipsis,
+                          style: Theme.of(context).textTheme.bodyText1,
+                        ),
                       )
                     ],
                   )
                 : Row(
                     children: <Widget>[
-                      Icon(FontAwesomeIcons.photoVideo),
-                      SizedBox(
+                      const Icon(FontAwesomeIcons.photoVideo),
+                      const SizedBox(
                         width: 10,
                       ),
-                      Text(
-                        'Réponse',
-                        style: Theme.of(context).textTheme.bodyText1,
+                      Flexible(
+                        child: Text(
+                          'Réponse',
+                          overflow: TextOverflow.ellipsis,
+                          style: Theme.of(context).textTheme.bodyText1,
+                        ),
                       )
                     ],
                   );

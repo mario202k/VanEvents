@@ -13,9 +13,13 @@
   },
   "main": "lib/index.js",
   "dependencies": {
+    "agora-access-token": "^2.0.4",
+    "apn": "^2.2.0",
+    "axios": "^0.21.1",
     "firebase-admin": "^9.2.0",
-    "firebase-functions": "^3.11.0",
-    "stripe": "^8.128.0"
+    "firebase-functions": "^3.13.1",
+    "stripe": "^8.128.0",
+    "uuid": "^8.3.2"
   },
   "devDependencies": {
     "typescript": "^3.8.0",

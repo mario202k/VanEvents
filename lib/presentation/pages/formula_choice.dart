@@ -25,9 +25,7 @@ import 'package:van_events_project/domain/repositories/my_event_repository.dart'
 import 'package:van_events_project/domain/repositories/my_transport_repository.dart';
 import 'package:van_events_project/domain/repositories/my_user_repository.dart';
 import 'package:van_events_project/domain/repositories/stripe_repository.dart';
-import 'package:van_events_project/presentation/widgets/model_body.dart';
 import 'package:van_events_project/presentation/widgets/model_screen.dart';
-import 'package:van_events_project/presentation/widgets/show.dart';
 import 'package:van_events_project/presentation/widgets/show.dart';
 import 'package:van_events_project/providers/formul_vtc.dart';
 import 'package:van_events_project/providers/toggle_bool.dart';
@@ -37,7 +35,7 @@ class FormulaChoice extends StatefulWidget {
   final List<Formule> formulas;
   final MyEvent myEvent;
 
-  FormulaChoice(this.formulas, this.myEvent);
+  const FormulaChoice(this.formulas, this.myEvent);
 
   @override
   _FormulaChoiceState createState() => _FormulaChoiceState();
@@ -74,10 +72,10 @@ class _FormulaChoiceState extends State<FormulaChoice> {
     //context.read(formuleVTCProvider).dispose();
   }
 
-  double _coordinateDistance(lat1, lon1, lat2, lon2) {
-    var p = 0.017453292519943295;
-    var c = cos;
-    var a = 0.5 -
+  double _coordinateDistance(num lat1, num lon1, num lat2, num lon2) {
+    const p = 0.017453292519943295;
+    const c = cos;
+    final a = 0.5 -
         c((lat2 - lat1) * p) / 2 +
         c(lat1 * p) * c(lat2 * p) * (1 - c((lon2 - lon1) * p)) / 2;
     return 12742 * asin(sqrt(a));
@@ -85,7 +83,6 @@ class _FormulaChoiceState extends State<FormulaChoice> {
 
   Future _createPolylines(
       LatLng start, LatLng destination, BuildContext context) async {
-    print('_createPolylines');
     final formuleVtc = context.read(formuleVTCProvider);
 
     formuleVtc.polylines.clear();
@@ -95,7 +92,8 @@ class _FormulaChoiceState extends State<FormulaChoice> {
 
     // Generating the list of coordinates to be used for
     // drawing the polylines
-    PolylineResult result = await polylinePoints.getRouteBetweenCoordinates(
+    final PolylineResult result =
+        await polylinePoints.getRouteBetweenCoordinates(
       PLACES_API_KEY, // Google Maps API Key
       PointLatLng(start.latitude, start.longitude),
       PointLatLng(destination.latitude, destination.longitude),
@@ -122,18 +120,17 @@ class _FormulaChoiceState extends State<FormulaChoice> {
 
     formuleVtc.polylines.add(Polyline(
         polylineId: PolylineId("poly"),
-        color: Color.fromARGB(255, 40, 122, 198),
+        color: const Color.fromARGB(255, 40, 122, 198),
         width: 5,
         points: formuleVtc.polylineCoordinates));
   }
 
   Future<void> waitForGoogleMap(GoogleMapController c) async {
-    LatLngBounds l1 = await c.getVisibleRegion();
-    LatLngBounds l2 = await c.getVisibleRegion();
-    print(l1.toString());
-    print(l2.toString());
+    final LatLngBounds l1 = await c.getVisibleRegion();
+    final LatLngBounds l2 = await c.getVisibleRegion();
+
     if (l1.southwest.latitude == -90 || l2.southwest.latitude == -90) {
-      return Future.delayed(Duration(milliseconds: 100))
+      return Future.delayed(const Duration(milliseconds: 100))
           .then((_) => waitForGoogleMap(c));
     }
     return Future.value();
@@ -168,7 +165,7 @@ class _FormulaChoiceState extends State<FormulaChoice> {
                         controller: _rue,
                         keyboardType: TextInputType.text,
                         name: 'Rue',
-                        decoration: InputDecoration(labelText: 'Rue'),
+                        decoration: const InputDecoration(labelText: 'Rue'),
                         onTap: () async {
                           final placesDetailsResponse =
                               await Show.showAddress(context, 'FormulaChoice');
@@ -184,14 +181,15 @@ class _FormulaChoiceState extends State<FormulaChoice> {
                         },
                         validator: FormBuilderValidators.required(context),
                       ),
-                      SizedBox(
+                      const SizedBox(
                         height: 8,
                       ),
                       FormBuilderTextField(
                         controller: _codePostal,
                         keyboardType: TextInputType.text,
                         name: 'Code postal',
-                        decoration: InputDecoration(labelText: 'Code postal'),
+                        decoration:
+                            const InputDecoration(labelText: 'Code postal'),
                         onTap: () async {
                           final placesDetailsResponse =
                               await Show.showAddress(context, 'FormulaChoice');
@@ -215,7 +213,7 @@ class _FormulaChoiceState extends State<FormulaChoice> {
             Padding(
               padding: const EdgeInsets.all(8.0),
               child: Visibility(
-                  visible: formulewatch.totalDistance == 0 ? false : true,
+                  visible: formulewatch.totalDistance != 0,
                   child: Text(
                     'Distance : ${formulewatch.totalDistance.toStringAsFixed(2)} km',
                     style: Theme.of(context).textTheme.bodyText1,
@@ -224,15 +222,10 @@ class _FormulaChoiceState extends State<FormulaChoice> {
             SizedBox(
               height: 200,
               child: GoogleMap(
-                mapType: MapType.normal,
                 markers: formulewatch.markers,
                 polylines: formulewatch.polylines,
-                cameraTargetBounds: CameraTargetBounds.unbounded,
                 zoomGesturesEnabled: false,
                 myLocationButtonEnabled: false,
-                myLocationEnabled: false,
-                zoomControlsEnabled: true,
-                scrollGesturesEnabled: true,
                 onMapCreated: (GoogleMapController controller) {
                   formuleVTC.setcontroller(controller);
                 },
@@ -246,34 +239,30 @@ class _FormulaChoiceState extends State<FormulaChoice> {
             Card(
               child: Column(
                 children: [
-                  SizedBox(
+                  const SizedBox(
                     height: 8,
                   ),
                   Visibility(
-                    visible: formulewatch.placesDetailsResponse == null
-                        ? false
-                        : true,
+                    visible: formulewatch.placesDetailsResponse != null,
                     child: FormBuilderDateTimePicker(
-                      inputType: InputType.both,
                       format: DateFormat("dd/MM/yyyy 'à' HH:mm"),
                       name: 'Date et heure',
-                      decoration: InputDecoration(labelText: 'Date et heure'),
+                      decoration:
+                          const InputDecoration(labelText: 'Date et heure'),
                       initialDate: widget.myEvent.dateDebut,
                       validator: FormBuilderValidators.required(context),
                     ),
                   ),
-                  SizedBox(
+                  const SizedBox(
                     height: 8,
                   ),
                   Visibility(
-                      visible: formulewatch.placesDetailsResponse == null
-                          ? false
-                          : true,
+                      visible: formulewatch.placesDetailsResponse != null,
                       child: FormBuilderTextField(
                         keyboardType: TextInputType.number,
                         name: 'Nombre de personne',
-                        decoration:
-                            InputDecoration(labelText: 'Nombre de personne'),
+                        decoration: const InputDecoration(
+                            labelText: 'Nombre de personne'),
                         validator: FormBuilderValidators.required(context),
                       ))
                 ],
@@ -334,16 +323,16 @@ class _FormulaChoiceState extends State<FormulaChoice> {
                   controller: _rue,
                   keyboardType: TextInputType.text,
                   name: 'Rue',
-                  decoration: InputDecoration(labelText: 'Rue'),
+                  decoration: const InputDecoration(labelText: 'Rue'),
                 ),
-                SizedBox(
+                const SizedBox(
                   height: 8,
                 ),
                 FormBuilderTextField(
                   controller: _codePostal,
                   keyboardType: TextInputType.text,
                   name: 'Code postal',
-                  decoration: InputDecoration(labelText: 'Code postal'),
+                  decoration: const InputDecoration(labelText: 'Code postal'),
                 ),
               ],
             ),
@@ -353,8 +342,8 @@ class _FormulaChoiceState extends State<FormulaChoice> {
     );
   }
 
-  void moveCam(FormuleVTC formuleVTC) async {
-    Set<Polyline> p = formuleVTC.polylines;
+  Future<void> moveCam(FormuleVTC formuleVTC) async {
+    final Set<Polyline> p = formuleVTC.polylines;
 
     double minLat = p.first.points.first.latitude;
     double minLong = p.first.points.first.longitude;
@@ -375,7 +364,8 @@ class _FormulaChoiceState extends State<FormulaChoice> {
             northeast: LatLng(maxLat, maxLong)),
         20));
     await scrollController.animateTo(scrollController.position.maxScrollExtent,
-        duration: Duration(milliseconds: 300), curve: Curves.fastOutSlowIn);
+        duration: const Duration(milliseconds: 300),
+        curve: Curves.fastOutSlowIn);
   }
 
   Marker makeMarker(LatLng latLng, String nom) {
@@ -386,33 +376,32 @@ class _FormulaChoiceState extends State<FormulaChoice> {
       infoWindow: InfoWindow(
         title: nom,
       ),
-      icon: BitmapDescriptor.defaultMarker,
     );
   }
 
   @override
   Widget build(BuildContext context) {
-    print('buildFormulaChoice');
     final formuleVtc = context.read(formuleVTCProvider);
     if (formuleVtc.formuleParticipant.isEmpty) {
-      formuleVtc.setformuleParticipant(Map.fromIterable(widget.formulas,
-          key: (form) => CardFormula(form),
-          value: (form) => CardFormIntParticipant(0, List<CardParticipant>())));
+      formuleVtc.setformuleParticipant({
+        for (var form in widget.formulas)
+          CardFormula(form): CardFormIntParticipant(0, <CardParticipant>[])
+      });
     }
 
     return ModelScreen(
       child: Scaffold(
         backgroundColor: Theme.of(context).colorScheme.background,
         appBar: AppBar(
-            title: Text(
+            title: const Text(
           "Formules",
         )),
         body: SingleChildScrollView(
-          physics: ClampingScrollPhysics(),
+          physics: const ClampingScrollPhysics(),
           controller: scrollController,
           child: Center(
             child: ConstrainedBox(
-              constraints: BoxConstraints(
+              constraints: const BoxConstraints(
                 maxWidth: 500,
               ),
               child: Padding(
@@ -425,14 +414,14 @@ class _FormulaChoiceState extends State<FormulaChoice> {
                             .headline5
                             .copyWith(fontSize: 40)),
                     ListView.builder(
-                        physics: ClampingScrollPhysics(),
+                        physics: const ClampingScrollPhysics(),
                         itemCount: widget.formulas.length,
                         shrinkWrap: true,
                         itemBuilder: (context, index) {
                           return CardFormula(widget.formulas[index]);
                         }),
-                    Divider(),
-                    SizedBox(
+                    const Divider(),
+                    const SizedBox(
                       height: 100,
                     ),
                     Text('Transport',
@@ -445,11 +434,13 @@ class _FormulaChoiceState extends State<FormulaChoice> {
                       onTap: () async {
                         if (formuleVtc.isNotDisplay) {
                           _listKey.currentState.insertItem(0,
-                              duration: Duration(milliseconds: 200));
-                          await Future.delayed(Duration(milliseconds: 300));
+                              duration: const Duration(milliseconds: 200));
+                          await Future.delayed(
+                              const Duration(milliseconds: 300));
+
                           await scrollController.animateTo(
                               scrollController.position.maxScrollExtent,
-                              duration: Duration(milliseconds: 300),
+                              duration: const Duration(milliseconds: 300),
                               curve: Curves.fastOutSlowIn);
 
                           formuleVtc.setautoPlay(false);
@@ -461,17 +452,16 @@ class _FormulaChoiceState extends State<FormulaChoice> {
                               return FadeTransition(
                                 opacity: CurvedAnimation(
                                     parent: animation,
-                                    curve: Interval(0.5, 1.0)),
+                                    curve: const Interval(0.5, 1.0)),
                                 child: SizeTransition(
                                   sizeFactor: CurvedAnimation(
                                       parent: animation,
-                                      curve: Interval(0.0, 1.0)),
-                                  axisAlignment: 0.0,
+                                      curve: const Interval(0.0, 1.0)),
                                   child: _buildRemovedItem(context),
                                 ),
                               );
                             },
-                            duration: Duration(milliseconds: 600),
+                            duration: const Duration(milliseconds: 600),
                           );
                           formuleVtc.setautoPlay(true);
                         }
@@ -488,26 +478,23 @@ class _FormulaChoiceState extends State<FormulaChoice> {
                           },
                           options: CarouselOptions(
                               onPageChanged: (index, raison) {
-                                String e = mercedes.elementAt(index);
+                                final String e = mercedes.elementAt(index);
                                 formuleVtc.setonGoingCar(e.substring(
                                     e.lastIndexOf('/') + 1, e.indexOf('.')));
                               },
                               autoPlay: watch(formuleVTCProvider).autoPlay,
-                              autoPlayInterval: Duration(seconds: 3),
-                              autoPlayAnimationDuration:
-                                  Duration(milliseconds: 800),
+                              autoPlayInterval: const Duration(seconds: 3),
                               height: 250.0),
                         );
                       }),
                     ),
                     AnimatedList(
                       shrinkWrap: true,
-                      physics: ClampingScrollPhysics(),
+                      physics: const ClampingScrollPhysics(),
                       key: _listKey,
                       itemBuilder: (BuildContext context, int index,
                           Animation<double> animation) {
                         return SizeTransition(
-                          axis: Axis.vertical,
                           sizeFactor: animation,
                           child: _buildItem(context, formuleVtc),
                         );
@@ -525,7 +512,7 @@ class _FormulaChoiceState extends State<FormulaChoice> {
             height: 80,
             decoration: BoxDecoration(
               color: Theme.of(context).colorScheme.primary,
-              borderRadius: BorderRadius.only(
+              borderRadius: const BorderRadius.only(
                 topLeft: Radius.circular(40.0),
                 topRight: Radius.circular(40.0),
               ),
@@ -537,9 +524,8 @@ class _FormulaChoiceState extends State<FormulaChoice> {
     );
   }
 
-  _buildTotalContent(BuildContext context, FormuleVTC readFormuleVtc) {
-    print('_buildTotalContent');
-    return Container(
+  Widget _buildTotalContent(BuildContext context, FormuleVTC readFormuleVtc) {
+    return SizedBox(
       width: MediaQuery.of(context).size.width,
       height: 80,
       child: Consumer(builder: (context, watch, child) {
@@ -553,7 +539,7 @@ class _FormulaChoiceState extends State<FormulaChoice> {
               style: Theme.of(context).textTheme.headline4,
             ),
             AnimatedSwitcher(
-              duration: Duration(milliseconds: 500),
+              duration: const Duration(milliseconds: 500),
               transitionBuilder: (Widget child, Animation<double> animation) {
                 return ScaleTransition(
                   scale: animation,
@@ -617,13 +603,10 @@ class _FormulaChoiceState extends State<FormulaChoice> {
         value.forEach((element) {
           nb++;
 
-          description = description +
-              key.title +
-              ' pour ' +
-              element.currentState.fields['prenom'].value +
-              ' ' +
-              element.currentState.fields['nom'].value +
-              '\n ';
+          description = '''
+          $description 
+          ${key.title} pour ${element.currentState.fields['prenom'].value} 
+          ${element.currentState.fields['nom'].value}\n''';
         });
       });
 
@@ -657,7 +640,7 @@ class _FormulaChoiceState extends State<FormulaChoice> {
         }
       });
     } else {
-      if (readFormuleVtc.getAllCardParticipants().length == 0) {
+      if (readFormuleVtc.getAllCardParticipants().isEmpty) {
         await Show.showDialogToDismiss(context, 'Billets!',
             'Vous n\'avez fait de demande de billets', 'Ok');
       } else {
@@ -668,9 +651,9 @@ class _FormulaChoiceState extends State<FormulaChoice> {
   }
 
   Future uploadTransport(BuildContext context, FormuleVTC formuleVTC) async {
-    List<AddressComponent> adresse = List<AddressComponent>();
+    final List<AddressComponent> adresse = <AddressComponent>[];
 
-    List<AddressComponent> rue = List<AddressComponent>();
+    final List<AddressComponent> rue = <AddressComponent>[];
 
     rue.addAll(formuleVTC.placesDetailsResponse.result.addressComponents);
 
@@ -689,7 +672,8 @@ class _FormulaChoiceState extends State<FormulaChoice> {
         element.types[0] == "route" ||
         element.types[0] == 'country');
 
-    String docId = FirebaseFirestore.instance.collection('transports').doc().id;
+    final String docId =
+        FirebaseFirestore.instance.collection('transports').doc().id;
 
     await context
         .read(myTransportRepositoryProvider)
@@ -699,11 +683,11 @@ class _FormulaChoiceState extends State<FormulaChoice> {
             car: formuleVTC.onGoingCar,
             position: GeoPoint(formuleVTC.latLngDepart.latitude,
                 formuleVTC.latLngDepart.longitude),
-            paymentIntentId: null,
-            nbPersonne: _fbKey.currentState.fields['Nombre de personne'].value,
+            nbPersonne: _fbKey.currentState.fields['Nombre de personne'].value
+                as String,
             distance: formuleVTC.totalDistance,
-            dateTime: _fbKey.currentState.fields['Date et heure'].value,
-            amount: null,
+            dateTime:
+                _fbKey.currentState.fields['Date et heure'].value as DateTime,
             adresseRue: List<String>.generate(
                 rue.length, (index) => rue[index].longName),
             adresseZone: List<String>.generate(
@@ -713,20 +697,19 @@ class _FormulaChoiceState extends State<FormulaChoice> {
         .then((value) => Show.showDialogToDismiss(
             context, '', 'Demande de transport effectuée', 'Ok'))
         .catchError((e) {
-      print(e);
+      debugPrint(e.toString());
       Show.showDialogToDismiss(context, 'Erreur', 'Erreur $e', 'Ok');
     });
   }
 
   Future paymentValider(
-      paymentIntentX, FormuleVTC formuleVTC, BuildContext context) async {
-    Map participant = Map();
+      Map paymentIntentX, FormuleVTC formuleVTC, BuildContext context) async {
+    final Map<String, List<dynamic>> participant = {};
     formuleVTC.listFbKey.forEach((key, value) {
       value.forEach((element) {
         participant.addAll({
-          element.currentState.fields['prenom'].value +
-              ' ' +
-              element.currentState.fields['nom'].value: [key.title, false]
+          "${element.currentState.fields['prenom'].value} ${element.currentState.fields['nom'].value}":
+              [key.title, false]
         });
       });
     });
@@ -735,16 +718,16 @@ class _FormulaChoiceState extends State<FormulaChoice> {
         .read(myUserRepository)
         .getMyUserFromStripeAccount(widget.myEvent.stripeAccount);
 
-    Billet billet = Billet(
+    final Billet billet = Billet(
       id: FirestoreService.instance.getDocId(path: 'billets'),
-      status: BilletStatus.up_coming,
-      paymentIntentId: paymentIntentX['id'],
+      status: BilletStatus.upComing,
+      paymentIntentId: paymentIntentX['id'] as String,
       uid: context.read(myUserProvider).id,
       eventId: widget.myEvent.id,
       imageUrl: widget.myEvent.imageFlyerUrl,
       participants: participant,
       organisateurId: organizateur.first.id,
-      amount: paymentIntentX['amount'],
+      amount: paymentIntentX['amount'] as int,
       dateTime: widget.myEvent.dateDebut,
     );
 
@@ -774,15 +757,13 @@ class _FormulaChoiceState extends State<FormulaChoice> {
 
   bool allParticipantIsOk(FormuleVTC formuleVTC) {
     bool b = true;
-    if (formuleVTC.getAllCardParticipants().length == 0) {
+    if (formuleVTC.getAllCardParticipants().isEmpty) {
       b = false;
     }
 
     for (int i = 0; i < formuleVTC.listFbKey.length; i++) {
-      Formule formule = formuleVTC.listFbKey.keys.elementAt(i);
+      final Formule formule = formuleVTC.listFbKey.keys.elementAt(i);
       for (int j = 0; j < formuleVTC.listFbKey[formule].length; j++) {
-        print(formuleVTC.listFbKey[formule][j].currentState.fields['prenom']);
-        print('//');
         if (!formuleVTC.listFbKey[formule][j].currentState.validate()) {
           b = false;
           break;
@@ -811,7 +792,7 @@ class CardParticipant extends StatefulWidget {
   final int index;
   final bool isToDestroy;
 
-  CardParticipant({this.formule, this.index, this.isToDestroy});
+  const CardParticipant({this.formule, this.index, this.isToDestroy});
 
   @override
   _CardParticipantState createState() => _CardParticipantState();
@@ -825,7 +806,6 @@ class _CardParticipantState extends State<CardParticipant>
 
   @override
   void initState() {
-    print('initState');
     context.read(formuleVTCProvider).onChangeParticipant(
         widget.formule, _fbKey, widget.index, widget.isToDestroy, true);
 
@@ -835,13 +815,12 @@ class _CardParticipantState extends State<CardParticipant>
   @override
   Widget build(BuildContext context) {
     super.build(context);
-    print('buildCardParticipant');
 
     return Consumer(builder: (context, watch, child) {
       return Padding(
         padding: const EdgeInsets.all(2.0),
         child: Container(
-          padding: EdgeInsets.only(left: 20.0, right: 20.0),
+          padding: const EdgeInsets.only(left: 20.0, right: 20.0),
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(25),
             // gradient: LinearGradient(colors: [
@@ -874,21 +853,18 @@ class _CardParticipantState extends State<CardParticipant>
                               borderSide: BorderSide(
                                   color:
                                       Theme.of(context).colorScheme.onPrimary,
-                                  style: BorderStyle.solid,
                                   width: 2),
                               borderRadius: BorderRadius.circular(25.0)),
                           focusedBorder: OutlineInputBorder(
                               borderSide: BorderSide(
                                   color:
                                       Theme.of(context).colorScheme.onPrimary,
-                                  style: BorderStyle.solid,
                                   width: 2),
                               borderRadius: BorderRadius.circular(25.0)),
                           labelStyle: Theme.of(context).textTheme.bodyText2,
-                          counterStyle: TextStyle(color: Colors.white),
+                          counterStyle: const TextStyle(color: Colors.white),
                         ),
                         onChanged: (val) {
-                          print(val);
                           context.read(formuleVTCProvider).onChangeParticipant(
                               widget.formule,
                               _fbKey,
@@ -909,13 +885,13 @@ class _CardParticipantState extends State<CardParticipant>
                               r'^[a-zA-ZáàâäãåçéèêëíìîïñóòôöõúùûüýÿæœÁÀÂÄÃÅÇÉÈÊËÍÌÎÏÑÓÒÔÖÕÚÙÛÜÝŸÆŒ ]{2,30}$')
                         ]),
                       ),
-                      SizedBox(
+                      const SizedBox(
                         height: 8,
                       ),
                       FormBuilderTextField(
                         valueTransformer: (value) => value.toString().trim(),
                         keyboardType: TextInputType.text,
-                        style: TextStyle(color: Colors.white),
+                        style: const TextStyle(color: Colors.white),
                         cursorColor: Colors.white,
                         name: 'nom',
                         decoration: InputDecoration(
@@ -923,19 +899,17 @@ class _CardParticipantState extends State<CardParticipant>
                                 borderSide: BorderSide(
                                     color:
                                         Theme.of(context).colorScheme.onPrimary,
-                                    style: BorderStyle.solid,
                                     width: 2),
                                 borderRadius: BorderRadius.circular(25.0)),
                             focusedBorder: OutlineInputBorder(
                                 borderSide: BorderSide(
                                     color:
                                         Theme.of(context).colorScheme.onPrimary,
-                                    style: BorderStyle.solid,
                                     width: 2),
                                 borderRadius: BorderRadius.circular(25.0)),
                             labelText: 'Nom',
                             labelStyle: Theme.of(context).textTheme.bodyText2,
-                            counterStyle: TextStyle(color: Colors.white)),
+                            counterStyle: const TextStyle(color: Colors.white)),
                         focusNode: _nom,
                         onEditingComplete: () {
                           if (_fbKey.currentState.fields['nom'].validate()) {
@@ -943,7 +917,6 @@ class _CardParticipantState extends State<CardParticipant>
                           }
                         },
                         onChanged: (val) {
-                          print(val);
                           context.read(formuleVTCProvider).onChangeParticipant(
                               widget.formule,
                               _fbKey,
@@ -976,7 +949,7 @@ class _CardParticipantState extends State<CardParticipant>
 class CardFormula extends StatefulWidget {
   final Formule formule;
 
-  CardFormula(this.formule);
+  const CardFormula(this.formule);
 
   @override
   _CardFormulaState createState() => _CardFormulaState();
@@ -989,7 +962,6 @@ class _CardFormulaState extends State<CardFormula>
   @override
   Widget build(BuildContext context) {
     super.build(context);
-    print('buildCardFormula!!!!');
     final formulVtc = context.read(formuleVTCProvider);
     return Consumer(builder: (context, watch, child) {
       return Column(
@@ -1026,12 +998,11 @@ class _CardFormulaState extends State<CardFormula>
                                     return FadeTransition(
                                       opacity: CurvedAnimation(
                                           parent: animation,
-                                          curve: Interval(0.5, 1.0)),
+                                          curve: const Interval(0.5, 1.0)),
                                       child: SizeTransition(
                                         sizeFactor: CurvedAnimation(
                                             parent: animation,
-                                            curve: Interval(0.0, 1.0)),
-                                        axisAlignment: 0.0,
+                                            curve: const Interval(0.0, 1.0)),
                                         child: CardParticipant(
                                           index: formulVtc
                                               .getCardParticipants(
@@ -1043,7 +1014,7 @@ class _CardFormulaState extends State<CardFormula>
                                       ),
                                     );
                                   },
-                                  duration: Duration(milliseconds: 600),
+                                  duration: const Duration(milliseconds: 600),
                                 );
                                 formulVtc.removeCardParticipants(
                                     widget.formule,
@@ -1064,15 +1035,15 @@ class _CardFormulaState extends State<CardFormula>
                                     .settotalCostMoins(widget.formule.prix);
                               }
                             },
+                            shape: const CircleBorder(),
+                            elevation: 5.0,
+                            fillColor: Theme.of(context).colorScheme.secondary,
+                            padding: const EdgeInsets.all(10.0),
                             child: Icon(
                               FontAwesomeIcons.minus,
                               color: Theme.of(context).colorScheme.primary,
                               size: 30.0,
                             ),
-                            shape: CircleBorder(),
-                            elevation: 5.0,
-                            fillColor: Theme.of(context).colorScheme.secondary,
-                            padding: const EdgeInsets.all(10.0),
                           ),
                           Consumer(builder: (context, watch, child) {
                             final formulVtc = watch(formuleVTCProvider);
@@ -1110,18 +1081,19 @@ class _CardFormulaState extends State<CardFormula>
                                                 widget.formule.id)
                                             .length -
                                         1,
-                                    duration: Duration(milliseconds: 500));
+                                    duration:
+                                        const Duration(milliseconds: 500));
                               }
                             },
+                            shape: const CircleBorder(),
+                            elevation: 5.0,
+                            fillColor: Theme.of(context).colorScheme.secondary,
+                            padding: const EdgeInsets.all(10.0),
                             child: Icon(
                               FontAwesomeIcons.plus,
                               color: Theme.of(context).colorScheme.primary,
                               size: 30.0,
                             ),
-                            shape: CircleBorder(),
-                            elevation: 5.0,
-                            fillColor: Theme.of(context).colorScheme.secondary,
-                            padding: const EdgeInsets.all(10.0),
                           ),
                         ],
                       ),
@@ -1143,7 +1115,6 @@ class _CardFormulaState extends State<CardFormula>
             itemBuilder:
                 (BuildContext context, int index, Animation<double> animation) {
               return SizeTransition(
-                axis: Axis.vertical,
                 sizeFactor: animation,
                 child: CardParticipant(
                   formule: widget.formule,
@@ -1173,7 +1144,7 @@ class CardFormIntParticipant {
 
   CardFormIntParticipant(this.nb, this.cardParticipant);
 
-  setNb(int nb) {
+  void setNb(int nb) {
     this.nb = nb;
   }
 }

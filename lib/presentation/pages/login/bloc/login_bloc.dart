@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:bloc/bloc.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/material.dart';
 import 'package:van_events_project/domain/repositories/my_user_repository.dart';
 import 'package:van_events_project/presentation/pages/login/bloc/bloc.dart';
 
@@ -9,8 +10,6 @@ class LoginBloc extends Bloc<LoginEvent, LoginState> {
 
   LoginBloc() : super(LoginState.initial());
 
-  @override
-  LoginState get initialState => LoginState.initial();
 
   @override
   Stream<LoginState> mapEventToState(LoginEvent event) async* {
@@ -32,12 +31,9 @@ class LoginBloc extends Bloc<LoginEvent, LoginState> {
   Stream<LoginState> _mapLoginWithGooglePressedToState(MyUserRepository myUserRepository) async* {
     try {
 
-      UserCredential authResult =
+      final UserCredential authResult =
           await myUserRepository.signInWithGoogle();
 
-      print('_mapLoginWithGooglePressedToState');
-
-      print(authResult.user.uid);
 
       await myUserRepository
           .createOrUpdateUserOnDatabase(authResult.user);
@@ -45,8 +41,7 @@ class LoginBloc extends Bloc<LoginEvent, LoginState> {
       yield LoginState.success();
 
     } catch (e) {
-      print(e);
-      print('!!!!');
+      debugPrint(e.toString());
       yield LoginState.failure('Impossible de se connecter');
     }
   }
@@ -54,7 +49,7 @@ class LoginBloc extends Bloc<LoginEvent, LoginState> {
   Stream<LoginState> _mapLoginWithApplePressedToState(MyUserRepository myUserRepository) async* {
     try {
 
-      UserCredential authResult =
+      final UserCredential authResult =
       await myUserRepository.signInWithApple();
 
       await myUserRepository
@@ -63,8 +58,7 @@ class LoginBloc extends Bloc<LoginEvent, LoginState> {
       yield LoginState.success();
 
     } catch (e) {
-      print(e);
-      print('!!!!');
+
       yield LoginState.failure('Impossible de se connecter');
     }
   }
@@ -76,13 +70,10 @@ class LoginBloc extends Bloc<LoginEvent, LoginState> {
   }) async* {
     yield LoginState.loading();
     try {
-      UserCredential authResult = await myUserRepository
+      final UserCredential authResult = await myUserRepository
           .signInWithCredentials(email, password);
 
 
-      print(await myUserRepository.isSignedIn());
-      print('!!!!!!!!!!!');
-      print('_mapLoginWithCredentialsPressedToState');
       if (authResult.user.emailVerified) {
         await myUserRepository
             .createOrUpdateUserOnDatabase(authResult.user);
@@ -92,7 +83,6 @@ class LoginBloc extends Bloc<LoginEvent, LoginState> {
         yield LoginState.failure('Email non vérifié');
       }
     } catch (e) {
-      print(e);
       yield LoginState.failure('Impossible de se connecter');
     }
   }
@@ -101,7 +91,7 @@ class LoginBloc extends Bloc<LoginEvent, LoginState> {
     yield LoginState.loading();
     try {
 
-      UserCredential authResult = await myUserRepository.loginAnonymous();
+      final UserCredential authResult = await myUserRepository.loginAnonymous();
 
       await myUserRepository
           .createOrUpdateUserOnDatabase(authResult.user);
@@ -109,7 +99,6 @@ class LoginBloc extends Bloc<LoginEvent, LoginState> {
 
       yield LoginState.success();
     } catch (e) {
-      print(e);
       yield LoginState.failure('Impossible de se connecter');
     }
   }

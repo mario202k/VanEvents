@@ -18,22 +18,21 @@ class MyChat {
 
   Map<String, dynamic> toMap() {
     return {
-      'id': this.id,
-      'createdAt': this.createdAt,
-      'membres': this.membres,
-      'isGroupe': this.isGroupe,
-      'imageUrl': this.imageUrl,
-      'titre':this.titre,
+      'id': id,
+      'createdAt': createdAt,
+      'membres': membres,
+      'isGroupe': isGroupe,
+      'imageUrl': imageUrl,
+      'titre':titre,
 
     };
   }
 
   factory MyChat.fromMap(Map<String, dynamic> map) {
-    Timestamp createdAt = map['createdAt'] ?? Timestamp.now();
 
-    return new MyChat(
+    return MyChat(
       id: map['id'] as String,
-      createdAt: createdAt.toDate(),
+      createdAt: (map['createdAt'] as Timestamp?? Timestamp.now()).toDate(),
       membres: map['membres'] as Map?? {},
       isGroupe: map['isGroupe'] as bool ?? false,
       imageUrl: map['imageFlyerUrl'] as String ?? '',

@@ -20,15 +20,15 @@ import 'package:van_events_project/providers/toggle_bool.dart';
 class Profil extends HookWidget {
   final MyUser other;
 
-  Profil({this.other});
+  const Profil({this.other});
 
   void showDialogGenresEtTypes(BuildContext context, List userGenres,
       List userTypes, int indexStart, TabController tabController) {
-    List<Widget> containersAlertDialog = [
+    final List<Widget> containersAlertDialog = [
       genreAlertDialog(context),
       typeAlertDialog(context)
     ];
-    List<Widget> containersCupertino = [
+    final List<Widget> containersCupertino = [
       genreCupertino(context),
       typeCupertino(context)
     ];
@@ -55,7 +55,7 @@ class Profil extends HookWidget {
               title: Container(
                 color: Theme.of(context).colorScheme.primary,
                 child: TabBar(
-                  tabs: <Widget>[
+                  tabs: const <Widget>[
                     Tab(
                       text: 'Genres',
                     ),
@@ -74,13 +74,12 @@ class Profil extends HookWidget {
               ),
               actions: <Widget>[
                 FlatButton(
-                  child: Text('Annuler'),
                   onPressed: () {
                     Navigator.of(context).pop();
                   },
+                  child: const Text('Annuler'),
                 ),
                 FlatButton(
-                  child: Text('Ok'),
                   onPressed: () {
                     context.read(myUserRepository).updateMyUserGenre(
                         context.read(boolToggleProvider).genre);
@@ -90,6 +89,7 @@ class Profil extends HookWidget {
 
                     // context.read<MyUserRepository>().updateUserLieu(context.read(boolToggleProvider).)
                   },
+                  child: const Text('Ok'),
                 ),
               ],
             )
@@ -97,7 +97,7 @@ class Profil extends HookWidget {
               title: Container(
                 color: Theme.of(context).colorScheme.primary,
                 child: TabBar(
-                  tabs: <Widget>[
+                  tabs: const <Widget>[
                     Tab(
                       text: 'Genres',
                     ),
@@ -115,13 +115,12 @@ class Profil extends HookWidget {
               ),
               actions: <Widget>[
                 FlatButton(
-                  child: Text('Annuler'),
                   onPressed: () {
                     Navigator.of(context).pop();
                   },
+                  child: const Text('Annuler'),
                 ),
                 FlatButton(
-                  child: Text('Ok'),
                   onPressed: () {
                     context.read(myUserRepository).updateMyUserGenre(
                         context.read(boolToggleProvider).genre);
@@ -129,6 +128,7 @@ class Profil extends HookWidget {
                         context.read(boolToggleProvider).type);
                     Navigator.of(context).pop();
                   },
+                  child: const Text('Ok'),
                 ),
               ],
             ),
@@ -141,7 +141,7 @@ class Profil extends HookWidget {
       child: ListView.builder(
           itemCount: context.read(boolToggleProvider).genre.keys.length,
           itemBuilder: (context, index) {
-            List<String> str =
+            final List<String> str =
                 context.read(boolToggleProvider).genre.keys.toList();
 
             return Consumer(builder: (context, watch, child) {
@@ -206,7 +206,7 @@ class Profil extends HookWidget {
       child: ListView.builder(
           itemCount: context.read(boolToggleProvider).type.keys.length,
           itemBuilder: (context, index) {
-            List<String> str =
+            final List<String> str =
                 context.read(boolToggleProvider).type.keys.toList();
 
             return Consumer(builder: (context, watch, child) {
@@ -232,21 +232,21 @@ class Profil extends HookWidget {
                 'Source?',
                 style: Theme.of(context).textTheme.bodyText1,
               ),
-              content: Text('Veuillez choisir une source'),
+              content: const Text('Veuillez choisir une source'),
               actions: <Widget>[
                 FlatButton(
-                  child: Text('Caméra'),
                   onPressed: () {
                     getImageCamera(db);
                     Navigator.of(context).pop();
                   },
+                  child: const Text('Caméra'),
                 ),
                 FlatButton(
-                  child: Text('Galerie'),
                   onPressed: () {
                     getImageGallery(db);
                     Navigator.of(context).pop();
                   },
+                  child: const Text('Galerie'),
                 ),
               ],
             )
@@ -255,21 +255,21 @@ class Profil extends HookWidget {
                 'Source?',
                 style: Theme.of(context).textTheme.bodyText1,
               ),
-              content: Text('Veuillez choisir une source'),
+              content: const Text('Veuillez choisir une source'),
               actions: <Widget>[
                 FlatButton(
-                  child: Text('Caméra'),
                   onPressed: () {
                     getImageCamera(db);
                     Navigator.of(context).pop();
                   },
+                  child: const Text('Caméra'),
                 ),
                 FlatButton(
-                  child: Text('Galerie'),
                   onPressed: () {
                     getImageGallery(db);
                     Navigator.of(context).pop();
                   },
+                  child: const Text('Galerie'),
                 ),
               ],
             ),
@@ -278,7 +278,7 @@ class Profil extends HookWidget {
 
   Future getImageGallery(MyUserRepository db) async {
     final _picker = ImagePicker();
-    File imageProfil =
+    final File imageProfil =
         File((await _picker.getImage(source: ImageSource.gallery)).path);
     //création du path pour le flyer
     await db.uploadImageProfil(imageProfil);
@@ -286,14 +286,14 @@ class Profil extends HookWidget {
 
   Future getImageCamera(MyUserRepository db) async {
     final _picker = ImagePicker();
-    File imageProfil =
+    final File imageProfil =
         File((await _picker.getImage(source: ImageSource.camera)).path);
     await db.uploadImageProfil(imageProfil);
   }
 
   @override
   Widget build(BuildContext context) {
-    final MyUser user = other == null ? useProvider(myUserProvider) : other;
+    final MyUser user = other ?? useProvider(myUserProvider);
     final streamMyUser = useProvider(streamMyUserProvider);
     final db = useProvider(myUserRepository);
     final tabController = useTabController(initialLength: 2);
@@ -310,7 +310,6 @@ class Profil extends HookWidget {
               children: [
                 Positioned.fill(
                   child: Align(
-                    alignment: Alignment.center,
                     child: other == null
                         ? streamMyUser.when(
                             data: (data) {
@@ -330,7 +329,7 @@ class Profil extends HookWidget {
                                           height: 100,
                                           width: 100,
                                           decoration: BoxDecoration(
-                                            borderRadius: BorderRadius.all(
+                                            borderRadius: const BorderRadius.all(
                                                 Radius.circular(100)),
                                             image: DecorationImage(
                                               image: imageProvider,
@@ -345,12 +344,12 @@ class Profil extends HookWidget {
                                           highlightColor: Theme.of(context)
                                               .colorScheme
                                               .primary,
-                                          child: CircleAvatar(
+                                          child: const CircleAvatar(
                                             radius: 50,
                                           ),
                                         ),
                                         errorWidget: (context, url, error) =>
-                                            Icon(Icons.error),
+                                            const Icon(Icons.error),
                                       ),
                                     )
                                   : Center(
@@ -359,7 +358,7 @@ class Profil extends HookWidget {
                                         backgroundColor: Theme.of(context)
                                             .colorScheme
                                             .primary,
-                                        backgroundImage: AssetImage(
+                                        backgroundImage: const AssetImage(
                                             'assets/img/normal_user_icon.png'),
                                       ),
                                     );
@@ -371,7 +370,7 @@ class Profil extends HookWidget {
                                               .colorScheme
                                               .primary)),
                                 ),
-                            error: (err, stack) => Icon(Icons.error))
+                            error: (err, stack) => const Icon(Icons.error))
                         : CachedNetworkImage(
                             imageUrl: other?.imageUrl,
                             imageBuilder: (context, imageProvider) =>
@@ -387,7 +386,7 @@ class Profil extends HookWidget {
                                 width: 100,
                                 decoration: BoxDecoration(
                                   borderRadius:
-                                      BorderRadius.all(Radius.circular(100)),
+                                      const BorderRadius.all(Radius.circular(100)),
                                   image: DecorationImage(
                                     image: imageProvider,
                                     fit: BoxFit.cover,
@@ -400,7 +399,7 @@ class Profil extends HookWidget {
                               baseColor: Colors.white,
                               highlightColor:
                                   Theme.of(context).colorScheme.primary,
-                              child: CircleAvatar(
+                              child: const CircleAvatar(
                                 radius: 50,
                               ),
                             ),
@@ -409,15 +408,14 @@ class Profil extends HookWidget {
                                 radius: 50,
                                 backgroundColor:
                                     Theme.of(context).colorScheme.primary,
-                                backgroundImage: AssetImage(
+                                backgroundImage: const AssetImage(
                                     'assets/img/normal_user_icon.png'),
                               ),
                             ),
                           ),
                   ),
                 ),
-                other == null
-                    ? Positioned(
+                if (other == null) Positioned(
                         bottom: -15,
                         right: 10,
                         child: IconButton(
@@ -427,8 +425,7 @@ class Profil extends HookWidget {
                             ),
                             onPressed: () {
                               showDialogSource(context, db);
-                            }))
-                    : SizedBox(),
+                            })) else const SizedBox(),
               ],
             ),
           ),
@@ -438,11 +435,11 @@ class Profil extends HookWidget {
               style: Theme.of(context).textTheme.bodyText1,
             ),
           ),
-          SizedBox(
+          const SizedBox(
             height: 20,
           ),
-          Divider(),
-          SizedBox(
+          const Divider(),
+          const SizedBox(
             height: 20,
           ),
           Padding(
@@ -455,14 +452,14 @@ class Profil extends HookWidget {
               ),
             ),
           ),
-          FutureBuilder(
+          FutureBuilder<List<Billet>>(
             future: context
                 .read(myBilletRepositoryProvider)
                 .futureBilletParticipation(otherUid: other?.id),
             builder: (context, async) {
               if (async.hasError) {
-                print(async.error);
-                return Center(
+                debugPrint(async.error.toString());
+                return const Center(
                   child: Text(
                     'Erreur de connexion',
                   ),
@@ -475,7 +472,7 @@ class Profil extends HookWidget {
                 );
               }
 
-              List<Billet> tickets = List<Billet>();
+              final List<Billet> tickets = <Billet>[];
 
               tickets.addAll(async.data);
 
@@ -483,7 +480,7 @@ class Profil extends HookWidget {
                   ? SizedBox(
                       height: 100,
                       child: ListView.separated(
-                        separatorBuilder: (context, index) => SizedBox(
+                        separatorBuilder: (context, index) => const SizedBox(
                           width: 12,
                         ),
                         scrollDirection: Axis.horizontal,
@@ -506,7 +503,7 @@ class Profil extends HookWidget {
                                   width: 84,
                                   decoration: BoxDecoration(
                                     borderRadius:
-                                        BorderRadius.all(Radius.circular(84)),
+                                        const BorderRadius.all(Radius.circular(84)),
                                     image: DecorationImage(
                                       image: imageProvider,
                                       fit: BoxFit.cover,
@@ -519,22 +516,22 @@ class Profil extends HookWidget {
                                   baseColor: Colors.white,
                                   highlightColor:
                                       Theme.of(context).colorScheme.primary,
-                                  child: CircleAvatar(
+                                  child: const CircleAvatar(
                                     radius: 42,
                                   ),
                                 ),
                                 errorWidget: (context, url, error) =>
-                                    Icon(Icons.error),
+                                    const Icon(Icons.error),
                               ),
                             ),
                           );
                         },
                       ),
                     )
-                  : SizedBox();
+                  : const SizedBox();
             },
           ),
-          Divider(),
+          const Divider(),
           ListTile(
             leading: Text(
               'Genres:',
@@ -556,17 +553,16 @@ class Profil extends HookWidget {
                               valueColor: AlwaysStoppedAnimation<Color>(
                                   Theme.of(context).colorScheme.primary)),
                         ),
-                    error: (err, stack) => Icon(Icons.error))
-                : SizedBox(),
+                    error: (err, stack) => const Icon(Icons.error))
+                : const SizedBox(),
           ),
-          other == null
-              ? streamMyUser.when(
+          if (other == null) streamMyUser.when(
                   data: (user) {
                     return Column(
                       children: user.genres
                           .map((e) => ListTile(
                                 title: Text(
-                                  e ?? '',
+                                  e?.toString() ?? '',
                                   style: Theme.of(context).textTheme.bodyText1,
                                 ),
                                 trailing: IconButton(
@@ -585,12 +581,11 @@ class Profil extends HookWidget {
                             valueColor: AlwaysStoppedAnimation<Color>(
                                 Theme.of(context).colorScheme.primary)),
                       ),
-                  error: (err, stack) => Icon(Icons.error))
-              : Column(
+                  error: (err, stack) => const Icon(Icons.error)) else Column(
                   children: other.genres
                       .map((e) => ListTile(
                             title: Text(
-                              e ?? '',
+                              e?.toString() ?? '',
                               style: Theme.of(context).textTheme.bodyText1,
                             ),
                             trailing: IconButton(
@@ -601,7 +596,7 @@ class Profil extends HookWidget {
                           ))
                       .toList(),
                 ),
-          Divider(),
+          const Divider(),
           ListTile(
             leading: Text(
               'Types:',
@@ -623,16 +618,15 @@ class Profil extends HookWidget {
                               valueColor: AlwaysStoppedAnimation<Color>(
                                   Theme.of(context).colorScheme.primary)),
                         ),
-                    error: (err, stack) => Icon(Icons.error))
-                : SizedBox(),
+                    error: (err, stack) => const Icon(Icons.error))
+                : const SizedBox(),
           ),
-          other == null
-              ? streamMyUser.when(
+          if (other == null) streamMyUser.when(
                   data: (user) => Column(
                         children: user.types
                             .map((e) => ListTile(
                                   title: Text(
-                                    e ?? '',
+                                    e?.toString() ?? '',
                                     style:
                                         Theme.of(context).textTheme.bodyText1,
                                   ),
@@ -651,12 +645,11 @@ class Profil extends HookWidget {
                             valueColor: AlwaysStoppedAnimation<Color>(
                                 Theme.of(context).colorScheme.primary)),
                       ),
-                  error: (err, stack) => Icon(Icons.error))
-              : Column(
+                  error: (err, stack) => const Icon(Icons.error)) else Column(
                   children: other.types
                       .map((e) => ListTile(
                             title: Text(
-                              e ?? '',
+                              e?.toString() ?? '',
                               style: Theme.of(context).textTheme.bodyText1,
                             ),
                             trailing: IconButton(
@@ -667,7 +660,7 @@ class Profil extends HookWidget {
                           ))
                       .toList(),
                 ),
-          Divider(),
+          const Divider(),
           ListTile(
             leading: Icon(FontAwesomeIcons.envelope,
                 color: Theme.of(context).colorScheme.onBackground),
@@ -685,9 +678,9 @@ class Profil extends HookWidget {
 class CustomShapeBorder extends ContinuousRectangleBorder {
   @override
   Path getOuterPath(Rect rect, {TextDirection textDirection}) {
-    final double innerCircleRadius = 150.0;
+    const double innerCircleRadius = 150.0;
 
-    Path path = Path();
+    final Path path = Path();
     path.lineTo(0, rect.height);
     path.quadraticBezierTo(rect.width / 2 - (innerCircleRadius / 2) - 30,
         rect.height + 15, rect.width / 2 - 75, rect.height + 50);

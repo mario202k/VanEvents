@@ -1,10 +1,11 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 
-enum MyMessageType { text, image, reply }
+enum MyMessageType { text, image, reply, call }
 enum MyMessageReplyType { text, image }
 
+
 class MyMessage {
-  final String id;
+  final String id;//channelId
   final String idFrom;
   final String idTo;
   final String message;
@@ -13,18 +14,18 @@ class MyMessage {
   final String replyMessageId;
   final MyMessageReplyType replyType;
 
-  MyMessage(
-      {this.id,
+  MyMessage({
+      this.id,
       this.idFrom,
       this.idTo,
       this.message,
       this.date,
       this.type,
       this.replyMessageId,
-      this.replyType});
+      this.replyType,
+  });
 
   factory MyMessage.fromMap(Map<String, dynamic> map) {
-    Timestamp time = map['date'] ?? '';
 
     MyMessageType myMessageType;
     switch (map['type'] as String) {
@@ -36,6 +37,9 @@ class MyMessage {
         break;
       case 'MyMessageType.reply':
         myMessageType = MyMessageType.reply;
+        break;
+      case 'MyMessageType.call':
+        myMessageType = MyMessageType.call;
         break;
     }
 
@@ -54,7 +58,7 @@ class MyMessage {
       idFrom: map['idFrom'] as String,
       idTo: map['idTo'] as String,
       message: map['message'] as String,
-      date: time.toDate() ?? DateTime.now(),
+      date: (map['date'] as Timestamp).toDate() ?? DateTime.now(),
       type: myMessageType,
       replyMessageId: map['replyMessageId'] as String,
       replyType: myMessageReplyType,
@@ -64,14 +68,14 @@ class MyMessage {
   Map<String, dynamic> toMap() {
     // ignore: unnecessary_cast
     return {
-      'id': this.id,
-      'idFrom': this.idFrom,
-      'idTo': this.idTo,
-      'message': this.message,
+      'id': id,
+      'idFrom': idFrom,
+      'idTo': idTo,
+      'message': message,
       'date': FieldValue.serverTimestamp(),
-      'type': this.type.toString(),
-      'replyMessageId': this.replyMessageId ?? '',
-      'replyType': this.replyType.toString() ?? '',
+      'type': type.toString(),
+      'replyMessageId': replyMessageId ?? '',
+      'replyType': replyType.toString() ?? '',
     } as Map<String, dynamic>;
   }
 
@@ -88,6 +92,9 @@ class MyMessage {
       case 'MyMessageType.reply':
         myMessageType = MyMessageType.reply;
         break;
+      case 'MyMessageType.call':
+        myMessageType = MyMessageType.call;
+        break;
     }
     MyMessageReplyType myMessageReplyType;
     switch (data['replyType'] as String) {
@@ -99,15 +106,15 @@ class MyMessage {
         break;
     }
     return MyMessage(
-        id: data['id'] ?? '',
-        idFrom: data['idFrom'] ?? '',
-        idTo: data['idTo'] ?? '',
+        id: data['id'] as String,
+        idFrom: data['idFrom'] as String,
+        idTo: data['idTo'] as String,
         message: data['aps'] != null
-            ? data['aps']['alert']['body']
-            : data['notification']['body'],
-        date: DateTime.parse(data['date']) ?? DateTime.now(),
+            ? data['aps']['alert']['body'] as String
+            : data['notification']['body'] as String,
+        date: DateTime.parse(data['date'] as String) ?? DateTime.now(),
         type: myMessageType,
-        replyMessageId: data['replyMessageId'],
+        replyMessageId: data['replyMessageId'] as String,
         replyType: myMessageReplyType);
   }
 
@@ -123,6 +130,9 @@ class MyMessage {
       case 'MyMessageType.reply':
         myMessageType = MyMessageType.reply;
         break;
+      case 'MyMessageType.call':
+        myMessageType = MyMessageType.call;
+        break;
     }
 
     MyMessageReplyType myMessageReplyType;
@@ -136,14 +146,14 @@ class MyMessage {
     }
 
     return MyMessage(
-        id: data['data']['id'] ?? '',
-        idFrom: data['data']['idFrom'] ?? '',
-        idTo: data['data']['idTo'] ?? '',
-        message: data['notification']['body'] ?? '',
-        date: DateTime.parse(data['data']['date'])  ?? DateTime.now() ,
+        id: data['data']['id'] as String,
+        idFrom: data['data']['idFrom'] as String,
+        idTo: data['data']['idTo'] as String,
+        message: data['notification']['body'] as String,
+        date: DateTime.parse(data['data']['date'] as String)  ?? DateTime.now() ,
         type: myMessageType,
         replyType: myMessageReplyType,
-        replyMessageId: data['data']['replyMessageId']);
+        replyMessageId: data['data']['replyMessageId']as String,);
   }
 
   @override

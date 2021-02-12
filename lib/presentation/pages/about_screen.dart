@@ -14,7 +14,7 @@ class AboutScreen extends HookWidget {
     return ModelScreen(
       child: Scaffold(
         appBar: AppBar(
-          title: Text('À propos'),
+          title: const Text('À propos'),
         ),
         body: ModelBody(
           child: Consumer(builder: (context, watch, child) {
@@ -35,12 +35,10 @@ class AboutScreen extends HookWidget {
                         );
                       }
 
-                      final myContent = SplayTreeMap.from(
+                      final SplayTreeMap<int,int> myContent = SplayTreeMap.from(
                           about.content,
                           (key1, key2) => key1
                               .compareTo(key2));
-
-
 
                       return Column(
                         children: [
@@ -53,7 +51,7 @@ class AboutScreen extends HookWidget {
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 Text(
-                                  keys,
+                                  keys.toString(),
                                   style:
                                   Theme.of(context).textTheme.headline5,
                                 ),
@@ -74,8 +72,8 @@ class AboutScreen extends HookWidget {
                                   Theme.of(context).colorScheme.primary)),
                         ),
                     error: (e, s) {
-                      print(e);
-                      print(s);
+                      debugPrint(e.toString());
+                      debugPrint(s.toString());
                       return Center(
                           child: Text(
                         'Erreur$e',

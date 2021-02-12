@@ -15,7 +15,7 @@ class Walkthrough extends StatefulWidget {
 
 class _WalkthroughState extends State<Walkthrough> {
   final int _numPages = 4;
-  final PageController _pageController = PageController(initialPage: 0);
+  final PageController _pageController = PageController();
   int _currentPage = 0;
   final Map<String, Map<String,String>> nameAnimation = {
     'assets/animations/easypurchase.flr': {
@@ -31,7 +31,7 @@ class _WalkthroughState extends State<Walkthrough> {
   };
 
   List<Widget> _buildPageIndicator() {
-    List<Widget> list = [];
+    final List<Widget> list = [];
     for (int i = 0; i < _numPages; i++) {
       list.add(i == _currentPage ? _indicator(true) : _indicator(false));
     }
@@ -68,22 +68,22 @@ class _WalkthroughState extends State<Walkthrough> {
 
   Widget _indicator(bool isActive) {
     return AnimatedContainer(
-      duration: Duration(milliseconds: 150),
-      margin: EdgeInsets.symmetric(horizontal: 8.0),
+      duration: const Duration(milliseconds: 150),
+      margin: const EdgeInsets.symmetric(horizontal: 8.0),
       height: 8.0,
       width: isActive ? 24.0 : 16.0,
       decoration: BoxDecoration(
         color: isActive
             ? Theme.of(context).colorScheme.secondary
             : Theme.of(context).colorScheme.onPrimary,
-        borderRadius: BorderRadius.all(Radius.circular(12)),
+        borderRadius: const BorderRadius.all(Radius.circular(12)),
       ),
     );
   }
 
   Widget myFlareAnim({String name, String animation, String comment}) {
     return Padding(
-      padding: EdgeInsets.all(40.0),
+      padding: const EdgeInsets.all(40.0),
       child: Wrap(
         children: [
           Center(
@@ -101,7 +101,6 @@ class _WalkthroughState extends State<Walkthrough> {
                         )
                       : FlareActor(
                           name,
-                          alignment: Alignment.center,
                           animation: animation,
                         );
                 }),
@@ -126,7 +125,7 @@ class _WalkthroughState extends State<Walkthrough> {
         body: LayoutBuilder(
           builder: (BuildContext context, BoxConstraints viewportConstraints) {
             return SingleChildScrollView(
-              physics: ClampingScrollPhysics(),
+              physics: const ClampingScrollPhysics(),
               child: ConstrainedBox(
                 constraints: BoxConstraints(
                   minWidth: viewportConstraints.maxWidth,
@@ -161,7 +160,7 @@ class _WalkthroughState extends State<Walkthrough> {
                       SizedBox(
                         height: (MediaQuery.of(context).size.width * 7) / 4.25,
                         child: PageView(
-                          physics: ClampingScrollPhysics(),
+                          physics: const ClampingScrollPhysics(),
                           controller: _pageController,
                           onPageChanged: (int page) {
                             setState(() {
@@ -290,7 +289,7 @@ class _WalkthroughState extends State<Walkthrough> {
                   },
                   child: Center(
                     child: Padding(
-                      padding: EdgeInsets.only(bottom: 30.0),
+                      padding: const EdgeInsets.only(bottom: 30.0),
                       child: Text(
                         'Démarrer',
                         style: TextStyle(
@@ -308,7 +307,7 @@ class _WalkthroughState extends State<Walkthrough> {
                 height: 80,
                 decoration: BoxDecoration(
                   color: Theme.of(context).colorScheme.primary,
-                  borderRadius: BorderRadius.only(
+                  borderRadius: const BorderRadius.only(
                     topLeft: Radius.circular(40.0),
                     topRight: Radius.circular(40.0),
                   ),
@@ -320,13 +319,12 @@ class _WalkthroughState extends State<Walkthrough> {
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: _buildPageIndicator(),
                     ),
-                    _currentPage != _numPages - 1
-                        ? Align(
+                    if (_currentPage != _numPages - 1) Align(
                             alignment: FractionalOffset.bottomRight,
                             child: FlatButton(
                               onPressed: () {
                                 _pageController.nextPage(
-                                  duration: Duration(milliseconds: 500),
+                                  duration: const Duration(milliseconds: 500),
                                   curve: Curves.ease,
                                 );
                               },
@@ -339,7 +337,7 @@ class _WalkthroughState extends State<Walkthrough> {
                                     style:
                                         Theme.of(context).textTheme.bodyText2,
                                   ),
-                                  SizedBox(width: 10.0),
+                                  const SizedBox(width: 10.0),
                                   Icon(
                                     Icons.arrow_forward,
                                     color:
@@ -349,8 +347,7 @@ class _WalkthroughState extends State<Walkthrough> {
                                 ],
                               ),
                             ),
-                          )
-                        : SizedBox(),
+                          ) else const SizedBox(),
                   ],
                 ),
               ),

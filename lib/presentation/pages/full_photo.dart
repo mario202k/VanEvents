@@ -7,7 +7,7 @@ class FullPhoto extends StatelessWidget {
   final String url;
   final File file;
 
-  FullPhoto({Key key, @required this.url, this.file}) : super(key: key);
+  const FullPhoto({Key key, @required this.url, this.file}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -28,32 +28,18 @@ class FullPhoto extends StatelessWidget {
   }
 }
 
-class FullPhotoScreen extends StatefulWidget {
+class FullPhotoScreen extends StatelessWidget {
   final String url;
   final File file;
 
-  FullPhotoScreen({Key key, @required this.url, this.file}) : super(key: key);
 
-  @override
-  State createState() => FullPhotoScreenState(url: url);
-}
-
-class FullPhotoScreenState extends State<FullPhotoScreen> {
-  final String url;
-
-  FullPhotoScreenState({Key key, @required this.url});
-
-  @override
-  void initState() {
-    super.initState();
-  }
+  const FullPhotoScreen({this.url, this.file});
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-        child: PhotoView(
-            imageProvider: widget.url == null
-                ? FileImage(widget.file)
-                : NetworkImage(url)));
+    return PhotoView(
+        imageProvider: url == null
+            ? FileImage(file)
+            : NetworkImage(url) as ImageProvider);
   }
 }

@@ -1,29 +1,36 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 
-class ChatMembre{
+class ChatMembre {
   final String id;
   final DateTime lastReading;
+  final DateTime lastReceived;
   final bool isReading;
   final bool isWriting;
 
-  ChatMembre({
-      this.id, this.lastReading, this.isReading,this.isWriting});
+  ChatMembre(
+      {this.id,
+      this.lastReading,
+      this.lastReceived,
+      this.isReading,
+      this.isWriting});
 
   Map<String, dynamic> toMap() {
     return {
-      'id': this.id,
-      'lastReading': this.lastReading,
-      'isReading': this.isReading,
-      'isWriting': this.isWriting,
+      'id': id,
+      'lastReading': lastReading,
+      'lastReceived': lastReceived,
+      'isReading': isReading,
+      'isWriting': isWriting,
     };
   }
 
-  factory ChatMembre.fromMap(Map<String, dynamic> map)  {
-    Timestamp lastReading = map['lastReading'] ?? Timestamp.now();
-
-    return new ChatMembre(
+  factory ChatMembre.fromMap(Map<String, dynamic> map) {
+    return ChatMembre(
       id: map['id'] as String,
-      lastReading: lastReading?.toDate(),
+      lastReading:
+          (map['lastReading'] as Timestamp ?? Timestamp.now())?.toDate(),
+      lastReceived:
+          (map['lastReceived'] as Timestamp ?? Timestamp.now())?.toDate(),
       isReading: map['isReading'] as bool,
       isWriting: map['isWriting'] as bool,
     );
@@ -31,6 +38,6 @@ class ChatMembre{
 
   @override
   String toString() {
-    return 'ChatMembre{id: $id, lastReading: $lastReading, isReading: $isReading, isWriting: $isWriting}';
+    return 'ChatMembre{id: $id, lastReading: $lastReading, lastReceived: $lastReceived, isReading: $isReading, isWriting: $isWriting}';
   }
 }

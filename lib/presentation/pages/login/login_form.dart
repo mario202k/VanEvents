@@ -35,7 +35,6 @@ class LoginForm extends HookWidget {
 
   @override
   Widget build(BuildContext context) {
-    print('LoginForm');
 
     final boolToggle = useProvider(boolToggleProvider);
     final myUserRepo = useProvider(myUserRepository);
@@ -44,7 +43,6 @@ class LoginForm extends HookWidget {
 
     return BlocListener<LoginBloc, LoginState>(
       listener: (context, state) {
-        print(state);
         if (state.isFailure) {
           Scaffold.of(context)
             ..hideCurrentSnackBar()
@@ -80,7 +78,6 @@ class LoginForm extends HookWidget {
       },
       child: BlocBuilder<LoginBloc, LoginState>(
         builder: (context, state) {
-          print('BlocBuilder');
 
           return Align(
             alignment: Alignment.bottomCenter,
@@ -89,7 +86,6 @@ class LoginForm extends HookWidget {
               child: LimitedBox(
                 maxWidth: 500,
                 child: Stack(
-                  fit: StackFit.loose,
                   overflow: Overflow.visible,
                   alignment: Alignment.center,
                   children: [
@@ -102,12 +98,10 @@ class LoginForm extends HookWidget {
                           maxWidth: 500,
                           child: FlareActor(
                             'assets/animations/logo.flr',
-                            alignment: Alignment.center,
                             animation: 'disparaitre',
                             fit: BoxFit.fitHeight,
                             callback: (str) {
-                              print(str);
-                              print('//');
+
                               flareControl.play('dance');
                             },
                             controller: flareControl,
@@ -121,7 +115,7 @@ class LoginForm extends HookWidget {
                         maxHeight: 800,
                         maxWidth: 500,
                         child: Container(
-                          margin: EdgeInsets.symmetric(horizontal: 80) ,
+                          margin: const EdgeInsets.symmetric(horizontal: 80) ,
                           child: Column(
                             mainAxisSize: MainAxisSize.min,
                             children: <Widget>[
@@ -142,7 +136,6 @@ class LoginForm extends HookWidget {
                                             .colorScheme
                                             .onBackground,
                                         name: 'Email',
-                                        maxLines: 1,
                                         decoration: InputDecoration(
                                           labelText: 'Email',
                                           icon: Icon(
@@ -164,7 +157,7 @@ class LoginForm extends HookWidget {
                                         },
                                         controller: _emailController,
                                         onChanged: (val) {
-                                          if (_emailController.text.length == 0) {
+                                          if (_emailController.text.isEmpty) {
                                             _emailController.clear();
                                           }
                                         },
@@ -190,7 +183,6 @@ class LoginForm extends HookWidget {
                                                   .colorScheme
                                                   .onBackground,
                                               name: 'Mot de passe',
-                                              maxLines: 1,
                                               obscureText: watch(boolToggleProvider)
                                                   .obscureTextLogin,
                                               decoration: InputDecoration(
@@ -209,7 +201,7 @@ class LoginForm extends HookWidget {
                                                       .colorScheme
                                                       .onBackground,
                                                   iconSize: 20,
-                                                  icon: Icon(FontAwesomeIcons.eye),
+                                                  icon: const Icon(FontAwesomeIcons.eye),
                                                 ),
                                               ),
                                               focusNode: _nodePassword,
@@ -222,8 +214,7 @@ class LoginForm extends HookWidget {
                                               },
                                               controller: _passwordController,
                                               onChanged: (val) {
-                                                if (_passwordController.text.length ==
-                                                    0) {
+                                                if (_passwordController.text.isEmpty) {
                                                   _passwordController.clear();
                                                 }
                                               },
@@ -244,17 +235,15 @@ class LoginForm extends HookWidget {
                                 ),
                               ),
                               Padding(
-                                padding: EdgeInsets.symmetric(vertical: 20),
+                                padding: const EdgeInsets.symmetric(vertical: 20),
                                 child: Column(
                                   crossAxisAlignment: CrossAxisAlignment.stretch,
                                   mainAxisSize: MainAxisSize.min,
                                   children: <Widget>[
-                                    !state.isSubmitting
-                                        ? LoginButton(
+                                    if (!state.isSubmitting) LoginButton(
                                       onPressed: () => _onFormSubmitted(
                                           context, myUserRepo),
-                                    )
-                                        : Center(
+                                    ) else Center(
                                       child: CircularProgressIndicator(
                                           valueColor:
                                           AlwaysStoppedAnimation<Color>(
@@ -266,7 +255,7 @@ class LoginForm extends HookWidget {
                                     Consumer(builder: (context, watch, child) {
                                       return SignInWithAppleButton(
                                         borderRadius:
-                                        BorderRadius.all(Radius.circular(25)),
+                                        const BorderRadius.all(Radius.circular(25)),
                                         text: 'avec Apple',
                                         style: watch(settingsProvider)
                                             .onGoingTheme ==
@@ -286,14 +275,9 @@ class LoginForm extends HookWidget {
                                         BlocProvider.of<LoginBloc>(context)
                                             .add(LoginWithAnonymous(myUserRepo));
                                       },
-                                      child: Text('Anonyme'),
+                                      child: const Text('Anonyme'),
                                     ),
                                     FlatButton(
-                                      child: Text(
-                                        'Mot de passe oublié',
-                                        style:
-                                        Theme.of(context).textTheme.headline5,
-                                      ),
                                       onPressed: () {
                                         Navigator.of(context).push(
                                           MaterialPageRoute(builder: (context) {
@@ -301,6 +285,11 @@ class LoginForm extends HookWidget {
                                           }),
                                         );
                                       },
+                                      child: Text(
+                                        'Mot de passe oublié',
+                                        style:
+                                        Theme.of(context).textTheme.headline5,
+                                      ),
                                     ),
                                     RaisedButton(
                                       onPressed: () {
@@ -310,7 +299,7 @@ class LoginForm extends HookWidget {
                                           }),
                                         );
                                       },
-                                      child: Text('J\'organise'),
+                                      child: const Text('J\'organise'),
                                     ),
                                     Hero(
                                       tag: 'vanevents',

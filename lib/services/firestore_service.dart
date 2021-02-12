@@ -3,7 +3,6 @@ import 'dart:io';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_storage/firebase_storage.dart' as firebase_storage;
 import 'package:meta/meta.dart';
-import 'package:van_events_project/domain/models/event.dart';
 
 class FirestoreService {
   FirestoreService._();
@@ -33,9 +32,9 @@ class FirestoreService {
 
   Stream<List<T>> collectionStream<T>({
     @required String path,
-    @required T builder(Map<String, dynamic> data),
-    Query queryBuilder(Query query),
-    int sort(T lhs, T rhs),
+    T Function(Map<String, dynamic> data) builder,
+    Query Function(Query query) queryBuilder,
+    int Function(T lhs, T rhs) sort,
   }) {
     Query query = FirebaseFirestore.instance.collection(path);
     if (queryBuilder != null) {
@@ -56,9 +55,9 @@ class FirestoreService {
 
   Future<List<T>> collectionFuture<T>({
     @required String path,
-    @required T builder(Map<String, dynamic> data),
-    Query queryBuilder(Query query),
-    int sort(T lhs, T rhs),
+    T Function(Map<String, dynamic> data) builder,
+    Query Function(Query query) queryBuilder,
+    int Function(T lhs, T rhs) sort,
   }) async {
     Query query = FirebaseFirestore.instance.collection(path);
     if (queryBuilder != null) {
@@ -80,7 +79,7 @@ class FirestoreService {
 
   Future<T> getDoc<T>({
     @required String path,
-    @required T builder(Map<String, dynamic> data),
+    T Function(Map<String, dynamic> data) builder,
   }) async {
     final DocumentReference reference = FirebaseFirestore.instance.doc(path);
     final DocumentSnapshot doc = await reference.get();
@@ -89,14 +88,14 @@ class FirestoreService {
 
   Stream<T> documentStream<T>({
     @required String path,
-    @required T builder(Map<String, dynamic> data),
+    T Function(Map<String, dynamic> data) builder,
   }) {
     final DocumentReference reference = FirebaseFirestore.instance.doc(path);
     final Stream<DocumentSnapshot> snapshots = reference.snapshots();
     return snapshots.map((snapshot) => builder(snapshot.data()));
   }
 
-  Query getQuery({@required String path, Query queryBuilder(Query query)}) {
+  Query getQuery({@required String path, Query Function(Query query) queryBuilder}) {
     Query query = FirebaseFirestore.instance.collection(path);
     if (queryBuilder != null) {
       query = queryBuilder(query);
@@ -116,30 +115,27 @@ class FirestoreService {
     @required String path,
     @required String contentType,
   }) async {
-    String url;
-    firebase_storage.TaskSnapshot taskSnapshot = await firebase_storage
+    final firebase_storage.TaskSnapshot taskSnapshot = await firebase_storage
         .FirebaseStorage.instance
         .ref()
         .child(path)
         .putFile(
             file, firebase_storage.SettableMetadata(contentType: contentType));
-    print('upload state: ${taskSnapshot.state}');
-    url = await taskSnapshot.ref.getDownloadURL();
-    return url;
+    return taskSnapshot.ref.getDownloadURL();
   }
 
   Future<void> deleteImg({
     @required String path,
     @required String contentType,
   }) async {
-    return await firebase_storage.FirebaseStorage.instance
+    return firebase_storage.FirebaseStorage.instance
         .ref()
         .child(path)
         .delete();
   }
 
   Future<int> nbDocuments(
-      {@required String path, Query queryBuilder(Query query)}) async {
+      {@required String path, Query Function(Query query) queryBuilder}) async {
     Query query = FirebaseFirestore.instance.collection(path);
     if (queryBuilder != null) {
       query = queryBuilder(query);

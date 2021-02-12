@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:van_events_project/domain/repositories/my_user_repository.dart';
-import 'package:van_events_project/providers/toggle_bool.dart';
 
 class AppLifeCycleManager extends StatefulWidget {
   final Widget child;

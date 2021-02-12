@@ -1,4 +1,4 @@
-export './bloc/blocOrganisateur.dart';
+export './bloc/bloc_organisateur.dart';
 export './register_button_organisateur.dart';
 export './register_screen_organisateur.dart';
-export 'widget/aboutYou.dart';
+export 'widget/about_you.dart';

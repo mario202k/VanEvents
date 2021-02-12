@@ -1,6 +1,8 @@
 import 'dart:async';
 import 'dart:io';
 
+import 'package:audioplayers/audio_cache.dart';
+import 'package:audioplayers/audioplayers.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
@@ -22,7 +24,7 @@ class ChatRoomChangeNotifier extends ChangeNotifier {
   Timer _throttle;
   String chatId;
   bool showSendBotton = false;
-  List<MyMessage> oldMessages = List<MyMessage>();
+  List<MyMessage> oldMessages = <MyMessage>[];
   GlobalKey<AnimatedListState> listKey;
   MyChat myChat;
   List<MyUser> myUsersList;
@@ -30,9 +32,9 @@ class ChatRoomChangeNotifier extends ChangeNotifier {
   String imageUrl;
   String nomTitre;
   Stream<MyUser> streamUserFriend;
-  Map<String, File> listPhoto = Map<String, File>();
+  Map<String, File> listPhoto = <String, File>{};
   Map<String, int> listTempMessages =
-      Map<String, int>(); //-1 error; 0 loading; 1 success
+      <String, int>{}; //-1 error; 0 loading; 1 success
   DocumentSnapshot lastDocument;
   int documentLimit = 20;
   bool hasNext = true;
@@ -42,7 +44,7 @@ class ChatRoomChangeNotifier extends ChangeNotifier {
   bool hasError = false;
   bool hasErrorOnFetchingOldMessage = false;
   MyMessage lastOldMessage;
-  List<MyMessage> messages = List<MyMessage>();
+  List<MyMessage> messages = <MyMessage>[];
   BuildContext context;
   MyChatRepository myChatRepo;
   String replyName;
@@ -57,10 +59,10 @@ class ChatRoomChangeNotifier extends ChangeNotifier {
     replyName = name;
     replyMessage = message;
     replyMessageId = messageId;
-    this.replyMessagetype = replyType;
+    replyMessagetype = replyType;
     notifyListeners();
   }
-  setReplyToNull() {
+  void setReplyToNull() {
     replyName = '';
     replyMessage = '';
     replyMessageId = '';
@@ -75,8 +77,8 @@ class ChatRoomChangeNotifier extends ChangeNotifier {
     this.context = context;
     myChatRepo = context.read(myChatRepositoryProvider);
     myChatRepo.setChatId(chatId);
-    messages = List<MyMessage>();
-    oldMessages = List<MyMessage>();
+    messages = <MyMessage>[];
+    oldMessages = <MyMessage>[];
     showSendBotton = false;
     listKey = GlobalKey<AnimatedListState>();
     hasNext = true;
@@ -112,20 +114,20 @@ class ChatRoomChangeNotifier extends ChangeNotifier {
 
       await Future.forEach(oldMessages, (element) async{
         if (element.type == MyMessageType.reply) {
-          MyMessage myMessage = await getReplyMessage(element.replyMessageId);
-          myRepliedMessage.addAll({element.id: myMessage});
+          final MyMessage myMessage = await getReplyMessage(element.replyMessageId as String);
+          myRepliedMessage.addAll({element.id as String: myMessage});
         }
       });
 
       notifyListeners();
     } catch (error) {
-      print(error);
+      debugPrint(error.toString());
       hasError = true;
       notifyListeners();
     }
   }
 
-  void fetchOldMessage() async {
+  Future<void> fetchOldMessage() async {
     if (isFetchingOldMessage) {
       return;
     }
@@ -146,14 +148,34 @@ class ChatRoomChangeNotifier extends ChangeNotifier {
     }
   }
 
-  void myNewMessages(MyMessage myMessage) async {
+  Future<void> myNewMessages(MyMessage myMessage) async {
     if (messages != null && listKey != null) {
+
+      if(myMessage.idFrom  == context.read(myUserProvider).id){
+        final AudioCache audioCache = AudioCache();
+        final AudioPlayer advancedPlayer = AudioPlayer();
+
+
+        if (Platform.isIOS) {
+          if (audioCache.fixedPlayer != null) {
+            audioCache.fixedPlayer.startHeadlessService();
+          }
+          advancedPlayer.startHeadlessService();
+        }
+
+        audioCache.play('sound/send.aac').catchError((e) {
+          debugPrint(e.toString());
+        });
+      }
+
+
+
       if (myMessage.type == MyMessageType.reply) {
-        MyMessage myMessagee = await getReplyMessage(myMessage.replyMessageId);
+        final MyMessage myMessagee = await getReplyMessage(myMessage.replyMessageId);
         myRepliedMessage.addAll({myMessage.id: myMessagee});
       }
       messages.insert(0, myMessage);
-      listKey.currentState.insertItem(0, duration: Duration(milliseconds: 500));
+      listKey.currentState.insertItem(0, duration: const Duration(milliseconds: 500));
 
     }
   }
@@ -168,7 +190,7 @@ class ChatRoomChangeNotifier extends ChangeNotifier {
     notifyListeners();
   }
 
-  setShowSendBotton(bool b) {
+  void setShowSendBotton(bool b) {
 
     showSendBotton = b;
     notifyListeners();
@@ -202,7 +224,7 @@ class ChatRoomChangeNotifier extends ChangeNotifier {
         .get()
         .then((value) {
       if (value.docs.isEmpty) {
-        return List<MyMessage>();
+        return <MyMessage>[];
       }
 
       lastDocument = value.docs.last;
@@ -261,15 +283,15 @@ class ChatRoomChangeNotifier extends ChangeNotifier {
 
   Future<MyMessage> getReplyMessage(String replyMessageId) async{
 
-    return await myChatRepo.getMessage(chatId,replyMessageId);
+    return myChatRepo.getMessage(chatId,replyMessageId);
 
   }
 
   void setAllNull() {
     replyName = null;
     replyMessage = null;
-    this.chatId = null;
-    this.context = null;
+    chatId = null;
+    context = null;
     myChatRepo = null;
     messages = null;
     oldMessages = null;
@@ -281,8 +303,17 @@ class ChatRoomChangeNotifier extends ChangeNotifier {
   }
 
   void setNewTempImage(File file) {
-    this.tempImage = file;
+    tempImage = file;
 
     notifyListeners();
+  }
+
+  void newCall(MyMessage myMessage) {
+    if (messages != null && listKey != null) {
+
+      messages.insert(0, myMessage);
+      listKey.currentState.insertItem(0, duration: const Duration(milliseconds: 500));
+
+    }
   }
 }

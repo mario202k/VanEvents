@@ -13,11 +13,12 @@ class RefundScreen extends HookWidget {
     final tabController = useTabController(initialLength: 3);
 
     return Scaffold(
+      backgroundColor: Theme.of(context).colorScheme.background,
       key: keyRefundScreen,
       appBar: AppBar(
-        title: Text('Remboursement'),
+        title: const Text('Remboursement'),
         bottom: TabBar(
-          tabs: [
+          tabs: const [
             Tab(
               text: 'Nouveau(x)',
             ),
@@ -32,7 +33,7 @@ class RefundScreen extends HookWidget {
         ),
       ),
       body: TabBarView(
-          physics: AlwaysScrollableScrollPhysics(),
+          physics: const AlwaysScrollableScrollPhysics(),
           controller: tabController,
           children: [NewDemand(), Refused(), ForStripe()]),
     );
@@ -80,6 +81,6 @@ String toNormalReason(RefundReason reason) {
 }
 
 String toNormalAmount(int montant) {
-  double amount = montant.toDouble() / 100;
+  final double amount = montant.toDouble() / 100;
   return '${amount.toStringAsFixed(amount.truncateToDouble() == amount ? 0 : 2)} €';
 }

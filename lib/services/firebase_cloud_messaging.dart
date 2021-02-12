@@ -6,30 +6,52 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
+import 'package:uuid/uuid.dart';
 import 'package:van_events_project/domain/models/message.dart';
 import 'package:van_events_project/domain/routing/route.gr.dart';
-import 'package:van_events_project/providers/chat_room_change_notifier.dart';
 import 'package:van_events_project/providers/toggle_bool.dart';
+// import 'package:awesome_notifications/awesome_notifications.dart';
+
+FirebaseMessaging _fcm = FirebaseMessaging();
+
 Future<dynamic> myBackgroundMessageHandler(Map<String, dynamic> message) async {
-  return NotificationHandler().showNotification(message);
+  debugPrint('coucou!!!!!');
+  debugPrint(message.toString());
+  if (message['data']['caller_id'] != null) {
+    var payload = message['data'];
+    var callerId = payload['caller_id'] as String;
+    final callerName = payload['caller_name'] as String;
+    var uuid = payload['uuid'] as String;
+    var imageUrl = payload['imageUrl'] as String;
+
+    ExtendedNavigator.root.push(Routes.pickupScreen,
+        arguments: PickupScreenArguments(nom: callerName, imageUrl: imageUrl));
+
+    return null;
+  } else {
+    String chatId = message["chatId"] as String;
+    String idTo = message['idTo'] as String;
+    FirebaseFirestore.instance
+        .collection('chats')
+        .doc(chatId)
+        .collection('chatMembres')
+        .doc(idTo)
+        .update({'lastReceived': DateTime.now()});
+    return NotificationHandler().showNotificationChatMessage(message);
+  }
 }
 
 class NotificationHandler {
-  String _platformVersion = 'Unknown';
-
+  final String _platformVersion = 'Unknown';
 
   FirebaseFirestore db = FirebaseFirestore.instance;
 
-  FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin;
-
-  FirebaseMessaging _fcm = FirebaseMessaging();
   String chatId = '';
   BuildContext context;
+  String uid;
   StreamSubscription iosSubscription;
-  static final NotificationHandler _singleton =
-      new NotificationHandler._internal();
+  static final NotificationHandler _singleton = NotificationHandler._internal();
 
   factory NotificationHandler() {
     return _singleton;
@@ -39,26 +61,11 @@ class NotificationHandler {
 
   String get platformVersion => _platformVersion;
 
-  initializeFcmNotification(String uid, BuildContext context) async {
+  initializeFcmNotification(String myUid, BuildContext context) async {
     this.context = context;
+    uid = myUid;
 
-    flutterLocalNotificationsPlugin = new FlutterLocalNotificationsPlugin();
-
-    var initializationSettingsAndroid =
-        new AndroidInitializationSettings('launcher_icon');
-    var initializationSettingsIOS = new IOSInitializationSettings(
-        requestSoundPermission: true,
-        requestAlertPermission: true,
-        requestBadgePermission: true,
-        defaultPresentAlert: true,
-        defaultPresentBadge: true,
-        defaultPresentSound: true,
-        onDidReceiveLocalNotification: onDidReceiveLocalNotification);
-    var initializationSettings = new InitializationSettings(
-        android: initializationSettingsAndroid, iOS: initializationSettingsIOS);
-
-    flutterLocalNotificationsPlugin.initialize(initializationSettings,
-        onSelectNotification: onSelectNotification);
+    initLocalNotification();
 
     if (Platform.isIOS) {
       iosSubscription = _fcm.onIosSettingsRegistered.listen((data) {
@@ -66,8 +73,7 @@ class NotificationHandler {
         // save the token  OR subscribe to a topic here
       });
 
-      _fcm.requestNotificationPermissions(IosNotificationSettings(
-          provisional: false, sound: true, badge: true, alert: true));
+      _fcm.requestNotificationPermissions();
     } else {
       //_saveDeviceToken(uid);
     }
@@ -78,61 +84,86 @@ class NotificationHandler {
       onBackgroundMessage:
           Platform.isAndroid ? myBackgroundMessageHandler : null,
       onMessage: (Map<String, dynamic> message) async {
-        print(message);
-        print("////");
+        // await AwesomeNotifications().createNotification(
+        //     content: NotificationContent(
+        //         id: 10,
+        //         channelKey: 'basic_channel',
+        //         title: 'Simple Notification',
+        //         body: 'Simple body'
+        //     )
+        // );
 
-
-        if(message.containsKey('chatId') || message['data']['chatId'] != null ){
-          MyMessage myMessage;
-          String chatId = '';
-          if (Platform.isAndroid) {
-            myMessage = MyMessage.fromAndroidFcm(message);
-            chatId = message['data']['chatId'];
-          } else {
-            myMessage = MyMessage.fromIosFcm(message);
-            chatId = message['chatId'];
-          }
-          if ( myMessage.idFrom != uid && context.read(chatRoomProvider).chatId == null) {
-            showNotification(message);
-          }
-          if(myMessage.idFrom != uid && context.read(chatRoomProvider).chatId == chatId){
-            context.read(chatRoomProvider).myNewMessages(myMessage);
-          }
-        }
-
-        if( message['from'] == 'topics/newEvent'|| message['notification']['title'].toString().startsWith('Nouvel évènement')){
-          showNotification(message);
-        }
-
+        // if (message.containsKey('chatId') ||
+        //     message['data']['chatId'] != null) {
+        //   MyMessage myMessage;
+        //   String chatId = '';
+        //   if (Platform.isAndroid) {
+        //     myMessage = MyMessage.fromAndroidFcm(message);
+        //     chatId = message['data']['chatId'];
+        //   } else {
+        //     myMessage = MyMessage.fromIosFcm(message);
+        //     chatId = message['chatId'];
+        //   }
+        //
+        //   print(chatId);
+        //   print(context.read(chatRoomProvider).chatId);
+        //   if (myMessage.idFrom != uid &&
+        //       context.read(chatRoomProvider).chatId == null) {
+        //     FirebaseFirestore.instance
+        //         .collection('chats')
+        //         .doc(chatId)
+        //         .collection('chatMembres')
+        //         .doc(uid)
+        //         .update({'lastReceived': DateTime.now()});
+        //   } else if (myMessage.idFrom != uid &&
+        //       context.read(chatRoomProvider).chatId == chatId) {
+        //     print('!!!!!');
+        //     context.read(chatRoomProvider).myNewMessages(myMessage);
+        //   }
+        // } else if (message['from'] == 'topics/newEvent' ||
+        //     message['notification']['title']
+        //         .toString()
+        //         .startsWith('Nouvel évènement')) {
+        //   showNotificationChatMessage(message);
+        // } else {
+        //   showCall(message);
+        // }
       },
       onLaunch: (Map<String, dynamic> message) async {
-        if(message['from'] == 'topics/newEvent'|| message['notification']['title'].toString().startsWith('Nouvel évènement')){
-          showNotification(message);
+        if (message['from'] == 'topics/newEvent' ||
+            message['notification']['title']
+                .toString()
+                .startsWith('Nouvel évènement')) {
+          showNotificationChatMessage(message);
           return;
         }
         String chatId = '';
         if (Platform.isAndroid) {
-          chatId = message['data']['chatId'];
+          chatId = message['data']['chatId'] as String;
         } else {
-          chatId = message['chatId'];
+          chatId = message['chatId'] as String;
         }
-
-        ExtendedNavigator.of(context).pushAndRemoveUntil(
-          Routes.chatRoom,
-          ModalRoute.withName(Routes.routeAuthentication),
-          arguments: ChatRoomArguments(chatId: chatId),
-        );
+        if (chatId != null) {
+          ExtendedNavigator.of(context).pushAndRemoveUntil(
+            Routes.chatRoom,
+            ModalRoute.withName(Routes.routeAuthentication),
+            arguments: ChatRoomArguments(chatId: chatId),
+          );
+        }
       },
       onResume: (Map<String, dynamic> message) async {
-        if(message['from'] == 'topics/newEvent'|| message['notification']['title'].toString().startsWith('Nouvel évènement')){
-          showNotification(message);
+        if (message['from'] == 'topics/newEvent' ||
+            message['notification']['title']
+                .toString()
+                .startsWith('Nouvel évènement')) {
+          showNotificationChatMessage(message);
           return;
         }
         String chatId = '';
         if (Platform.isAndroid) {
-          chatId = message['data']['chatId'];
+          chatId = message['data']['chatId'] as String;
         } else {
-          chatId = message['chatId'];
+          chatId = message['chatId'] as String;
         }
 
 //        Navigator.popUntil(context, ModalRoute.withName(Routes.authWidget));
@@ -150,63 +181,179 @@ class NotificationHandler {
     );
   }
 
-  void showNotification(Map<String, dynamic> message) async {
-    print('showNotification');
+  // Future<void> initializeFirebaseService() async {
+  //   String firebaseAppToken;
+  //   bool isFirebaseAvailable;
+  //
+  //   // Platform messages may fail, so we use a try/catch PlatformException.
+  //   try {
+  //     isFirebaseAvailable = await AwesomeNotifications().isFirebaseAvailable;
+  //
+  //     if(isFirebaseAvailable){
+  //       try {
+  //         firebaseAppToken = await AwesomeNotifications().firebaseAppToken;
+  //         debugPrint('Firebase token: $firebaseAppToken');
+  //       } on Exception {
+  //         firebaseAppToken = 'failed';
+  //         debugPrint('Firebase failed to get token');
+  //       }
+  //     }
+  //     else {
+  //       firebaseAppToken = 'unavailable';
+  //       debugPrint('Firebase is not available on this project');
+  //     }
+  //
+  //   } on Exception {
+  //     isFirebaseAvailable = false;
+  //     firebaseAppToken = 'Firebase is not available on this project';
+  //   }
+  //
+  //   // If the widget was removed from the tree while the asynchronous platform
+  //   // message was in flight, we want to discard the reply rather than calling
+  //   // setState to update our non-existent appearance.
+  //   if (!mounted){
+  //     _firebaseAppToken = firebaseAppToken;
+  //     return;
+  //   }
+  //
+  //   setState(() {
+  //     _firebaseAppToken = firebaseAppToken;
+  //   });
+  // }
 
-    if(!context.read(boolToggleProvider).isNextEvents && message.containsKey('newEventId')){
+  Future<void> initLocalNotification() async {
+    // // initialise the plugin. app_icon needs to be a added as a drawable resource to the Android head project
+    // const AndroidInitializationSettings initializationSettingsAndroid =
+    // AndroidInitializationSettings('app_icon');
+    // final IOSInitializationSettings initializationSettingsIOS =
+    // IOSInitializationSettings(
+    //     onDidReceiveLocalNotification: onDidReceiveLocalNotification);
+    //
+    // final InitializationSettings initializationSettings = InitializationSettings(
+    //     android: initializationSettingsAndroid,
+    //     iOS: initializationSettingsIOS);
+    // await flutterLocalNotificationsPlugin.initialize(initializationSettings,
+    //     onSelectNotification: onSelectNotification);
+
+    // AwesomeNotifications().initialize(
+    //     null,
+    //     [
+    //       NotificationChannel(
+    //           channelKey: 'basic_channel',
+    //           channelName: 'Basic notifications',
+    //           channelDescription: 'Notification channel for basic tests',
+    //           defaultColor: Color(0xFF9D50DD),
+    //           ledColor: Colors.white
+    //       )
+    //
+    //     ]
+    // );
+    //
+    // AwesomeNotifications().isNotificationAllowed().then((isAllowed) {
+    //   if (!isAllowed) {
+    //     // Insert here your friendly dialog box before call the request method
+    //     // This is very important to not harm the user experience
+    //     AwesomeNotifications().requestPermissionToSendNotifications();
+    //   }
+    // });
+    //
+    // AwesomeNotifications().actionStream.listen(
+    //         (receivedNotification){
+    //           print(receivedNotification.payload);
+    //
+    //           //
+    //           // ExtendedNavigator.root.push(Routes.pickupScreen,
+    //           //     arguments: PickupScreenArguments(nom: callerName, imageUrl: imageUrl));
+    //
+    //
+    //         }
+    // );
+  }
+
+  void setMessageReceived(String chatId, String uid, QuerySnapshot docs) {
+    List<MyMessage> myList =
+        List.from(docs.docs.map((e) => MyMessage.fromMap(e.data())));
+
+    myList.sort((a, b) => a.date.compareTo(b.date));
+
+    FirebaseFirestore.instance
+        .collection('chats')
+        .doc(chatId)
+        .collection('chatMembres')
+        .doc(uid)
+        .update({'lastReceived': myList.last.date});
+  }
+
+  Future<void> showNotificationChatMessage(Map<String, dynamic> message) async {
+    if (!context.read(boolToggleProvider).isNextEvents &&
+        message.containsKey('newEventId')) {
       return;
     }
-    if(!context.read(boolToggleProvider).isMessages && message.containsKey('chatId')){
+    if (!context.read(boolToggleProvider).isMessages &&
+        message.containsKey('chatId')) {
       return;
     }
+
     String title, type, body, chatId;
-
 
     if (Platform.isIOS) {
       title = message['aps'] != null
-          ? message['aps']['alert']['title']
-          : message['notification']['title'];
-      type = message['type'];
+          ? message['aps']['alert']['title'] as String
+          : message['notification']['title'] as String;
+      type = message['type'] as String;
       body = message['aps'] != null
-          ? message['aps']['alert']['body']
-          : message['notification']['body'];
-      chatId = message['chatId'];
+          ? message['aps']['alert']['body'] as String
+          : message['notification']['body'] as String;
+      chatId = message['chatId'] as String;
     } else {
-      title = message['notification']['title'];
-      type = message['data']['type'];
-      body = message['notification']['body'];
-      chatId = message['data']['chatId'];
+      title = message['notification']['title'] as String;
+      type = message['data']['type'] as String;
+      body = message['notification']['body'] as String;
+      chatId = message['data']['chatId'] as String;
     }
 
-    if( message['from'] == 'topics/newEvent'|| message['notification']['title'].toString().startsWith('Nouvel évènement')){
+    if (message['from'] == 'topics/newEvent' ||
+        message['notification']['title']
+            .toString()
+            .startsWith('Nouvel évènement')) {
       type = MyMessageType.text.toString();
     }
 
-    var androidPlatformChannelSpecifics = AndroidNotificationDetails(
-        'com.vanevents.VanEvents',
-        'VanEvents',
-        'VanEvents notification',
-        playSound: true,
-        enableVibration: true,
-        importance: Importance.max,
-        priority: Priority.high,
-        ticker: 'ticker');
-    var iOSPlatformChannelSpecifics = IOSNotificationDetails(
-        badgeNumber: 0,
-        presentAlert: true,
-        presentBadge: true,
-        presentSound: true);
-    var platformChannelSpecifics = NotificationDetails(
-        android: androidPlatformChannelSpecifics,
-        iOS: iOSPlatformChannelSpecifics);
+    // var androidPlatformChannelSpecifics = AndroidNotificationDetails(
+    //     'com.vanevents.VanEvents', 'VanEvents', 'VanEvents notification',
+    //     playSound: true,
+    //     sound: RawResourceAndroidNotificationSound(
+    //         'android/app/src/main/res/raw/sonnerie.aac'),
+    //     enableVibration: true,
+    //     importance: Importance.max,
+    //     priority: Priority.high,
+    //     ticker: 'ticker');
+    // var iOSPlatformChannelSpecifics = IOSNotificationDetails(
+    //     badgeNumber: 0,
+    //     presentAlert: true,
+    //     presentBadge: true,
+    //     presentSound: true);
+    // var platformChannelSpecifics = NotificationDetails(
+    //     android: androidPlatformChannelSpecifics,
+    //     iOS: iOSPlatformChannelSpecifics);
+    //
+    // await flutterLocalNotificationsPlugin.show(
+    //     0,
+    //     title,
+    //     type == MyMessageType.text.toString() ? body : 'image',
+    //     platformChannelSpecifics,
+    //     payload: chatId);
 
-    await flutterLocalNotificationsPlugin.show(
-        0, title, type == MyMessageType.text.toString() ? body : 'image', platformChannelSpecifics,
-        payload: chatId);
+    FirebaseFirestore.instance
+        .collection('chats')
+        .doc(chatId)
+        .collection('chatMembres')
+        .doc(uid)
+        .update({'lastReceived': DateTime.now()});
   }
 
-  _saveDeviceToken(String uid) async {
-    _fcm.getToken().then((token) async {
+  Future<void> _saveDeviceToken(String uid) async {
+    await _fcm.getToken().then((token) async {
       await db //supprimer s'il en reste
           .collection('users')
           .doc(uid)
@@ -236,7 +383,7 @@ class NotificationHandler {
         }, SetOptions(merge: true));
       });
     }).catchError((err) {
-      print(err);
+      debugPrint(err.toString());
     });
 
     // subscribeTo();
@@ -304,7 +451,7 @@ class NotificationHandler {
 //  }
 
   Future onSelectNotification(String payload) async {
-    if(payload != null){
+    if (payload != null) {
       final newRouteName = Routes.chatRoom;
       bool isNewRouteSameAsCurrent = false;
 
@@ -321,49 +468,9 @@ class NotificationHandler {
           arguments: ChatRoomArguments(chatId: payload),
         );
       }
-    }else{
+    } else {
       await ExtendedNavigator.of(context).push(Routes.routeAuthentication);
     }
-
-//    if (payload != null) {
-//      debugPrint('notification payload: ' + payload);
-//    }
-
-    //await flutterLocalNotificationsPlugin.cancelAll();
-    //Route route = MaterialPageRoute(builder: (context) => ChatRoom(chatId));
-    // if(route.isActive){
-    //   await ExtendedNavigator.of(context).push(
-    //     Routes.chatRoom,
-    //     arguments: ChatRoomArguments(chatId: payload),
-    //   );
-    // }
-
-    // final routeName = route?.settings?.name;
-    // print(routeName);
-    // print('!!!!');
-    // print(route.isCurrent);
-    // print(route.isActive);
-    // print(route.isFirst);
-    // if (routeName != null && routeName == nav) {
-    //   Navigator.of(context).pushNamed(nav);
-    //   print(route.settings.name);
-    // }
-    //
-    // await Navigator.of(context).pushNamedAndRemoveUntil
-    //   (Routes.chatRoom, (route) => false,arguments: chatId);
-
-    // await ExtendedNavigator.of(context).pushAndRemoveUntil(
-    //   Routes.chatRoom,(route)=>
-    //   ModalRoute.withName(Routes.authentication).,
-    //   arguments: ChatRoomArguments(chatId: payload),
-    // );
-
-    //ExtendedNavigator.ofRouter<Router>().pushNamed(Routes.chatRoom,arguments: ChatRoomArguments(chatId: payload) );
-    //await ExtendedNavigator(router: null).pushNamed(Routes.baseScreens);
-    // await Navigator.push(
-    //   context,
-    //   new MaterialPageRoute(builder: (context) => new SecondScreen(payload)),
-    // );
   }
 
   Future<void> onDidReceiveLocalNotification(
@@ -393,6 +500,22 @@ class NotificationHandler {
     // );
     //onSelectNotification(payload);
   }
+
+  Future showCall(Map<String, dynamic> message) {
+    var payload = message['data'];
+    var callerId = payload['caller_id'] as String;
+    var callerName = payload['caller_name'] as String;
+    var uuid = payload['uuid'] as String;
+    var imageUrl = payload['imageUrl'] as String;
+
+    final callUUID = uuid ?? Uuid().v4();
+
+    ExtendedNavigator.root.push(Routes.pickupScreen,
+        arguments: PickupScreenArguments(nom: callerName, imageUrl: imageUrl));
+
+    return Future.value();
+  }
+
 //
 //  Future<String> _downloadAndSaveImage(String url, String fileName) async {
 //    var directory = await getApplicationDocumentsDirectory();

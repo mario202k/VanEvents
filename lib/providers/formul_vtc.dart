@@ -3,11 +3,9 @@ import 'package:flutter_form_builder/flutter_form_builder.dart';
 import 'package:flutter_polyline_points/flutter_polyline_points.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:google_maps_webservice/places.dart';
-import 'package:hooks_riverpod/all.dart';
+import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:van_events_project/domain/models/formule.dart';
-import 'package:van_events_project/domain/repositories/stripe_repository.dart';
 import 'package:van_events_project/presentation/pages/formula_choice.dart';
-import 'package:van_events_project/presentation/widgets/show.dart';
 
 final formuleVTCProvider = ChangeNotifierProvider<FormuleVTC>((ref) {
   return FormuleVTC();
@@ -41,13 +39,13 @@ class FormuleVTC extends ChangeNotifier {
 
   FormuleVTC._internal();
 
-  init() {
+  void init() {
     showSpinner = false;
     isNotDisplay = true;
-    formuleParticipant = Map<CardFormula, CardFormIntParticipant>();
-    listFbKey = Map<Formule, List<GlobalKey<FormBuilderState>>>();
+    formuleParticipant = <CardFormula, CardFormIntParticipant>{};
+    listFbKey = <Formule, List<GlobalKey<FormBuilderState>>>{};
 
-    formules = List<Formule>();
+    formules = <Formule>[];
     indexParticipants = 0;
     totalCost = 0;
     markers = {};
@@ -61,7 +59,6 @@ class FormuleVTC extends ChangeNotifier {
   }
 
   void myDispose() {
-    print('disposeChangeNotifier!!');
       showSpinner = null;
       isNotDisplay = null;
       formuleParticipant =
@@ -87,100 +84,98 @@ class FormuleVTC extends ChangeNotifier {
 
   }
 
-  setplacesDetailsResponse(PlacesDetailsResponse placesDetailsResponse) {
+  void setplacesDetailsResponse(PlacesDetailsResponse placesDetailsResponse) {
     this.placesDetailsResponse = placesDetailsResponse;
   }
 
-  setcontroller(GoogleMapController controller) {
+  void setcontroller(GoogleMapController controller) {
     this.controller = controller;
     notifyListeners();
   }
 
-  setformuleParticipant(
+  void setformuleParticipant(
       Map<CardFormula, CardFormIntParticipant> formuleParticipant) {
     this.formuleParticipant = formuleParticipant;
     //notifyListeners();
   }
 
-  setFormule(List<Formule> formules) {
+  void setFormule(List<Formule> formules) {
     this.formules = formules;
     notifyListeners();
   }
 
-  setshowSpinner() {
+  void setshowSpinner() {
     showSpinner = !showSpinner;
     notifyListeners();
   }
 
-  setisNotDisplay() {
+  void setisNotDisplay() {
     isNotDisplay = !isNotDisplay;
     notifyListeners();
   }
 
-  setplaceDistance(String value) {
+  void setplaceDistance(String value) {
     placeDistance = value;
     notifyListeners();
   }
 
-  setindexParticipants(int value) {
+  void setindexParticipants(int value) {
     indexParticipants = value;
     notifyListeners();
   }
 
-  settotalCostMoins(double value) {
+  void settotalCostMoins(double value) {
     totalCost -= value;
     notifyListeners();
   }
 
-  settotalCostPlus(double value) {
+  void settotalCostPlus(double value) {
     totalCost += value;
     notifyListeners();
   }
 
-  setmarkers(Set<Marker> value) {
+  void setmarkers(Set<Marker> value) {
     markers = value;
     notifyListeners();
   }
 
-  setlatLngDepart(LatLng value) {
+  void setlatLngDepart(LatLng value) {
     latLngDepart = value;
     notifyListeners();
   }
 
-  setautoPlay(bool value) {
+  void setautoPlay(bool value) {
     autoPlay = value;
     notifyListeners();
   }
 
-  setpolylinePoints(PolylinePoints value) {
+  void setpolylinePoints(PolylinePoints value) {
     polylinePoints = value;
     notifyListeners();
   }
 
-  setpolylineCoordinates(List<LatLng> value) {
+  void setpolylineCoordinates(List<LatLng> value) {
     polylineCoordinates = value;
     notifyListeners();
   }
 
-  setpolylines(Set<Polyline> value) {
+  void setpolylines(Set<Polyline> value) {
     polylines = value;
     notifyListeners();
   }
 
-  settotalDistance(double value) {
-    print('settotalDistance');
+  void settotalDistance(double value) {
     totalDistance = value;
     notifyListeners();
   }
 
-  settotalDistancePlus(double value) {
-    print('settotalDistancePlus');
-    print(value);
+  void settotalDistancePlus(double value) {
+
     totalDistance += value;
     notifyListeners();
   }
 
-  setonGoingCar(String value) {
+  void setonGoingCar(String value) {
     switch (value) {
       case 'van':
         onGoingCar = 'Van';
@@ -236,10 +231,10 @@ class FormuleVTC extends ChangeNotifier {
   }
 
   void setCarParticipants(Formule formule, int index) {
-    print('setCarParticipants');
-    if (!formuleParticipant.containsKey(formule)) {
-      print('azert');
-    }
+    // print('setCarParticipants');
+    // if (!formuleParticipant.containsKey(formule)) {
+    //   print('azert');
+    // }
     formuleParticipant[formuleParticipant.keys
             .firstWhere((element) => element.formule.id == formule.id)]
         .cardParticipant
@@ -253,7 +248,6 @@ class FormuleVTC extends ChangeNotifier {
   }
 
   void removeCardParticipants(Formule formule, int index) {
-    print('removeCardParticipants');
     formuleParticipant[formuleParticipant.keys
             .firstWhere((element) => element.formule.id == formule.id)]
         .cardParticipant
@@ -265,13 +259,13 @@ class FormuleVTC extends ChangeNotifier {
           return element.formule.id == formuleId;
         })]
             .cardParticipant ??
-        List<CardParticipant>();
+        <CardParticipant>[];
   }
 
   List<CardParticipant> getAllCardParticipants() {
-    List<CardParticipant> myList = List<CardParticipant>();
+    final List<CardParticipant> myList = <CardParticipant>[];
 
-    for (List<CardParticipant> cardParticipant
+    for (final List<CardParticipant> cardParticipant
         in formuleParticipant.values.map((e) => e.cardParticipant)) {
       myList.addAll(cardParticipant);
     }

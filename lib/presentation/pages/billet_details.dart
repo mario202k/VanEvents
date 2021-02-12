@@ -34,7 +34,7 @@ class BilletDetails extends HookWidget {
         child: Scaffold(
           key: scaffolKey,
           appBar: AppBar(
-            title: Text('Détails'),
+            title: const Text('Détails'),
           ),
           body: ModelBody(
             child: Column(
@@ -49,7 +49,6 @@ class BilletDetails extends HookWidget {
                                   Theme.of(context).colorScheme.secondary)),
                         );
                       } else if (snapshot.hasError) {
-                        print(snapshot.error);
                         return Center(
                           child: Text(
                             'Erreur de connexion',
@@ -57,19 +56,15 @@ class BilletDetails extends HookWidget {
                           ),
                         );
                       } else if (!snapshot.hasData) {
-                        print("pas data");
-                        return Center(
+                        return const Center(
                           child: Text('Erreur de connexion'),
                         );
                       }
 
-                      Billet billet = snapshot.data.first;
-
-
+                      final Billet billet = snapshot.data.first;
 
                       return Column(
                         children: [
-
                           Padding(
                             padding: const EdgeInsets.all(8.0),
                             child: InkWell(
@@ -83,62 +78,61 @@ class BilletDetails extends HookWidget {
                                 imageUrl: billet.imageUrl,
                                 imageBuilder: (context, imageProvider) =>
                                     Container(
-                                      height: 84,
-                                      width: 84,
-                                      decoration: BoxDecoration(
-                                        borderRadius:
-                                        BorderRadius.all(Radius.circular(84)),
-                                        image: DecorationImage(
-                                          image: imageProvider,
-                                          fit: BoxFit.cover,
-                                        ),
-                                      ),
+                                  height: 84,
+                                  width: 84,
+                                  decoration: BoxDecoration(
+                                    borderRadius: const BorderRadius.all(
+                                        Radius.circular(84)),
+                                    image: DecorationImage(
+                                      image: imageProvider,
+                                      fit: BoxFit.cover,
                                     ),
+                                  ),
+                                ),
                                 fit: BoxFit.cover,
-                                placeholder: (context, url) => Shimmer.fromColors(
+                                placeholder: (context, url) =>
+                                    Shimmer.fromColors(
                                   baseColor: Colors.white,
                                   highlightColor:
-                                  Theme.of(context).colorScheme.primary,
-                                  child: CircleAvatar(
+                                      Theme.of(context).colorScheme.primary,
+                                  child: const CircleAvatar(
                                     radius: 42,
                                   ),
                                 ),
                                 errorWidget: (context, url, error) =>
-                                    Icon(Icons.error),
+                                    const Icon(Icons.error),
                               ),
                             ),
                           ),
-                          snapshot.data.isNotEmpty
-                              ? Stack(
-                                  children: <Widget>[
-                                    Align(
-                                      alignment: Alignment.center,
-                                      child: QrImage(
-                                        data: billet.paymentIntentId,
-                                        version: QrVersions.auto,
-                                        size: 320,
-                                        gapless: false,
-                                      ),
-                                    ),
-                                    Visibility(
-                                      visible:
-                                          billet.status == BilletStatus.check,
-                                      child: FlareActor(
-                                        'assets/animations/ok.flr',
-                                        alignment: Alignment.center,
-                                        animation: 'Checkmark Appear',
-                                      ),
-                                    )
-                                  ],
-                                )
-                              : Center(
-                                  child: Text(
-                                    'Erreur de connexion',
-                                    style:
-                                        Theme.of(context).textTheme.bodyText1,
+                          if (snapshot.data.isNotEmpty)
+                            Stack(
+                              children: <Widget>[
+                                Align(
+                                  child: QrImage(
+                                    data: billet.paymentIntentId,
+                                    size: 320,
+                                    backgroundColor: const Color(0xFFFFFFFF),
+                                    gapless: false,
                                   ),
                                 ),
-                          handleStatus(context,billet,billet.status,billet.id),
+                                Visibility(
+                                  visible: billet.status == BilletStatus.check,
+                                  child: const FlareActor(
+                                    'assets/animations/ok.flr',
+                                    animation: 'Checkmark Appear',
+                                  ),
+                                )
+                              ],
+                            )
+                          else
+                            Center(
+                              child: Text(
+                                'Erreur de connexion',
+                                style: Theme.of(context).textTheme.bodyText1,
+                              ),
+                            ),
+                          handleStatus(
+                              context, billet, billet.status, billet.id),
                         ],
                       );
                     }),
@@ -150,24 +144,24 @@ class BilletDetails extends HookWidget {
     );
   }
 
-  Widget handleStatus(BuildContext context,
-      Billet billet,
-      BilletStatus status,String id) {
+  Widget handleStatus(
+      BuildContext context, Billet billet, BilletStatus status, String id) {
     switch (status) {
-      case BilletStatus.up_coming:
+      case BilletStatus.upComing:
         return Row(
-
           mainAxisAlignment: MainAxisAlignment.spaceEvenly,
           children: [
-            FlatButton(onPressed: () async{
-              await askRefund(context,billet);
-            }, child: Text('Rembourser')),
+            FlatButton(
+                onPressed: () async {
+                  await askRefund(context, billet);
+                },
+                child: const Text('Rembourser')),
             FloatingActionButton.extended(
               onPressed: () {
                 sharePdf(id);
               },
-              label: Text('Partager'),
-              icon: FaIcon(FontAwesomeIcons.share),
+              label: const Text('Partager'),
+              icon: const FaIcon(FontAwesomeIcons.share),
             ),
           ],
         );
@@ -176,59 +170,67 @@ class BilletDetails extends HookWidget {
         return Row(
           mainAxisAlignment: MainAxisAlignment.spaceEvenly,
           children: [
-            FlatButton(onPressed: () async {
-              await askRefund(context,billet);
-            }, child: Text('Rembourser')),
+            FlatButton(
+                onPressed: () async {
+                  await askRefund(context, billet);
+                },
+                child: const Text('Rembourser')),
             FloatingActionButton.extended(
               onPressed: () {
                 sharePdf(id);
               },
-              label: Text('Partager'),
-              icon: FaIcon(FontAwesomeIcons.share),
+              label: const Text('Partager'),
+              icon: const FaIcon(FontAwesomeIcons.share),
             ),
           ],
         );
         break;
-      case BilletStatus.refund_asked:
+      case BilletStatus.refundAsked:
         return Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            RaisedButton(onPressed: () async {
-              await cancelAsking(context,billet);
-            }, child: Text('Annuler ma demande')),
+            RaisedButton(
+                onPressed: () async {
+                  await cancelAsking(context, billet);
+                },
+                child: const Text('Annuler ma demande')),
           ],
         );
         break;
-      case BilletStatus.refund_cancelled:
+      case BilletStatus.refundCancelled:
         return Row(
           mainAxisAlignment: MainAxisAlignment.spaceEvenly,
           children: [
-            FlatButton(onPressed: () async {
-              await askRefund(context,billet);
-            }, child: Text('Rembourser')),
+            FlatButton(
+                onPressed: () async {
+                  await askRefund(context, billet);
+                },
+                child: const Text('Rembourser')),
             FloatingActionButton.extended(
               onPressed: () {
                 sharePdf(id);
               },
-              label: Text('Partager'),
-              icon: FaIcon(FontAwesomeIcons.share),
+              label: const Text('Partager'),
+              icon: const FaIcon(FontAwesomeIcons.share),
             ),
           ],
         );
         break;
-      case BilletStatus.refund_refused:
+      case BilletStatus.refundRefused:
         return Row(
           mainAxisAlignment: MainAxisAlignment.spaceEvenly,
           children: [
-            FlatButton(onPressed: () async {
-              await askRefund(context,billet);
-            }, child: Text('Rembourser')),
+            FlatButton(
+                onPressed: () async {
+                  await askRefund(context, billet);
+                },
+                child: const Text('Rembourser')),
             FloatingActionButton.extended(
               onPressed: () {
                 sharePdf(id);
               },
-              label: Text('Partager'),
-              icon: FaIcon(FontAwesomeIcons.share),
+              label: const Text('Partager'),
+              icon: const FaIcon(FontAwesomeIcons.share),
             ),
           ],
         );
@@ -241,8 +243,8 @@ class BilletDetails extends HookWidget {
               onPressed: () {
                 sharePdf(id);
               },
-              label: Text('Partager'),
-              icon: FaIcon(FontAwesomeIcons.share),
+              label: const Text('Partager'),
+              icon: const FaIcon(FontAwesomeIcons.share),
             ),
           ],
         );
@@ -254,19 +256,20 @@ class BilletDetails extends HookWidget {
     final rep = await Show.showAreYouSureModel(
         context: context,
         title: 'Remboursement',
-        content:
-        'Êtes-vous sûr de vouloir annuler le remboursement?');
+        content: 'Êtes-vous sûr de vouloir annuler le remboursement?');
     if (rep != null && rep) {
-
       context.read(myBilletRepositoryProvider).setStatusCancelAsking(billet.id);
-      Refund myRefund = Refund(
-        id: FirestoreService.instance.getDocId(path: MyPath.refunds(billet.organisateurId)),
+      final Refund myRefund = Refund(
+        id: FirestoreService.instance
+            .getDocId(path: MyPath.refunds(billet.organisateurId)),
         amount: billet.amount,
         paymentIntent: billet.paymentIntentId,
         status: RefundStatus.new_demand,
         reason: RefundReason.requested_by_customer,
       );
-      context.read(stripeRepositoryProvider).setNewRefund(myRefund,billet.organisateurId);
+      context
+          .read(stripeRepositoryProvider)
+          .setNewRefund(myRefund, billet.organisateurId);
     }
   }
 }
