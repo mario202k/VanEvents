@@ -3,6 +3,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:permission_handler/permission_handler.dart';
+import 'package:van_events_project/constants/credentials.dart';
 import 'package:van_events_project/domain/models/my_user.dart';
 import 'package:van_events_project/domain/repositories/my_chat_repository.dart';
 
@@ -12,47 +13,59 @@ final callChangeNotifierProvider =
 });
 
 class CallChangeNotifier extends ChangeNotifier {
-  bool isJoined, openMicrophone, enableSpeakerphone, playEffect, switchCamera, isDisableVideo;
+  bool isJoined,
+      openMicrophone,
+      enableSpeakerphone,
+      playEffect,
+      switchCamera,
+  speaker,
+      isDisableVideo;
   List<int> remoteUid;
   RtcEngine engine;
   String channel;
 
-  void initial(BuildContext context) {
+  void initial(BuildContext context, bool isVideoCall, String myChannel) {
+
     isJoined = false;
     openMicrophone = true;
     enableSpeakerphone = true;
-    isDisableVideo = false;
+    isDisableVideo = isVideoCall ?? false;
     playEffect = false;
     switchCamera = true;
     remoteUid = [];
+    channel = myChannel;
     initEngine(context);
   }
 
   Future<void> initEngine(BuildContext context) async {
-    // engine = await RtcEngine.create(AGORA_KEY);
+    engine = await RtcEngine.create(AGORA_KEY);
     _addListeners();
 
-    await engine.enableVideo();
-    await engine.startPreview();
+    if(isDisableVideo){
+      await engine.enableVideo();
+      await engine.startPreview();
+    }
     await engine.enableAudio();
     await engine.setChannelProfile(ChannelProfile.LiveBroadcasting);
     await engine.setClientRole(ClientRole.Broadcaster);
 
     await joinChannel(context);
-    playEffectTonalite();
+    // playEffectTonalite();
   }
 
-  Future<void> disableVideo()async{
-    if(isDisableVideo){
-      await engine.enableVideo();
-      isDisableVideo = false;
-      notifyListeners();
-    }else{
+  Future<void> disableVideo() async {
+    if (isDisableVideo) {
       await engine.disableVideo();
+      isDisableVideo = false;
+
+
+      notifyListeners();
+    } else {
+      await engine.enableVideo();
+      await engine.startPreview();
       isDisableVideo = true;
       notifyListeners();
     }
-
   }
 
   void _addListeners() {
@@ -63,16 +76,13 @@ class CallChangeNotifier extends ChangeNotifier {
       },
       userJoined: (uid, elapsed) {
         remoteUid.add(uid);
-        playEffectTonalite();
         notifyListeners();
       },
       userOffline: (uid, reason) {
-
         remoteUid.removeWhere((element) => element == uid);
         notifyListeners();
       },
       leaveChannel: (stats) {
-
         isJoined = false;
         remoteUid.clear();
         notifyListeners();
@@ -85,17 +95,15 @@ class CallChangeNotifier extends ChangeNotifier {
       await [Permission.microphone, Permission.camera].request();
     }
 
-    final response = await context.read(myChatRepositoryProvider).getAgoraToken(channel);
+    final response =
+        await context.read(myChatRepositoryProvider).getAgoraToken(channel);
 
     final uid = context.read(myUserProvider).id;
 
-    if(response != null){
-
-
-      await engine.joinChannelWithUserAccount(response.data as String, channel, uid);
-
+    if (response != null) {
+      await engine.joinChannelWithUserAccount(
+          response.data as String, channel, uid);
     }
-
   }
 
   Future<void> leaveChannel() async {
@@ -147,6 +155,7 @@ class CallChangeNotifier extends ChangeNotifier {
       });
     }
   }
+
   Future<void> playEffectSonnerie() async {
     if (playEffect) {
       engine?.stopEffect(1)?.then((value) {
@@ -158,14 +167,14 @@ class CallChangeNotifier extends ChangeNotifier {
     } else {
       engine
           ?.playEffect(
-          1,
-          await RtcEngineExtension.getAssetAbsolutePath(
-              "assets/sound/sonnerie.aac"),
-          -1,
-          1,
-          1,
-          100,
-          true)
+              1,
+              await RtcEngineExtension.getAssetAbsolutePath(
+                  "assets/sound/sonnerie.aac"),
+              -1,
+              1,
+              1,
+              100,
+              true)
           ?.then((value) {
         playEffect = true;
         notifyListeners();
@@ -174,8 +183,6 @@ class CallChangeNotifier extends ChangeNotifier {
       });
     }
   }
-
-
 
   void switchCameraM() {
     engine?.switchCamera()?.then((value) {
@@ -232,6 +239,11 @@ class CallChangeNotifier extends ChangeNotifier {
 
   void setChannel(String channel) {
     this.channel = channel;
+    notifyListeners();
+  }
+
+  void setSpeaker(){
+    speaker = !speaker;
     notifyListeners();
   }
 }

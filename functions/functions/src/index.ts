@@ -17,7 +17,6 @@ const stripe = new Stripe(stripeSecret, {
 });
 
 
-
 exports.retrievePromotionCode = functions.region('europe-west1').https.onCall(async (data, context) => {
 
     const code = assert(data, 'code')
@@ -621,7 +620,6 @@ exports.sendCall = functions.region('europe-west1').firestore
         const doc = snap.data()
         const idFrom = doc!.idFrom;
         const idTo = doc!.idTo;
-        const uuid = doc!.uuid;
         const hasVideo = doc!.hasVideo;
 
         // Get push token user to (receive)
@@ -629,24 +627,68 @@ exports.sendCall = functions.region('europe-west1').firestore
 
         const tokens = querySnapshot.docs.map((snap: { id: any; }) => snap.id);
 
+        const tokenDoc = await db.collection('users').doc(idTo).collection('tokens').doc(tokens[0]).get();
+
+        const platform = tokenDoc.data()!.platform;
+
+        console.log(platform, 'Platform');
+
+
         // Get info user from (sent)
         const userFrom = await db.collection('users').doc(idFrom).get();
 
-        const payload: admin.messaging.MessagingPayload = {
-            notification :{
-                title : ''
-            },
-            data: {
-                uuid: uuid,
-                caller_id: `${userFrom.data()!.email}`,
-                caller_name: `${userFrom.data()!.nom}`,
-                caller_id_type: "email",
-                has_video: hasVideo,
-                imageUrl: `${userFrom.data()!.imageUrl}`
-            }
-        };
+        if (platform === 'android') {
 
-        return fcm.sendToDevice(tokens, payload);
+            const payload: admin.messaging.MessagingPayload = {
+
+                data: {
+                    caller_id: `${idFrom}`,
+                    caller_name: `${userFrom.data()!.nom}`,
+                    caller_id_type: "email",
+                    has_video: hasVideo,
+                }
+            };
+
+            return fcm.sendToDevice(tokens, payload);
+
+        } else {
+            const voiPToken = tokenDoc.data()!.voIPToken;
+
+            console.log(voiPToken, 'voiPToken');
+            const config = {
+                production: false, /* change this when in production */
+                token: {
+                    key: "./AuthKey_N5X78U4TZ5.p8",
+                    keyId: "N5X78U4TZ5",
+                    teamId: "R52PK5Z22B"
+                }
+            }
+            const apn = require("apn")
+            const apnProvider = new apn.Provider(config)
+            const notification = new apn.Notification()
+            notification.expiry = Math.floor(Date.now() / 1000) + 3600; // Expires 1 hour from now.
+            notification.badge = 3
+            notification.priority = 0
+            notification.topic = "com.vanevents.VanEvents.voip"
+
+
+            notification.payload = {
+                "caller_id": `${idFrom}`,
+                "caller_name": `${userFrom.data()!.nom}`,
+                "caller_id_type": "email",
+                "has_video": hasVideo === "true"
+            }
+            console.log(voiPToken);
+
+            return apnProvider.send(notification, voiPToken).then((result: any) => {
+                // For one-shot notification tasks you may wish to shutdown the connection
+                // after everything is sent, but only call shutdown if you need your
+                // application to terminate.
+                apnProvider.shutdown();
+                console.log(result.failed);
+                console.log(result.failed.length);
+            });
+        }
 
     });
 
@@ -682,7 +724,7 @@ exports.sendMessages = functions.region('europe-west1').firestore
 
             // Get info user from (sent)
             console.log(`Found user from: ${userFrom.data()!.nom}`)
-            const payload : admin.messaging.MessagingPayload = {
+            const payload: admin.messaging.MessagingPayload = {
 
                 data: {
                     chatId: chatId,
@@ -703,7 +745,7 @@ exports.sendMessages = functions.region('europe-west1').firestore
         } else {
             // Get info user from (sent)
             console.log(`Found user from: ${userFrom.data()!.nom}`)
-            const payload : admin.messaging.MessagingPayload = {
+            const payload: admin.messaging.MessagingPayload = {
 
                 data: {
                     chatId: chatId,
@@ -826,7 +868,7 @@ exports.getAgoraToken = functions.region('europe-west1').https.onCall(async (dat
 
 });
 
-
+//
 // exports.sendApnsMessage = functions.region('europe-west1').https.onCall(async (data, context) => {
 //     const config = {
 //         production: false, /* change this when in production */
@@ -841,8 +883,7 @@ exports.getAgoraToken = functions.region('europe-west1').https.onCall(async (dat
 //     const notification = new apn.Notification()
 //     notification.expiry = Math.floor(Date.now() / 1000) + 3600; // Expires 1 hour from now.
 //     notification.badge = 1
-//     notification.topic = 'com.vanina.vanevents'
-//     notification.alert = contentMessage
+//     notification.topic = 'com.vanevents.VanEvents'
 //     notification.payload = {
 //         aps: {
 //             alert: {

@@ -135,18 +135,18 @@ class _ChatRoomState extends State<ChatRoom> with WidgetsBindingObserver {
                           FontAwesomeIcons.camera,
                           color: Theme.of(context).colorScheme.onBackground,
                         ),
-                        onPressed: () {
-                          db.sendCall(chatRoomRead).then((value) {
-                            context
-                                .read(callChangeNotifierProvider)
-                                .setChannel(value);
+                        onPressed: () async {
 
-                            ExtendedNavigator.of(context).push(
-                                Routes.callScreen,
-                                arguments: CallScreenArguments(
-                                    imageUrl: chatRoomRead.friend.imageUrl,
-                                    nom: chatRoomRead.friend.nom));
-                          });
+                          await db.sendCall(chatRoomRead,true);
+
+                          ExtendedNavigator.of(context).push(
+                              Routes.callScreen,
+                              arguments: CallScreenArguments(
+                                  imageUrl: chatRoomRead.friend.imageUrl,
+                                  isVideoCall: true,
+                                  channel: context.read(myUserProvider).id,
+                                  nom: chatRoomRead.friend.nom));
+
                         },
                       ),
                       IconButton(
@@ -154,17 +154,18 @@ class _ChatRoomState extends State<ChatRoom> with WidgetsBindingObserver {
                           FontAwesomeIcons.phone,
                           color: Theme.of(context).colorScheme.onBackground,
                         ),
-                        onPressed: () {
-                          db.sendCall(chatRoomRead).then((value) {
-                            context
-                                .read(callChangeNotifierProvider)
-                                .setChannel(value);
-                            ExtendedNavigator.of(context).push(
-                                Routes.callScreen,
-                                arguments: CallScreenArguments(
-                                    imageUrl: chatRoomRead.friend.imageUrl,
-                                    nom: chatRoomRead.friend.nom));
-                          });
+                        onPressed: () async {
+
+                          await db.sendCall(chatRoomRead,false);
+
+                          ExtendedNavigator.of(context).push(
+                              Routes.callScreen,
+                              arguments: CallScreenArguments(
+                                  imageUrl: chatRoomRead.friend.imageUrl,
+                                  isVideoCall: false,
+                                  channel: context.read(myUserProvider).id,
+                                  nom: chatRoomRead.friend.nom));
+
                         },
                       ),
                     ],
@@ -226,45 +227,47 @@ class _ChatRoomState extends State<ChatRoom> with WidgetsBindingObserver {
                                   chatRoomRead.nomTitre,
                                   style: Theme.of(context).textTheme.subtitle1,
                                 ),
-                                if (!chatRoomRead.myChat.isGroupe) StreamBuilder<MyUser>(
-                                        stream: chatRoomRead.streamUserFriend,
-                                        builder: (context, snapshot) {
-                                          if (!snapshot.hasData) {
-                                            return const SizedBox();
-                                          }
-                                          final MyUser user = snapshot.data;
+                                if (!chatRoomRead.myChat.isGroupe)
+                                  StreamBuilder<MyUser>(
+                                      stream: chatRoomRead.streamUserFriend,
+                                      builder: (context, snapshot) {
+                                        if (!snapshot.hasData) {
+                                          return const SizedBox();
+                                        }
+                                        final MyUser user = snapshot.data;
 
-                                          return StreamBuilder<ChatMembre>(
-                                              stream: context
-                                                  .read(
-                                                      myChatRepositoryProvider)
-                                                  .getChatMembre(
-                                                      widget.chatId, user.id),
-                                              builder: (context, snapshot) {
-                                                final ChatMembre chatMembre =
-                                                    snapshot.data;
+                                        return StreamBuilder<ChatMembre>(
+                                            stream: context
+                                                .read(myChatRepositoryProvider)
+                                                .getChatMembre(
+                                                    widget.chatId, user.id),
+                                            builder: (context, snapshot) {
+                                              final ChatMembre chatMembre =
+                                                  snapshot.data;
 
-                                                return user != null
-                                                    ? Text(
-                                                        user.isLogin
-                                                            ? chatMembre?.isWriting ??
-                                                                    false
-                                                                ? 'écrit...'
-                                                                : 'En ligne'
-                                                            : isToday(user
-                                                                    .lastActivity)
-                                                                ? 'Vu aujourd\'hui à ${DateFormat.Hm().format(user.lastActivity)}'
-                                                                : DateFormat(
-                                                                        'dd/MM/yy')
-                                                                    .format(user
-                                                                        .lastActivity),
-                                                        style: Theme.of(context)
-                                                            .textTheme
-                                                            .caption,
-                                                      )
-                                                    : const SizedBox();
-                                              });
-                                        }) else const SizedBox()
+                                              return user != null
+                                                  ? Text(
+                                                      user.isLogin
+                                                          ? chatMembre?.isWriting ??
+                                                                  false
+                                                              ? 'écrit...'
+                                                              : 'En ligne'
+                                                          : isToday(user
+                                                                  .lastActivity)
+                                                              ? 'Vu aujourd\'hui à ${DateFormat.Hm().format(user.lastActivity)}'
+                                                              : DateFormat(
+                                                                      'dd/MM/yy')
+                                                                  .format(user
+                                                                      .lastActivity),
+                                                      style: Theme.of(context)
+                                                          .textTheme
+                                                          .caption,
+                                                    )
+                                                  : const SizedBox();
+                                            });
+                                      })
+                                else
+                                  const SizedBox()
                               ],
                             ),
                           ),
@@ -332,80 +335,77 @@ class _ChatRoomState extends State<ChatRoom> with WidgetsBindingObserver {
 
                                       return Column(
                                         children: [
-                                          if (isAnotherDay(index,
-                                                  chatRoomRead.oldMessages)) Text(
-                                                  isToday(oldMessage.date)
-                                                      ? 'Aujourd\'hui'
-                                                      : isYesterday(
-                                                              oldMessage.date)
-                                                          ? 'Hier'
-                                                          : ' ${day(oldMessage.date.weekday)} ${oldMessage.date.day} ${month(oldMessage.date.month)}',
-                                                  style: Theme.of(context)
-                                                      .textTheme
-                                                      .headline5
-                                                      .copyWith(
-                                                          color: Theme.of(
-                                                                  context)
-                                                              .colorScheme
-                                                              .onBackground),
-                                                ) else const SizedBox(),
-                                          if (db.uid != oldMessage.idFrom) SwipeTo(
-                                                  onRightSwipe: () {
-                                                    chatRoomRead
-                                                        .setReplyToMessage(
-                                                            userFrom.nom,
-                                                            oldMessage.message,
-                                                            oldMessage.id,
-                                                            oldMessage.type);
-                                                    FocusScope.of(context)
-                                                        .requestFocus(
-                                                            textFieldFocus);
-                                                  },
-                                                  rightSwipeWidget: Icon(
-                                                    FontAwesomeIcons.reply,
-                                                    color: Theme.of(context)
-                                                        .colorScheme
-                                                        .primary,
-                                                  ),
-                                                  child: ChatMessageListItem(
-                                                    message: oldMessage,
-                                                    isMe: db.uid ==
-                                                        oldMessage.idFrom,
-                                                    chatId:
-                                                        chatRoomRead.myChat.id,
-                                                    isGroupe: chatRoomRead
-                                                        .myChat.isGroupe,
-                                                    friendName: userFrom.nom,
-                                                    //name
-                                                    friendUrl:
-                                                        userFrom.imageUrl,
-                                                    idTo: oldMessage.idTo,
-                                                    replyName: replyUser?.nom,
-                                                    replyMessage: replyMessage,
-                                                    replyType:
-                                                        oldMessage.replyType,
-                                                    replyIsFromMe:
-                                                        replyUser?.id == db.uid,
-                                                  ),
-                                                ) else ChatMessageListItem(
-                                                  message: oldMessage,
-                                                  isMe: db.uid ==
-                                                      oldMessage.idFrom,
-                                                  chatId:
-                                                      chatRoomRead.myChat.id,
-                                                  isGroupe: chatRoomRead
-                                                      .myChat.isGroupe,
-                                                  friendName: userFrom.nom,
-                                                  //name
-                                                  friendUrl: userFrom.imageUrl,
-                                                  idTo: oldMessage.idTo,
-                                                  replyName: replyUser?.nom,
-                                                  replyMessage: replyMessage,
-                                                  replyType:
-                                                      oldMessage.replyType,
-                                                  replyIsFromMe:
-                                                      replyUser?.id == db.uid,
-                                                ),
+                                          if (isAnotherDay(
+                                              index, chatRoomRead.oldMessages))
+                                            Text(
+                                              isToday(oldMessage.date)
+                                                  ? 'Aujourd\'hui'
+                                                  : isYesterday(oldMessage.date)
+                                                      ? 'Hier'
+                                                      : ' ${day(oldMessage.date.weekday)} ${oldMessage.date.day} ${month(oldMessage.date.month)}',
+                                              style: Theme.of(context)
+                                                  .textTheme
+                                                  .headline5
+                                                  .copyWith(
+                                                      color: Theme.of(context)
+                                                          .colorScheme
+                                                          .onBackground),
+                                            )
+                                          else
+                                            const SizedBox(),
+                                          if (db.uid != oldMessage.idFrom)
+                                            SwipeTo(
+                                              onRightSwipe: () {
+                                                chatRoomRead.setReplyToMessage(
+                                                    userFrom.nom,
+                                                    oldMessage.message,
+                                                    oldMessage.id,
+                                                    oldMessage.type);
+                                                FocusScope.of(context)
+                                                    .requestFocus(
+                                                        textFieldFocus);
+                                              },
+                                              rightSwipeWidget: Icon(
+                                                FontAwesomeIcons.reply,
+                                                color: Theme.of(context)
+                                                    .colorScheme
+                                                    .primary,
+                                              ),
+                                              child: ChatMessageListItem(
+                                                message: oldMessage,
+                                                isMe:
+                                                    db.uid == oldMessage.idFrom,
+                                                chatId: chatRoomRead.myChat.id,
+                                                isGroupe: chatRoomRead
+                                                    .myChat.isGroupe,
+                                                friendName: userFrom.nom,
+                                                //name
+                                                friendUrl: userFrom.imageUrl,
+                                                idTo: oldMessage.idTo,
+                                                replyName: replyUser?.nom,
+                                                replyMessage: replyMessage,
+                                                replyType: oldMessage.replyType,
+                                                replyIsFromMe:
+                                                    replyUser?.id == db.uid,
+                                              ),
+                                            )
+                                          else
+                                            ChatMessageListItem(
+                                              message: oldMessage,
+                                              isMe: db.uid == oldMessage.idFrom,
+                                              chatId: chatRoomRead.myChat.id,
+                                              isGroupe:
+                                                  chatRoomRead.myChat.isGroupe,
+                                              friendName: userFrom.nom,
+                                              //name
+                                              friendUrl: userFrom.imageUrl,
+                                              idTo: oldMessage.idTo,
+                                              replyName: replyUser?.nom,
+                                              replyMessage: replyMessage,
+                                              replyType: oldMessage.replyType,
+                                              replyIsFromMe:
+                                                  replyUser?.id == db.uid,
+                                            ),
                                         ],
                                       );
                                     }),
@@ -536,56 +536,59 @@ class _ChatRoomState extends State<ChatRoom> with WidgetsBindingObserver {
             sizeFactor: animation,
             child: Column(
               children: <Widget>[
-                if (isAnotherDayNewMessage(index, chatRoomRead.messages,
-                        chatRoomRead.lastOldMessage)) Text(
-                        isToday(chatRoomRead.messages[index].date)
-                            ? 'Aujourd\'hui'
-                            : isYesterday(chatRoomRead.messages[index].date)
-                                ? 'Hier'
-                                : ' ${day(chatRoomRead.messages[index].date.weekday)} ${chatRoomRead.messages[index].date.day} ${month(chatRoomRead.messages[index].date.month)}',
-                        style: Theme.of(context).textTheme.headline4,
-                      ) else const SizedBox(),
-                if (db.uid == newMessage.idFrom) ChatMessageListItem(
-                        message: newMessage,
-                        isMe: db.uid == newMessage.idFrom,
-                        chatId: chatRoomRead.myChat.id,
-                        isGroupe: chatRoomRead.myChat.isGroupe,
-                        friendName: userFrom.nom,
-                        //name
-                        friendUrl: userFrom.imageUrl,
-                        idTo: newMessage.idTo,
-                        replyName: replyUser?.nom,
-                        replyMessage: replyMessage,
-                        replyType: newMessage?.replyType,
-                        replyIsFromMe: replyUser?.id == db.uid,
-                      ) else SwipeTo(
-                        onRightSwipe: () {
-                          chatRoomRead.setReplyToMessage(
-                              userFrom.nom,
-                              newMessage.message,
-                              newMessage.id,
-                              newMessage.type);
-                          FocusScope.of(context).requestFocus(textFieldFocus);
-                        },
-                        rightSwipeWidget: Icon(
-                          FontAwesomeIcons.reply,
-                          color: Theme.of(context).colorScheme.primary,
-                        ),
-                        child: ChatMessageListItem(
-                          message: newMessage,
-                          isMe: db.uid == newMessage.idFrom,
-                          chatId: chatRoomRead.myChat.id,
-                          isGroupe: chatRoomRead.myChat.isGroupe,
-                          friendName: userFrom.nom,
-                          //name
-                          friendUrl: userFrom.imageUrl,
-                          idTo: newMessage.idTo,
-                          replyName: replyUser?.nom,
-                          replyMessage: replyMessage,
-                          replyType: newMessage?.replyType,
-                          replyIsFromMe: replyUser?.id == db.uid,
-                        ),
-                      )
+                if (isAnotherDayNewMessage(
+                    index, chatRoomRead.messages, chatRoomRead.lastOldMessage))
+                  Text(
+                    isToday(chatRoomRead.messages[index].date)
+                        ? 'Aujourd\'hui'
+                        : isYesterday(chatRoomRead.messages[index].date)
+                            ? 'Hier'
+                            : ' ${day(chatRoomRead.messages[index].date.weekday)} ${chatRoomRead.messages[index].date.day} ${month(chatRoomRead.messages[index].date.month)}',
+                    style: Theme.of(context).textTheme.headline4,
+                  )
+                else
+                  const SizedBox(),
+                if (db.uid == newMessage.idFrom)
+                  ChatMessageListItem(
+                    message: newMessage,
+                    isMe: db.uid == newMessage.idFrom,
+                    chatId: chatRoomRead.myChat.id,
+                    isGroupe: chatRoomRead.myChat.isGroupe,
+                    friendName: userFrom.nom,
+                    //name
+                    friendUrl: userFrom.imageUrl,
+                    idTo: newMessage.idTo,
+                    replyName: replyUser?.nom,
+                    replyMessage: replyMessage,
+                    replyType: newMessage?.replyType,
+                    replyIsFromMe: replyUser?.id == db.uid,
+                  )
+                else
+                  SwipeTo(
+                    onRightSwipe: () {
+                      chatRoomRead.setReplyToMessage(userFrom.nom,
+                          newMessage.message, newMessage.id, newMessage.type);
+                      FocusScope.of(context).requestFocus(textFieldFocus);
+                    },
+                    rightSwipeWidget: Icon(
+                      FontAwesomeIcons.reply,
+                      color: Theme.of(context).colorScheme.primary,
+                    ),
+                    child: ChatMessageListItem(
+                      message: newMessage,
+                      isMe: db.uid == newMessage.idFrom,
+                      chatId: chatRoomRead.myChat.id,
+                      isGroupe: chatRoomRead.myChat.isGroupe,
+                      friendName: userFrom.nom,
+                      //name
+                      friendUrl: userFrom.imageUrl,
+                      idTo: newMessage.idTo,
+                      replyName: replyUser?.nom,
+                      replyMessage: replyMessage,
+                      replyType: newMessage?.replyType,
+                      replyIsFromMe: replyUser?.id == db.uid,
+                    ),
+                  )
               ],
             ));
       },
@@ -693,7 +696,8 @@ class _ChatRoomState extends State<ChatRoom> with WidgetsBindingObserver {
 
   Future _getImageCamera(
       MyChatRepository db, ChatRoomChangeNotifier chatRoomRead) async {
-    final PickedFile image = await ImagePicker().getImage(source: ImageSource.camera);
+    final PickedFile image =
+        await ImagePicker().getImage(source: ImageSource.camera);
 
     db.displayAndSendImage(File(image.path), chatRoomRead);
   }
@@ -717,7 +721,8 @@ class _ChatRoomState extends State<ChatRoom> with WidgetsBindingObserver {
             return watch(chatRoomProvider).replyMessage?.isNotEmpty ?? false
                 ? Container(
                     clipBehavior: Clip.hardEdge,
-                    constraints: const BoxConstraints(maxHeight: 200, maxWidth: 300),
+                    constraints:
+                        const BoxConstraints(maxHeight: 200, maxWidth: 300),
                     decoration: const BoxDecoration(
                       color: Colors.black26,
                       borderRadius: BorderRadius.all(Radius.circular(10)),
@@ -788,7 +793,8 @@ class _ChatRoomState extends State<ChatRoom> with WidgetsBindingObserver {
                                                   Image(image: imageProvider),
                                           errorWidget: (context, url, error) =>
                                               Material(
-                                            borderRadius: const BorderRadius.all(
+                                            borderRadius:
+                                                const BorderRadius.all(
                                               Radius.circular(8.0),
                                             ),
                                             clipBehavior: Clip.hardEdge,
@@ -883,7 +889,8 @@ class _ChatRoomState extends State<ChatRoom> with WidgetsBindingObserver {
                     }
                   },
                   decoration: InputDecoration(
-                    border: const OutlineInputBorder(borderSide: BorderSide.none),
+                    border:
+                        const OutlineInputBorder(borderSide: BorderSide.none),
                     hintText: 'Saisir un message',
                     hintStyle: Theme.of(context).textTheme.bodyText1,
                   ),

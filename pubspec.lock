@@ -183,6 +183,13 @@ packages:
       url: "https://pub.dartlang.org"
     source: hosted
     version: "2.5.0"
+  callkeep:
+    dependency: "direct main"
+    description:
+      name: callkeep
+      url: "https://pub.dartlang.org"
+    source: hosted
+    version: "0.2.3+1"
   carousel_slider:
     dependency: "direct main"
     description:

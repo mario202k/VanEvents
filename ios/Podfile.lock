@@ -17,6 +17,8 @@ PODS:
     - BSGridCollectionViewLayout (= 1.2.5)
     - BSImageView (= 1.0.3)
   - BSImageView (1.0.3)
+  - callkeep (0.0.1):
+    - Flutter
   - cloud_firestore (0.14.4):
     - Firebase/CoreOnly (~> 6.33.0)
     - Firebase/Firestore (~> 6.33.0)
@@ -234,6 +236,7 @@ DEPENDENCIES:
   - add_2_calendar (from `.symlinks/plugins/add_2_calendar/ios`)
   - agora_rtc_engine (from `.symlinks/plugins/agora_rtc_engine/ios`)
   - audioplayers (from `.symlinks/plugins/audioplayers/ios`)
+  - callkeep (from `.symlinks/plugins/callkeep/ios`)
   - cloud_firestore (from `.symlinks/plugins/cloud_firestore/ios`)
   - cloud_functions (from `.symlinks/plugins/cloud_functions/ios`)
   - firebase_analytics (from `.symlinks/plugins/firebase_analytics/ios`)
@@ -302,6 +305,8 @@ EXTERNAL SOURCES:
     :path: ".symlinks/plugins/agora_rtc_engine/ios"
   audioplayers:
     :path: ".symlinks/plugins/audioplayers/ios"
+  callkeep:
+    :path: ".symlinks/plugins/callkeep/ios"
   cloud_firestore:
     :path: ".symlinks/plugins/cloud_firestore/ios"
   cloud_functions:
@@ -376,6 +381,7 @@ SPEC CHECKSUMS:
   BSGridCollectionViewLayout: 333dcb457a5a3bdd9212607ab5756553dcfe06cb
   BSImagePicker: 07404254f2fcdaf5a2eb403c0f8c337267ce8738
   BSImageView: a149459433a2687157d034c78e059d30ac7f2544
+  callkeep: 6b21abbd46786a36e482190816db99b391ada1e3
   cloud_firestore: b8c0e15fa49dfff87c2817d288b577e5dca2df13
   cloud_functions: 322f7aacaf0d6736d4365a0d33eb93e74c0469a6
   Firebase: 8db6f2d1b2c5e2984efba4949a145875a8f65fe5

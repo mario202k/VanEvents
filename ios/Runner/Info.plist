@@ -96,14 +96,7 @@
 	</array>
 	<key>UIViewControllerBasedStatusBarAppearance</key>
 	<false/>
-    <key>FIVKIconName</key>
-    <string>AppIcon-VoIPKit</string>
-    <key>FIVKLocalizedName</key>
-    <string>VoIP-Kit</string>
-    <key>FIVKSupportVideo</key>
-    <true/>
-    <key>FIVKSkipRecallScreen</key>
-    <true/>
+
 
 </dict>
 </plist>

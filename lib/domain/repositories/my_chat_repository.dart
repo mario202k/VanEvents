@@ -359,21 +359,22 @@ class MyChatRepository {
         builder: (map) => MyMessage.fromMap(map));
   }
 
-  Future<String> sendCall(ChatRoomChangeNotifier chatRoomRead) async {
+  Future<String> sendCall(ChatRoomChangeNotifier chatRoomRead, bool hasVideo) async {
     final String callId = _service.getDocId(path: MyPath.calls(chatId));
 
+    final uuid = Uuid().v4();
     final Call myCall = Call(
       id: callId,
       date: DateTime.now(),
-      uuid: Uuid().v4(),
+      uuid: uuid,
       idFrom: uid,
       idTo: chatRoomRead.friend.id,
-      hasVideo: false
+      hasVideo: hasVideo
     );
 
     await _service.setData(
         path: MyPath.call(chatId,callId), data: myCall.toMap());
-    return callId;
+    return uuid;
   }
 
   Future<HttpsCallableResult> getAgoraToken(String channelName) async {

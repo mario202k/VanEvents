@@ -134,7 +134,6 @@ class MyRouter extends RouterBase {
     RouteDef(Routes.pickupScreen, page: PickupScreen),
     RouteDef(Routes.callScreen, page: CallScreen),
   ];
-
   @override
   Map<Type, AutoRouteFactory> get pagesMap => _pagesMap;
   final _pagesMap = <Type, AutoRouteFactory>{
@@ -239,7 +238,7 @@ class MyRouter extends RouterBase {
     },
     MySplashScreen: (data) {
       return MaterialPageRoute<dynamic>(
-        builder: (context) => const MySplashScreen(),
+        builder: (context) => MySplashScreen(),
         settings: data,
         fullscreenDialog: true,
       );
@@ -299,7 +298,9 @@ class MyRouter extends RouterBase {
       );
     },
     SearchUserEvent: (data) {
-      final args = data.getArgs<SearchUserEventArguments>(nullOk: false);
+      final args = data.getArgs<SearchUserEventArguments>(
+        orElse: () => SearchUserEventArguments(),
+      );
       return MaterialPageRoute<dynamic>(
         builder: (context) => SearchUserEvent(isEvent: args.isEvent),
         settings: data,
@@ -350,6 +351,7 @@ class MyRouter extends RouterBase {
         builder: (context) => PickupScreen(
           imageUrl: args.imageUrl,
           nom: args.nom,
+          channel: args.channel,
         ),
         settings: data,
         fullscreenDialog: true,
@@ -363,6 +365,8 @@ class MyRouter extends RouterBase {
         builder: (context) => CallScreen(
           imageUrl: args.imageUrl,
           nom: args.nom,
+          isVideoCall: args.isVideoCall,
+          channel: args.channel,
         ),
         settings: data,
         fullscreenDialog: true,
@@ -378,7 +382,6 @@ class MyRouter extends RouterBase {
 /// ChatRoom arguments holder class
 class ChatRoomArguments {
   final String chatId;
-
   ChatRoomArguments({@required this.chatId});
 }
 
@@ -387,21 +390,18 @@ class FullPhotoArguments {
   final Key key;
   final String url;
   final File file;
-
   FullPhotoArguments({this.key, @required this.url, this.file});
 }
 
 /// UploadEvent arguments holder class
 class UploadEventArguments {
   final MyEvent myEvent;
-
   UploadEventArguments({this.myEvent});
 }
 
 /// Details arguments holder class
 class DetailsArguments {
   final MyEvent event;
-
   DetailsArguments({@required this.event});
 }
 
@@ -409,42 +409,36 @@ class DetailsArguments {
 class FormulaChoiceArguments {
   final List<Formule> formulas;
   final MyEvent myEvent;
-
   FormulaChoiceArguments({@required this.formulas, @required this.myEvent});
 }
 
 /// BilletDetails arguments holder class
 class BilletDetailsArguments {
   final String billetId;
-
   BilletDetailsArguments({@required this.billetId});
 }
 
 /// MonitoringScanner arguments holder class
 class MonitoringScannerArguments {
   final String eventId;
-
   MonitoringScannerArguments({@required this.eventId});
 }
 
 /// CguCgvAccept arguments holder class
 class CguCgvAcceptArguments {
   final String uid;
-
   CguCgvAcceptArguments({@required this.uid});
 }
 
 /// CguCgv arguments holder class
 class CguCgvArguments {
   final String cguOuCgv;
-
   CguCgvArguments({@required this.cguOuCgv});
 }
 
 /// StripeProfile arguments holder class
 class StripeProfileArguments {
   final String stripeAccount;
-
   StripeProfileArguments({this.stripeAccount});
 }
 
@@ -452,7 +446,6 @@ class StripeProfileArguments {
 class TransportDetailScreenArguments {
   final MyTransport myTransport;
   final String addressArriver;
-
   TransportDetailScreenArguments(
       {@required this.myTransport, @required this.addressArriver});
 }
@@ -460,21 +453,18 @@ class TransportDetailScreenArguments {
 /// LoginScreen arguments holder class
 class LoginScreenArguments {
   final String myEmail;
-
   LoginScreenArguments({this.myEmail});
 }
 
 /// SearchUserEvent arguments holder class
 class SearchUserEventArguments {
   final bool isEvent;
-
-  SearchUserEventArguments({@required this.isEvent});
+  SearchUserEventArguments({this.isEvent});
 }
 
 /// OtherProfile arguments holder class
 class OtherProfileArguments {
   final MyUser myUser;
-
   OtherProfileArguments({@required this.myUser});
 }
 
@@ -482,14 +472,16 @@ class OtherProfileArguments {
 class PickupScreenArguments {
   final String imageUrl;
   final String nom;
-
-  PickupScreenArguments({this.imageUrl, this.nom});
+  final String channel;
+  PickupScreenArguments({this.imageUrl, this.nom, this.channel});
 }
 
 /// CallScreen arguments holder class
 class CallScreenArguments {
   final String imageUrl;
   final String nom;
-
-  CallScreenArguments({this.imageUrl, this.nom});
+  final bool isVideoCall;
+  final String channel;
+  CallScreenArguments(
+      {this.imageUrl, this.nom, this.isVideoCall, this.channel});
 }

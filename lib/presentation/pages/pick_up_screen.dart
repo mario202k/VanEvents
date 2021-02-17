@@ -1,16 +1,41 @@
+
 import 'package:auto_route/auto_route.dart';
 import 'package:flutter/material.dart';
+import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:van_events_project/domain/routing/route.gr.dart';
+import 'package:van_events_project/providers/call_change_notifier.dart';
 
-class PickupScreen extends StatelessWidget {
-
+class PickupScreen extends StatefulWidget {
   final String imageUrl;
   final String nom;
+  final String channel;
 
-  const PickupScreen({this.imageUrl, this.nom});
+  const PickupScreen({this.imageUrl, this.nom, this.channel});
+
+  @override
+  _PickupScreenState createState() => _PickupScreenState();
+}
+
+class _PickupScreenState extends State<PickupScreen> {
+
+
+  @override
+  void initState() {
+    context.read(callChangeNotifierProvider).setChannel(widget.channel);
+
+    super.initState();
+
+  }
+
+  @override
+  void dispose() {
+
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
+
     return Scaffold(
       body: Container(
         alignment: Alignment.center,
@@ -25,19 +50,20 @@ class PickupScreen extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 50),
-            if (imageUrl != null) Image.network(imageUrl) else Center(
-              child: CircleAvatar(
-                radius: 50,
-                backgroundColor: Theme.of(context)
-                    .colorScheme
-                    .primary,
-                backgroundImage: const AssetImage(
-                    'assets/img/normal_user_icon.png'),
+            if (widget.imageUrl != null)
+              Image.network(widget.imageUrl)
+            else
+              Center(
+                child: CircleAvatar(
+                  radius: 50,
+                  backgroundColor: Theme.of(context).colorScheme.primary,
+                  backgroundImage:
+                      const AssetImage('assets/img/normal_user_icon.png'),
+                ),
               ),
-            ),
             const SizedBox(height: 15),
             Text(
-              nom,
+              widget.nom,
               style: const TextStyle(
                 fontWeight: FontWeight.bold,
                 fontSize: 20,
@@ -59,13 +85,9 @@ class PickupScreen extends StatelessWidget {
                   icon: const Icon(Icons.call),
                   color: Colors.green,
                   onPressed: () async {
-
-                    ExtendedNavigator.of(context).push(
-                        Routes.callScreen,
+                    ExtendedNavigator.of(context).push(Routes.callScreen,
                         arguments: CallScreenArguments(
-                            imageUrl: imageUrl,
-                            nom: nom));
-
+                            imageUrl: widget.imageUrl, nom: widget.nom));
                   },
                 ),
               ],
@@ -75,4 +97,6 @@ class PickupScreen extends StatelessWidget {
       ),
     );
   }
+
+
 }
