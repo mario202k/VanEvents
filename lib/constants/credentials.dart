@@ -1,8 +1,8 @@
-const placesApiKey = 'AIzaSyANu2dlwJvQXKqZBKCbHfvtOBkhlSOIGg8'; //google
-const pkTest = 'pk_test_gPlqnEqiVydntTBkyFzc4aUb001o1vGwb6'; //Stripe
-const appId = 'caf08851b010462981e8c3b856d9df8a';
-const giphyApiKey = 'nZXOSODAIyJlsmNBMXzz55JvV5f8kd0D';
-const agoraKey = 'caf08851b010462981e8c3b856d9df8a';
+const placesApiKey = 'XXXXXXXXXXXXXXXXXXX'; //google
+const pkTest = 'XXXXXXXXXXXXXXXXXXX'; //Stripe
+const appId = 'XXXXXXXXXXXXXXXXXXX';
+const giphyApiKey = 'XXXXXXXXXXXXXXXXXXX';
+const agoraKey = 'XXXXXXXXXXXXXXXXXXX';
 const regExpNom =
     r'^[a-zA-ZáàâäãåçéèêëíìîïñóòôöõúùûüýÿæœÁÀÂÄÃÅÇÉÈÊËÍÌÎÏÑÓÒÔÖÕÚÙÛÜÝŸÆŒ\-. ]{2,60}$';
 const regExpMDP = r'^(?=.*[a-z])(?=.*[A-Z])(?=.*\d.*)[a-zA-Z0-9\S]{8,15}$';
