@@ -25,7 +25,6 @@ import '../../presentation/pages/full_photo.dart';
 import '../../presentation/pages/login/login_screen.dart';
 import '../../presentation/pages/monitoring_scanner.dart';
 import '../../presentation/pages/other_profil.dart';
-import '../../presentation/pages/pick_up_screen.dart';
 import '../../presentation/pages/refund_screen.dart';
 import '../../presentation/pages/reset_password.dart';
 import '../../presentation/pages/screen_chat_room.dart';
@@ -34,6 +33,7 @@ import '../../presentation/pages/settings.dart';
 import '../../presentation/pages/splash_screen.dart';
 import '../../presentation/pages/stripe_profile/screen_stripe_profile.dart';
 import '../../presentation/pages/transport_details_screen.dart';
+import '../../presentation/pages/transport_only.dart';
 import '../../presentation/pages/transport_screen.dart';
 import '../../presentation/pages/upload_event.dart';
 import '../../presentation/pages/walkthrough.dart';
@@ -69,8 +69,8 @@ class Routes {
   static const String aboutScreen = '/about-screen';
   static const String refundScreen = '/refund-screen';
   static const String otherProfile = '/other-profile';
-  static const String pickupScreen = '/pickup-screen';
   static const String callScreen = '/call-screen';
+  static const String transportOnly = '/transport-only';
   static const all = <String>{
     routeAuthentication,
     resetPassword,
@@ -97,8 +97,8 @@ class Routes {
     aboutScreen,
     refundScreen,
     otherProfile,
-    pickupScreen,
     callScreen,
+    transportOnly,
   };
 }
 
@@ -131,8 +131,8 @@ class MyRouter extends RouterBase {
     RouteDef(Routes.aboutScreen, page: AboutScreen),
     RouteDef(Routes.refundScreen, page: RefundScreen),
     RouteDef(Routes.otherProfile, page: OtherProfile),
-    RouteDef(Routes.pickupScreen, page: PickupScreen),
     RouteDef(Routes.callScreen, page: CallScreen),
+    RouteDef(Routes.transportOnly, page: TransportOnly),
   ];
   @override
   Map<Type, AutoRouteFactory> get pagesMap => _pagesMap;
@@ -238,7 +238,7 @@ class MyRouter extends RouterBase {
     },
     MySplashScreen: (data) {
       return MaterialPageRoute<dynamic>(
-        builder: (context) => MySplashScreen(),
+        builder: (context) => const MySplashScreen(),
         settings: data,
         fullscreenDialog: true,
       );
@@ -302,7 +302,11 @@ class MyRouter extends RouterBase {
         orElse: () => SearchUserEventArguments(),
       );
       return MaterialPageRoute<dynamic>(
-        builder: (context) => SearchUserEvent(isEvent: args.isEvent),
+        builder: (context) => SearchUserEvent(
+          isEvent: args.isEvent,
+          fromBilletForm: args.fromBilletForm,
+          fromTransport: args.fromTransport,
+        ),
         settings: data,
         fullscreenDialog: true,
       );
@@ -343,20 +347,6 @@ class MyRouter extends RouterBase {
         fullscreenDialog: true,
       );
     },
-    PickupScreen: (data) {
-      final args = data.getArgs<PickupScreenArguments>(
-        orElse: () => PickupScreenArguments(),
-      );
-      return MaterialPageRoute<dynamic>(
-        builder: (context) => PickupScreen(
-          imageUrl: args.imageUrl,
-          nom: args.nom,
-          channel: args.channel,
-        ),
-        settings: data,
-        fullscreenDialog: true,
-      );
-    },
     CallScreen: (data) {
       final args = data.getArgs<CallScreenArguments>(
         orElse: () => CallScreenArguments(),
@@ -364,10 +354,19 @@ class MyRouter extends RouterBase {
       return MaterialPageRoute<dynamic>(
         builder: (context) => CallScreen(
           imageUrl: args.imageUrl,
+          chatId: args.chatId,
           nom: args.nom,
           isVideoCall: args.isVideoCall,
-          channel: args.channel,
+          isCaller: args.isCaller,
+          callId: args.callId,
         ),
+        settings: data,
+        fullscreenDialog: true,
+      );
+    },
+    TransportOnly: (data) {
+      return MaterialPageRoute<dynamic>(
+        builder: (context) => TransportOnly(),
         settings: data,
         fullscreenDialog: true,
       );
@@ -459,7 +458,10 @@ class LoginScreenArguments {
 /// SearchUserEvent arguments holder class
 class SearchUserEventArguments {
   final bool isEvent;
-  SearchUserEventArguments({this.isEvent});
+  final bool fromBilletForm;
+  final bool fromTransport;
+  SearchUserEventArguments(
+      {this.isEvent, this.fromBilletForm, this.fromTransport});
 }
 
 /// OtherProfile arguments holder class
@@ -468,20 +470,19 @@ class OtherProfileArguments {
   OtherProfileArguments({@required this.myUser});
 }
 
-/// PickupScreen arguments holder class
-class PickupScreenArguments {
-  final String imageUrl;
-  final String nom;
-  final String channel;
-  PickupScreenArguments({this.imageUrl, this.nom, this.channel});
-}
-
 /// CallScreen arguments holder class
 class CallScreenArguments {
   final String imageUrl;
+  final String chatId;
   final String nom;
   final bool isVideoCall;
-  final String channel;
+  final bool isCaller;
+  final String callId;
   CallScreenArguments(
-      {this.imageUrl, this.nom, this.isVideoCall, this.channel});
+      {this.imageUrl,
+      this.chatId,
+      this.nom,
+      this.isVideoCall,
+      this.isCaller,
+      this.callId});
 }

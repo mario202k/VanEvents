@@ -13,7 +13,7 @@ class Billet {
   final String id; //paymentIntentId
   final BilletStatus status;
   final String paymentIntentId;
-  final String uid;
+  final Map participantsId;
   final String eventId;
   final String imageUrl;
   final Map participants;
@@ -25,7 +25,7 @@ class Billet {
       {this.id,
       this.status,
       this.paymentIntentId,
-      this.uid,
+      this.participantsId,
       this.eventId,
       this.imageUrl,
       this.participants,
@@ -39,7 +39,7 @@ class Billet {
       'status': status
           .toString()
           .substring(status.toString().indexOf('.') + 1),
-      'uid': uid,
+      'participantsId': participantsId,
       'eventId': eventId,
       'imageUrl': imageUrl,
       'participant': participants,
@@ -55,16 +55,16 @@ class Billet {
     BilletStatus billetStatus;
 
     switch (map['status'] as String ) {
-      case 'up_coming':
+      case 'upComing':
         billetStatus = BilletStatus.upComing;
         break;
       case 'check':
         billetStatus = BilletStatus.check;
         break;
-      case 'refund_asked':
+      case 'refundAsked':
         billetStatus = BilletStatus.refundAsked;
         break;
-      case 'refund_refused':
+      case 'refundRefused':
         billetStatus = BilletStatus.refundRefused;
         break;
       case 'refunded':
@@ -75,7 +75,7 @@ class Billet {
     return Billet(
         id: map['id'] as String,
         status: billetStatus,
-        uid: map['uid'] as String,
+        participantsId: map['participantsId'] as Map,
         eventId: map['eventId'] as String,
         imageUrl: map['imageUrl'] as String,
         participants: map['participant'] as Map,

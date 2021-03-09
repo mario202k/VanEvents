@@ -1,4 +1,9 @@
+import 'dart:async';
+import 'dart:io';
+
 import 'package:agora_rtc_engine/rtc_engine.dart';
+import 'package:audioplayers/audio_cache.dart';
+import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
@@ -8,7 +13,7 @@ import 'package:van_events_project/domain/models/my_user.dart';
 import 'package:van_events_project/domain/repositories/my_chat_repository.dart';
 
 final callChangeNotifierProvider =
-    ChangeNotifierProvider<CallChangeNotifier>((ref) {
+    ChangeNotifierProvider.autoDispose<CallChangeNotifier>((ref) {
   return CallChangeNotifier();
 });
 
@@ -17,31 +22,55 @@ class CallChangeNotifier extends ChangeNotifier {
       openMicrophone,
       enableSpeakerphone,
       playEffect,
+      isCaller,
       switchCamera,
-  speaker,
+      speaker,
+  hasStarTimer,
+
       isDisableVideo;
   List<int> remoteUid;
   RtcEngine engine;
   String channel;
+  AudioCache audioCache;
+  AudioPlayer advancedPlayer;
+  int seconds;
+  int minutes;
+  int hours;
+  double currentOpacity;
 
-  void initial(BuildContext context, bool isVideoCall, String myChannel) {
-
+  void initial(BuildContext context, bool isVideoCall, bool myIsCaller,
+      String callId, String chatId) {
+    if(Platform.isAndroid){
+      context.read(myChatRepositoryProvider).setCallReceived(chatId: chatId,callId: callId);
+    }
+    audioCache = AudioCache();
+    advancedPlayer = AudioPlayer();
+    hasStarTimer = false;
     isJoined = false;
     openMicrophone = true;
-    enableSpeakerphone = true;
+    currentOpacity = 1;
+    if (isVideoCall) {
+      enableSpeakerphone = true;
+    } else {
+      enableSpeakerphone = false;
+    }
     isDisableVideo = isVideoCall ?? false;
     playEffect = false;
     switchCamera = true;
+    isCaller = myIsCaller;
     remoteUid = [];
-    channel = myChannel;
+    channel = callId;
+    seconds = 0;
+    minutes = 0;
+    hours = 0;
     initEngine(context);
   }
 
   Future<void> initEngine(BuildContext context) async {
-    engine = await RtcEngine.create(AGORA_KEY);
+    engine = await RtcEngine.create(agoraKey);
     _addListeners();
 
-    if(isDisableVideo){
+    if (isDisableVideo) {
       await engine.enableVideo();
       await engine.startPreview();
     }
@@ -49,15 +78,15 @@ class CallChangeNotifier extends ChangeNotifier {
     await engine.setChannelProfile(ChannelProfile.LiveBroadcasting);
     await engine.setClientRole(ClientRole.Broadcaster);
 
-    await joinChannel(context);
-    // playEffectTonalite();
+    if (isCaller) {
+      await joinChannel(context);
+    }
   }
 
   Future<void> disableVideo() async {
     if (isDisableVideo) {
       await engine.disableVideo();
       isDisableVideo = false;
-
 
       notifyListeners();
     } else {
@@ -68,15 +97,48 @@ class CallChangeNotifier extends ChangeNotifier {
     }
   }
 
+  void startTimer() {
+    if(!hasStarTimer){
+      hasStarTimer = true;
+      Timer.periodic(
+        const Duration(seconds: 1),
+            (timer){
+          if(engine == null){
+            timer.cancel();
+          }
+          seconds = seconds + 1;
+          if (seconds > 59) {
+            minutes += 1;
+            seconds = 0;
+            if (minutes > 59) {
+              hours += 1;
+              minutes = 0;
+            }
+          }
+          notifyListeners();
+        },
+      );
+    }
+
+  }
+
   void _addListeners() {
     engine?.setEventHandler(RtcEngineEventHandler(
       joinChannelSuccess: (channel, uid, elapsed) {
         isJoined = true;
+
+
         notifyListeners();
       },
       userJoined: (uid, elapsed) {
         remoteUid.add(uid);
-        notifyListeners();
+
+        if(isDisableVideo){
+          setCurrentOpacity();
+        }else{
+          notifyListeners();
+        }
+
       },
       userOffline: (uid, reason) {
         remoteUid.removeWhere((element) => element == uid);
@@ -102,7 +164,8 @@ class CallChangeNotifier extends ChangeNotifier {
 
     if (response != null) {
       await engine.joinChannelWithUserAccount(
-          response.data as String, channel, uid);
+          response.data as String, channel, uid).catchError((e){
+      });
     }
   }
 
@@ -158,29 +221,22 @@ class CallChangeNotifier extends ChangeNotifier {
 
   Future<void> playEffectSonnerie() async {
     if (playEffect) {
-      engine?.stopEffect(1)?.then((value) {
-        playEffect = false;
-        notifyListeners();
-      })?.catchError((err) {
-        debugPrint('stopEffect $err');
-      });
+      advancedPlayer.stop();
+      playEffect = false;
     } else {
-      engine
-          ?.playEffect(
-              1,
-              await RtcEngineExtension.getAssetAbsolutePath(
-                  "assets/sound/sonnerie.aac"),
-              -1,
-              1,
-              1,
-              100,
-              true)
-          ?.then((value) {
-        playEffect = true;
-        notifyListeners();
-      })?.catchError((err) {
-        debugPrint('playEffect $err');
+      if (Platform.isIOS) {
+        if (audioCache.fixedPlayer != null) {
+          audioCache.fixedPlayer.startHeadlessService();
+        }
+        advancedPlayer.startHeadlessService();
+      }
+
+      advancedPlayer =
+          await audioCache.loop('sound/sonnerie.aac').catchError((e) {
+        debugPrint(e.toString());
       });
+
+      playEffect = true;
     }
   }
 
@@ -200,6 +256,7 @@ class CallChangeNotifier extends ChangeNotifier {
 
   void destroy() {
     engine?.destroy();
+    engine = null;
   }
 
   void setEngine(RtcEngine value) {
@@ -242,8 +299,28 @@ class CallChangeNotifier extends ChangeNotifier {
     notifyListeners();
   }
 
-  void setSpeaker(){
+  void setSpeaker() {
     speaker = !speaker;
     notifyListeners();
   }
+
+  void setCurrentOpacity(){
+    if (currentOpacity == 0) {
+      currentOpacity = 1;
+    } else {
+      currentOpacity = 0;
+    }
+    notifyListeners();
+  }
+
+  void stopAllSound() {
+    if(playEffect){
+      if(isCaller){
+        playEffectTonalite();
+      }else{
+        playEffectSonnerie();
+      }
+    }
+  }
+
 }

@@ -38,7 +38,9 @@ class UploadEventState extends State<UploadEvent> {
   @override
   void dispose() {
     super.dispose();
-    uploadEventRead.nodes.forEach((node) => node.dispose());
+    for (final node in uploadEventRead.nodes) {
+      node.dispose();
+    }
     //uploadEventRead.dispose();
   }
 
@@ -190,7 +192,8 @@ class UploadEventState extends State<UploadEvent> {
                                       fit: BoxFit.cover,
                                     ),
                                   ),
-                                  imageUrl: widget.myEvent.imagePhotos[index] as String,
+                                  imageUrl: widget.myEvent.imagePhotos[index]
+                                      as String,
                                   fit: BoxFit.scaleDown,
                                 );
                               })
@@ -335,39 +338,42 @@ class UploadEventState extends State<UploadEvent> {
                       const SizedBox(
                         height: 4,
                       ),
-                      FormBuilderDateTimePicker(
-                        controller: uploadEventRead.dateFinController,
-                        firstDate: uploadEventRead.dateDebut ?? DateTime.now(),
-                        initialValue: uploadEventRead.isUpdating
-                            ? widget.myEvent.dateFin
-                            : null,
-                        initialDate:
-                            uploadEventRead.dateDebut ?? DateTime.now(),
-                        name: "Date de fin",
-                        onChanged: (dt) {
-                          uploadEventRead.setDateFin(dt);
-                        },
-                        style: Theme.of(context).textTheme.bodyText1,
-                        cursorColor: Theme.of(context).colorScheme.onBackground,
-                        focusNode: uploadEventRead.nodes[2],
-                        onEditingComplete: () {
-                          if (uploadEventRead
-                              .fbKey.currentState.fields['Date de fin']
-                              .validate()) {
-                            uploadEventRead.nodes[2].unfocus();
-                            //FocusScope.of(context).requestFocus(nodes[3]);
-                          }
-                        },
-                        format: DateFormat("dd/MM/yyyy 'à' HH:mm"),
-                        decoration: InputDecoration(
-                            labelText: !uploadEventRead.isUpdating
-                                ? 'Date de fin'
-                                : DateFormat("dd/MM/yyyy 'à' HH:mm")
-                                    .format(widget.myEvent.dateFin)),
-                        validator: FormBuilderValidators.required(
-                          context,
-                        ),
-                      ),
+                      Consumer(builder: (context, watch, child) {
+                        final dateDebut = watch(uploadEventProvider).dateDebut;
+                        return FormBuilderDateTimePicker(
+                          controller: uploadEventRead.dateFinController,
+                          firstDate: dateDebut ?? DateTime.now(),
+                          initialValue: uploadEventRead.isUpdating
+                              ? widget.myEvent.dateFin
+                              : null,
+                          initialDate: dateDebut ?? DateTime.now(),
+                          name: "Date de fin",
+                          onChanged: (dt) {
+                            uploadEventRead.setDateFin(dt);
+                          },
+                          style: Theme.of(context).textTheme.bodyText1,
+                          cursorColor:
+                              Theme.of(context).colorScheme.onBackground,
+                          focusNode: uploadEventRead.nodes[2],
+                          onEditingComplete: () {
+                            if (uploadEventRead
+                                .fbKey.currentState.fields['Date de fin']
+                                .validate()) {
+                              uploadEventRead.nodes[2].unfocus();
+                              //FocusScope.of(context).requestFocus(nodes[3]);
+                            }
+                          },
+                          format: DateFormat("dd/MM/yyyy 'à' HH:mm"),
+                          decoration: InputDecoration(
+                              labelText: !uploadEventRead.isUpdating
+                                  ? 'Date de fin'
+                                  : DateFormat("dd/MM/yyyy 'à' HH:mm")
+                                      .format(widget.myEvent.dateFin)),
+                          validator: FormBuilderValidators.required(
+                            context,
+                          ),
+                        );
+                      }),
                       const Divider(),
                       if (!uploadEventRead.isUpdating)
                         Column(

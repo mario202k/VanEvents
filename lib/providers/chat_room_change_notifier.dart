@@ -11,8 +11,7 @@ import 'package:van_events_project/domain/models/my_chat.dart';
 import 'package:van_events_project/domain/models/my_user.dart';
 import 'package:van_events_project/domain/repositories/my_chat_repository.dart';
 
-
-final chatRoomProvider = ChangeNotifierProvider<ChatRoomChangeNotifier>((ref) {
+final chatRoomProvider = ChangeNotifierProvider.autoDispose<ChatRoomChangeNotifier>((ref) {
   return ChatRoomChangeNotifier();
 });
 
@@ -24,7 +23,7 @@ class ChatRoomChangeNotifier extends ChangeNotifier {
   Timer _throttle;
   String chatId;
   bool showSendBotton = false;
-  List<MyMessage> oldMessages = <MyMessage>[];
+  List<MyMessage> oldMessages;
   GlobalKey<AnimatedListState> listKey;
   MyChat myChat;
   List<MyUser> myUsersList;
@@ -50,18 +49,22 @@ class ChatRoomChangeNotifier extends ChangeNotifier {
   String replyName;
   String replyMessage;
   String replyMessageId;
+  String uid;
   MyMessageType replyMessagetype;
   Map<String, MyMessage> myRepliedMessage;
+  bool isBlocked;
 
   File tempImage;
 
-  void setReplyToMessage(String name, String message,String messageId, MyMessageType replyType) {
+  void setReplyToMessage(
+      String name, String message, String messageId, MyMessageType replyType) {
     replyName = name;
     replyMessage = message;
     replyMessageId = messageId;
     replyMessagetype = replyType;
     notifyListeners();
   }
+
   void setReplyToNull() {
     replyName = '';
     replyMessage = '';
@@ -76,6 +79,7 @@ class ChatRoomChangeNotifier extends ChangeNotifier {
     this.chatId = chatId;
     this.context = context;
     myChatRepo = context.read(myChatRepositoryProvider);
+    uid = context.read(myUserProvider).id;
     myChatRepo.setChatId(chatId);
     messages = <MyMessage>[];
     oldMessages = <MyMessage>[];
@@ -84,14 +88,26 @@ class ChatRoomChangeNotifier extends ChangeNotifier {
     hasNext = true;
     isLoading = true;
     myRepliedMessage = {};
+    isBlocked = false;
   }
 
   Future<void> fetchAllMessages() async {
-
     try {
       myChat = await getMyChat(chatId);
 
-      myUsersList = await chatUsers(myChat);
+      myUsersList = getFinalListUser(await chatUsers(myChat));
+
+      for (final myUser in myUsersList) {// blocked or not
+        if(myUser.id == uid){
+          continue;
+        }
+        for(final id in myUser.blockedUser ){
+          if(id.toString() == uid){
+            isBlocked = true;
+            break;
+          }
+        }
+      }
 
       oldMessages = await getChatMessages(chatId);
 
@@ -99,9 +115,7 @@ class ChatRoomChangeNotifier extends ChangeNotifier {
         lastOldMessage = oldMessages.first;
       }
 
-
       if (!myChat.isGroupe) {
-
         friend = myUsersList.firstWhere((user) => user.id != myChatRepo.uid);
         streamUserFriend = myChatRepo.userFriendStream(friend.id);
         imageUrl = friend.imageUrl;
@@ -112,9 +126,10 @@ class ChatRoomChangeNotifier extends ChangeNotifier {
       }
       isLoading = false;
 
-      await Future.forEach(oldMessages, (element) async{
+      await Future.forEach(oldMessages, (element) async {
         if (element.type == MyMessageType.reply) {
-          final MyMessage myMessage = await getReplyMessage(element.replyMessageId as String);
+          final MyMessage myMessage =
+              await getReplyMessage(element.replyMessageId as String);
           myRepliedMessage.addAll({element.id as String: myMessage});
         }
       });
@@ -140,6 +155,14 @@ class ChatRoomChangeNotifier extends ChangeNotifier {
 
       oldMessages.addAll(newOldMessage);
 
+      await Future.forEach(oldMessages, (element) async {
+        if (element.type == MyMessageType.reply) {
+          final MyMessage myMessage =
+              await getReplyMessage(element.replyMessageId as String);
+          myRepliedMessage.addAll({element.id as String: myMessage});
+        }
+      });
+
       isFetchingOldMessage = false;
       notifyListeners();
     } catch (error) {
@@ -150,11 +173,9 @@ class ChatRoomChangeNotifier extends ChangeNotifier {
 
   Future<void> myNewMessages(MyMessage myMessage) async {
     if (messages != null && listKey != null) {
-
-      if(myMessage.idFrom  == context.read(myUserProvider).id){
+      if (myMessage.idFrom == context.read(myUserProvider).id) {
         final AudioCache audioCache = AudioCache();
         final AudioPlayer advancedPlayer = AudioPlayer();
-
 
         if (Platform.isIOS) {
           if (audioCache.fixedPlayer != null) {
@@ -168,15 +189,14 @@ class ChatRoomChangeNotifier extends ChangeNotifier {
         });
       }
 
-
-
       if (myMessage.type == MyMessageType.reply) {
-        final MyMessage myMessagee = await getReplyMessage(myMessage.replyMessageId);
+        final MyMessage myMessagee =
+            await getReplyMessage(myMessage.replyMessageId);
         myRepliedMessage.addAll({myMessage.id: myMessagee});
       }
       messages.insert(0, myMessage);
-      listKey.currentState.insertItem(0, duration: const Duration(milliseconds: 500));
-
+      listKey.currentState
+          .insertItem(0, duration: const Duration(milliseconds: 500));
     }
   }
 
@@ -191,7 +211,6 @@ class ChatRoomChangeNotifier extends ChangeNotifier {
   }
 
   void setShowSendBotton(bool b) {
-
     showSendBotton = b;
     notifyListeners();
 
@@ -199,8 +218,8 @@ class ChatRoomChangeNotifier extends ChangeNotifier {
     if (_throttle?.isActive ?? false) {
       _throttle.cancel();
     }
-    _throttle = Timer(const Duration(seconds: 2), (){
-      myChatRepo.setIsReading();
+    _throttle = Timer(const Duration(seconds: 2), () {
+      myChatRepo?.setIsReading();
     });
   }
 
@@ -213,8 +232,6 @@ class ChatRoomChangeNotifier extends ChangeNotifier {
   }
 
   Future<List<MyMessage>> getChatMessages(String chatId) {
-
-
     return FirebaseFirestore.instance
         .collection('chats')
         .doc(chatId)
@@ -258,7 +275,6 @@ class ChatRoomChangeNotifier extends ChangeNotifier {
   }
 
   Future<MyChat> getMyChat(String chatId) {
-
     return FirebaseFirestore.instance
         .collection('chats')
         .doc(chatId)
@@ -266,14 +282,43 @@ class ChatRoomChangeNotifier extends ChangeNotifier {
         .then((doc) => MyChat.fromMap(doc.data()));
   }
 
-  Future<List<MyUser>> chatUsers(MyChat myChat) {
-    return FirebaseFirestore.instance
-        .collection('users')
-        .where('id', whereIn: myChat.membres.keys.toList())
-        .get()
-        .then((users) => users.docs
-            .map((user) => MyUser.fromMap(user.data()))
-            .toList());
+  Future<List<List<MyUser>>> chatUsers(MyChat myChat) async {
+    final myListOfList = listLimit(myChat.membres.keys.toList(), 10);
+
+    final List<Future<List<MyUser>>> myListFuture = [];
+
+    for (final listOf10 in myListOfList) {
+      myListFuture.add(FirebaseFirestore.instance
+          .collection('users')
+          .where('id', whereIn: listOf10)
+          .get()
+          .then((users) =>
+              users.docs.map((user) => MyUser.fromMap(user.data())).toList()));
+    }
+
+    return Future.wait(myListFuture);
+    // //TODO whereIn limité a 10
+    // return FirebaseFirestore.instance
+    //     .collection('users')
+    //     .where('id', whereIn: myChat.membres.keys.toList())
+    //     .get()
+    //     .then((users) =>
+    //         users.docs.map((user) => MyUser.fromMap(user.data())).toList());
+  }
+
+  List<List<String>> listLimit(List list, int limit) {
+    final List<List<String>> toReturn = [<String>[]];
+
+    for (int i = 0; i < list.length; i++) {
+      if (toReturn.last.length < limit) {
+        toReturn.last.add(list[i].toString());
+      } else {
+        toReturn.add(<String>[]);
+        toReturn.last.add(list[i].toString());
+      }
+    }
+
+    return toReturn;
   }
 
   @override
@@ -281,10 +326,8 @@ class ChatRoomChangeNotifier extends ChangeNotifier {
     return 'ChatRoomChangeNotifier{chatId: $chatId,  showSendBotton: $showSendBotton, oldMessages: $oldMessages, listKey: $listKey, myChat: $myChat, myUsersList: $myUsersList, friend: $friend, imageUrl: $imageUrl, nomTitre: $nomTitre, streamUserFriend: $streamUserFriend, listPhoto: $listPhoto, listTempMessages: $listTempMessages, lastDocument: $lastDocument, documentLimit: $documentLimit, hasNext: $hasNext, isFetchingUsers: $isFetchingUsers, isFetchingOldMessage: $isFetchingOldMessage, isLoading: $isLoading, hasError: $hasError, hasErrorOnFetchingOldMessage: $hasErrorOnFetchingOldMessage, lastOldMessage: $lastOldMessage, messages: $messages, context: $context, db: $myChatRepo, replyName: $replyName, replyMessage: $replyMessage, replyMessagetype: $replyMessagetype, myRepliedMessage: $myRepliedMessage}';
   }
 
-  Future<MyMessage> getReplyMessage(String replyMessageId) async{
-
-    return myChatRepo.getMessage(chatId,replyMessageId);
-
+  Future<MyMessage> getReplyMessage(String replyMessageId) async {
+    return myChatRepo.getMessage(chatId, replyMessageId);
   }
 
   void setAllNull() {
@@ -299,7 +342,6 @@ class ChatRoomChangeNotifier extends ChangeNotifier {
     listKey = null;
     hasNext = null;
     isLoading = null;
-
   }
 
   void setNewTempImage(File file) {
@@ -310,10 +352,32 @@ class ChatRoomChangeNotifier extends ChangeNotifier {
 
   void newCall(MyMessage myMessage) {
     if (messages != null && listKey != null) {
-
       messages.insert(0, myMessage);
-      listKey.currentState.insertItem(0, duration: const Duration(milliseconds: 500));
-
+      listKey.currentState
+          .insertItem(0, duration: const Duration(milliseconds: 500));
     }
+  }
+
+  List<MyUser> getFinalListUser(List<List<MyUser>> list) {
+    final List<MyUser> toReturn = [];
+
+    for (final myList in list) {
+      for (final myUser in myList) {
+        toReturn.add(myUser);
+      }
+    }
+
+    return toReturn;
+  }
+
+  MyUser getUserFriend() {
+
+   return myUsersList.firstWhere((element) => element.id != uid);
+
+  }
+
+  void setIsBlocked() {
+    isBlocked = true;
+    //notifyListeners();
   }
 }

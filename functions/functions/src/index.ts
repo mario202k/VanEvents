@@ -615,9 +615,10 @@ exports.notificationTransport = functions.region('europe-west1').firestore
 
 exports.sendCall = functions.region('europe-west1').firestore
     .document('chats/{chatId}/calls/{callId}')
-    .onCreate(async (snap, context) => {
+    .onCreate(async (snapCall, context) => {
 
-        const doc = snap.data()
+        const doc = snapCall.data()
+        const chatId = doc!.chatId;
         const idFrom = doc!.idFrom;
         const idTo = doc!.idTo;
         const hasVideo = doc!.hasVideo;
@@ -633,23 +634,76 @@ exports.sendCall = functions.region('europe-west1').firestore
 
         console.log(platform, 'Platform');
 
-
         // Get info user from (sent)
         const userFrom = await db.collection('users').doc(idFrom).get();
 
         if (platform === 'android') {
 
+            const userTo = await db.collection('users').doc(idTo).get();
+
+            const isLogin: boolean = userTo.data()!.isLogin;
+
+            console.log(isLogin, 'isLogin');
+
+            if(!isLogin){
+
+                functions.region('europe-west1')
+                    .firestore.document(`users/${idTo}`)
+                    .onWrite((snap, context) => {
+                        const docBefore = snap.before.data();
+                        const docAfter = snap.after.data();
+
+                        const isLoginBefore: boolean = docBefore!.isLogin;
+                        const isLoginAfter: boolean = docAfter!.isLogin;
+
+                        console.log(isLoginBefore, 'isLoginBefore');
+                        console.log(isLoginAfter, 'isLoginAfter');
+
+                        if (!isLoginBefore && isLoginAfter) {
+
+                            const payload: admin.messaging.MessagingPayload = {
+
+                                data: {
+                                    caller_id: `${idFrom}/${snapCall.id}!${chatId}`,
+                                    caller_name: `${userFrom.data()!.nom}`,
+                                    caller_id_type: "email",
+                                    has_video: hasVideo,
+                                }
+                            };
+
+                            fcm.sendToDevice(tokens, payload);
+                            process.exit()
+
+                        }
+
+                    });
+
+                const payload: admin.messaging.MessagingPayload = {
+
+                    data: {
+                        caller_id: `${idFrom}/${snapCall.id}!${chatId}`,
+                        caller_name: `${userFrom.data()!.nom}`,
+                        caller_id_type: "email",
+                        has_video: hasVideo,
+                    }
+                };
+
+                await fcm.sendToDevice(tokens, payload);
+            }
+
+
+
             const payload: admin.messaging.MessagingPayload = {
 
                 data: {
-                    caller_id: `${idFrom}`,
+                    caller_id: `${idFrom}/${snapCall.id}!${chatId}`,
                     caller_name: `${userFrom.data()!.nom}`,
                     caller_id_type: "email",
                     has_video: hasVideo,
                 }
             };
 
-            return fcm.sendToDevice(tokens, payload);
+            return await fcm.sendToDevice(tokens, payload);
 
         } else {
             const voiPToken = tokenDoc.data()!.voIPToken;
@@ -673,7 +727,7 @@ exports.sendCall = functions.region('europe-west1').firestore
 
 
             notification.payload = {
-                "caller_id": `${idFrom}`,
+                "caller_id": `${idFrom}/${snapCall.id}!${chatId}`,
                 "caller_name": `${userFrom.data()!.nom}`,
                 "caller_id_type": "email",
                 "has_video": hasVideo === "true"
@@ -713,39 +767,73 @@ exports.sendMessages = functions.region('europe-west1').firestore
         // Get info user from (sent)
         const userFrom = await db.collection('users').doc(idFrom).get();
 
+        const querySnapshot = await db.collection('users').doc(idTo).collection('tokens').get();
+
+        const tokens = querySnapshot.docs.map((snap: { id: any; }) => snap.id);
+
+        console.log(`Found user from: ${userFrom.data()!.nom}`)
+
+        // Get info user from (sent)
+        console.log(`Found user from: ${userFrom.data()!.nom}`)
 
         if (idTo != null) {
             // Get push token user to (receive)
-            const querySnapshot = await db.collection('users').doc(idTo).collection('tokens').get();
+            const tokenDoc = await db.collection('users').doc(idTo).collection('tokens').doc(tokens[0]).get();
 
-            const tokens = querySnapshot.docs.map((snap: { id: any; }) => snap.id);
+            const platform = tokenDoc.data()!.platform;
 
-            console.log(`Found user from: ${userFrom.data()!.nom}`)
+            console.log(platform, 'Platform');
 
-            // Get info user from (sent)
-            console.log(`Found user from: ${userFrom.data()!.nom}`)
-            const payload: admin.messaging.MessagingPayload = {
+            if (platform === 'android') {
+                const payload: admin.messaging.MessagingPayload = {
 
-                data: {
-                    chatId: chatId,
-                    id: doc!.id,
-                    type: type.toString(),
-                    idFrom: idFrom,
-                    idTo: idTo,
-                    date: date.toJSON().toString(),
-                    replyMessageId: replyMessageId,
-                    replyType: replyType.toString(),
-                    title: `${userFrom.data()!.nom}`,
-                    body: contentMessage,
-                }
-            };
+                    data: {
+                        chatId: chatId,
+                        id: doc!.id,
+                        type: type.toString(),
+                        idFrom: idFrom,
+                        idTo: idTo,
+                        date: date.toJSON().toString(),
+                        replyMessageId: replyMessageId,
+                        replyType: replyType.toString(),
+                        title: `${userFrom.data()!.nom}`,
+                        body: contentMessage,
+                    }
+                };
 
-            return fcm.sendToDevice(tokens, payload);
+                return fcm.sendToDevice(tokens, payload);
+            } else {
+                const payload: admin.messaging.MessagingPayload = {
+                    notification: {
+                        title: `${userFrom.data()!.nom}`,
+                        body: contentMessage,
+                    },
+
+                    data: {
+                        chatId: chatId,
+                        id: doc!.id,
+                        type: type.toString(),
+                        idFrom: idFrom,
+                        idTo: idTo,
+                        date: date.toJSON().toString(),
+                        replyMessageId: replyMessageId,
+                        replyType: replyType.toString(),
+
+                    }
+                };
+
+                return fcm.sendToDevice(tokens, payload);
+            }
 
         } else {
             // Get info user from (sent)
             console.log(`Found user from: ${userFrom.data()!.nom}`)
+
             const payload: admin.messaging.MessagingPayload = {
+                notification: {
+                    title: `${userFrom.data()!.nom}`,
+                    body: contentMessage,
+                },
 
                 data: {
                     chatId: chatId,
@@ -755,11 +843,12 @@ exports.sendMessages = functions.region('europe-west1').firestore
                     date: date.toJSON().toString(),
                     replyMessageId: replyMessageId,
                     replyType: replyType.toString(),
-                    title: `${userFrom.data()!.nom}`,
-                    body: contentMessage,
+
                 }
             };
+
             return fcm.sendToTopic(chatId, payload);
+
         }
     });
 

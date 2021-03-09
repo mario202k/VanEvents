@@ -264,8 +264,8 @@ class BilletDetails extends HookWidget {
             .getDocId(path: MyPath.refunds(billet.organisateurId)),
         amount: billet.amount,
         paymentIntent: billet.paymentIntentId,
-        status: RefundStatus.new_demand,
-        reason: RefundReason.requested_by_customer,
+        status: RefundStatus.newDemand,
+        reason: RefundReason.requestedByCustomer,
       );
       context
           .read(stripeRepositoryProvider)

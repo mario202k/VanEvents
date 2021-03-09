@@ -18,6 +18,7 @@ class RouteAuthentication extends HookWidget {
     final myUser = useProvider(myUserProvider);
     final myUserRepo = useProvider(myUserRepository);
 
+    // myUserRepo.addDummyUser();
     BlocProvider.of<AuthenticationCubit>(context)
         .authenticationStarted(myUserRepo, context);
 
@@ -25,6 +26,8 @@ class RouteAuthentication extends HookWidget {
       child: BlocListener<AuthenticationCubit, AuthenticationState>(
         listener: (context, state) {
           if (state is AuthenticationFailure) {
+            myUserRepo.setUid(null);
+            myUser.setUser(null);
             if (state.seenOnboarding) {
               Navigator.of(context).pushReplacementNamed(Routes.mySplashScreen);
             } else {

@@ -1,5 +1,6 @@
 import 'dart:io';
 
+import 'package:auto_route/auto_route.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:cloud_functions/cloud_functions.dart';
@@ -15,7 +16,6 @@ import 'package:shimmer/shimmer.dart';
 import 'package:van_events_project/domain/models/balance.dart';
 import 'package:van_events_project/domain/models/list_payout.dart';
 import 'package:van_events_project/domain/models/my_user.dart';
-import 'package:van_events_project/domain/models/payout.dart';
 import 'package:van_events_project/domain/models/transfer.dart';
 import 'package:van_events_project/domain/repositories/stripe_repository.dart';
 import 'package:van_events_project/presentation/pages/stripe_profile/cubit/stripe_profile_cubit.dart';
@@ -246,8 +246,10 @@ class StripeProfile extends HookWidget {
                         ),
                         InkWell(
                           onTap: () async {
+
                             await sendDocument(boolToggleRead, context,
                                 myUserRead, db, 'front');
+
                           },
                           child: Consumer(builder: (context, watch, child) {
                             if (watch(boolToggleProvider).showSpinner &&
@@ -401,6 +403,8 @@ class StripeProfile extends HookWidget {
           content: file,
           title: 'Êtes-vous sûr de vouloir envoyer cette image?');
       if (rep != null && rep) {
+        Show.showLoading(context);
+
         final firebase_storage.TaskSnapshot taskSnapshot =
             await firebase_storage.FirebaseStorage.instance
                 .ref()
@@ -418,18 +422,19 @@ class StripeProfile extends HookWidget {
           switch (type) {
             case 'front':
               boolToggleRead.setUrlFront(url);
-              db.setUrlFront(url);
+              await db.setUrlFront(url);
               break;
             case 'back':
               boolToggleRead.setUrlBack(url);
-              db.setUrlBack(url);
+              await db.setUrlBack(url);
               break;
             case 'justificatifDomicile':
               boolToggleRead.setUrljustificatifDomicile(url);
-              db.setUrljustificatifDomicile(url);
+              await db.setUrljustificatifDomicile(url);
               break;
           }
         }
+        ExtendedNavigator.root.pop();
       }
     }
     boolToggleRead.setShowSpinner();

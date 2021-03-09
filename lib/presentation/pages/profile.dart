@@ -15,6 +15,7 @@ import 'package:van_events_project/domain/repositories/my_billet_repository.dart
 import 'package:van_events_project/domain/repositories/my_user_repository.dart';
 import 'package:van_events_project/domain/routing/route.gr.dart';
 import 'package:van_events_project/presentation/widgets/model_body.dart';
+import 'package:van_events_project/presentation/widgets/show.dart';
 import 'package:van_events_project/providers/toggle_bool.dart';
 
 class Profil extends HookWidget {
@@ -278,16 +279,24 @@ class Profil extends HookWidget {
 
   Future getImageGallery(MyUserRepository db) async {
     final _picker = ImagePicker();
+    final result = await _picker.getImage(source: ImageSource.gallery);
+    if(result == null){
+      return;
+    }
     final File imageProfil =
-        File((await _picker.getImage(source: ImageSource.gallery)).path);
+        File(result.path);
     //création du path pour le flyer
     await db.uploadImageProfil(imageProfil);
   }
 
   Future getImageCamera(MyUserRepository db) async {
     final _picker = ImagePicker();
+    final result = await _picker.getImage(source: ImageSource.camera);
+    if(result == null){
+      return;
+    }
     final File imageProfil =
-        File((await _picker.getImage(source: ImageSource.camera)).path);
+        File(result.path);
     await db.uploadImageProfil(imageProfil);
   }
 
@@ -329,8 +338,9 @@ class Profil extends HookWidget {
                                           height: 100,
                                           width: 100,
                                           decoration: BoxDecoration(
-                                            borderRadius: const BorderRadius.all(
-                                                Radius.circular(100)),
+                                            borderRadius:
+                                                const BorderRadius.all(
+                                                    Radius.circular(100)),
                                             image: DecorationImage(
                                               image: imageProvider,
                                               fit: BoxFit.cover,
@@ -385,8 +395,8 @@ class Profil extends HookWidget {
                                 height: 100,
                                 width: 100,
                                 decoration: BoxDecoration(
-                                  borderRadius:
-                                      const BorderRadius.all(Radius.circular(100)),
+                                  borderRadius: const BorderRadius.all(
+                                      Radius.circular(100)),
                                   image: DecorationImage(
                                     image: imageProvider,
                                     fit: BoxFit.cover,
@@ -415,26 +425,57 @@ class Profil extends HookWidget {
                           ),
                   ),
                 ),
-                if (other == null) Positioned(
-                        bottom: -15,
-                        right: 10,
-                        child: IconButton(
-                            icon: Icon(
-                              FontAwesomeIcons.pencilAlt,
-                              color: Theme.of(context).colorScheme.primary,
-                            ),
-                            onPressed: () {
+                if (other == null)
+                  Positioned(
+                      bottom: -15,
+                      right: 10,
+                      child: IconButton(
+                          icon: Icon(
+                            FontAwesomeIcons.pencilAlt,
+                            color: Theme.of(context).colorScheme.primary,
+                          ),
+                          onPressed: () async {
+                            final rep =
+                                await Show.showDialogChoicesAvatar(context);
+                            if (rep == null) {
+                              return;
+                            }
+                            if (rep) {
+                              final newName = await Show.showNewName(context);
+                              if (newName == null) {
+                                return;
+                              }
+                              db.setNewName(newName);
+                            } else {
                               showDialogSource(context, db);
-                            })) else const SizedBox(),
+                            }
+                          }))
               ],
             ),
           ),
-          Center(
-            child: Text(
-              user.nom ?? 'Anonymous',
-              style: Theme.of(context).textTheme.bodyText1,
+          if (other == null)
+            streamMyUser.when(
+                data: (data) {
+                  return Center(
+                    child: Text(
+                      data.nom ?? 'Anonymous',
+                      style: Theme.of(context).textTheme.bodyText1,
+                    ),
+                  );
+                },
+                loading: () => Center(
+                      child: CircularProgressIndicator(
+                          valueColor: AlwaysStoppedAnimation<Color>(
+                              Theme.of(context).colorScheme.primary)),
+                    ),
+                error: (err, stack) => const Icon(Icons.error))
+          else
+            Center(
+              child: Text(
+                user.nom ?? 'Anonymous',
+                style: Theme.of(context).textTheme.bodyText1,
+              ),
             ),
-          ),
           const SizedBox(
             height: 20,
           ),
@@ -502,8 +543,8 @@ class Profil extends HookWidget {
                                   height: 84,
                                   width: 84,
                                   decoration: BoxDecoration(
-                                    borderRadius:
-                                        const BorderRadius.all(Radius.circular(84)),
+                                    borderRadius: const BorderRadius.all(
+                                        Radius.circular(84)),
                                     image: DecorationImage(
                                       image: imageProvider,
                                       fit: BoxFit.cover,
@@ -556,46 +597,48 @@ class Profil extends HookWidget {
                     error: (err, stack) => const Icon(Icons.error))
                 : const SizedBox(),
           ),
-          if (other == null) streamMyUser.when(
-                  data: (user) {
-                    return Column(
-                      children: user.genres
-                          .map((e) => ListTile(
-                                title: Text(
-                                  e?.toString() ?? '',
-                                  style: Theme.of(context).textTheme.bodyText1,
-                                ),
-                                trailing: IconButton(
-                                  onPressed: null,
-                                  icon: Icon(FontAwesomeIcons.solidHeart,
-                                      color: Theme.of(context)
-                                          .colorScheme
-                                          .primary),
-                                ),
-                              ))
-                          .toList(),
-                    );
-                  },
-                  loading: () => Center(
-                        child: CircularProgressIndicator(
-                            valueColor: AlwaysStoppedAnimation<Color>(
-                                Theme.of(context).colorScheme.primary)),
-                      ),
-                  error: (err, stack) => const Icon(Icons.error)) else Column(
-                  children: other.genres
-                      .map((e) => ListTile(
-                            title: Text(
-                              e?.toString() ?? '',
-                              style: Theme.of(context).textTheme.bodyText1,
-                            ),
-                            trailing: IconButton(
-                              onPressed: null,
-                              icon: Icon(FontAwesomeIcons.solidHeart,
-                                  color: Theme.of(context).colorScheme.primary),
-                            ),
-                          ))
-                      .toList(),
-                ),
+          if (other == null)
+            streamMyUser.when(
+                data: (user) {
+                  return Column(
+                    children: user.genres
+                        .map((e) => ListTile(
+                              title: Text(
+                                e?.toString() ?? '',
+                                style: Theme.of(context).textTheme.bodyText1,
+                              ),
+                              trailing: IconButton(
+                                onPressed: null,
+                                icon: Icon(FontAwesomeIcons.solidHeart,
+                                    color:
+                                        Theme.of(context).colorScheme.primary),
+                              ),
+                            ))
+                        .toList(),
+                  );
+                },
+                loading: () => Center(
+                      child: CircularProgressIndicator(
+                          valueColor: AlwaysStoppedAnimation<Color>(
+                              Theme.of(context).colorScheme.primary)),
+                    ),
+                error: (err, stack) => const Icon(Icons.error))
+          else
+            Column(
+              children: other.genres
+                  .map((e) => ListTile(
+                        title: Text(
+                          e?.toString() ?? '',
+                          style: Theme.of(context).textTheme.bodyText1,
+                        ),
+                        trailing: IconButton(
+                          onPressed: null,
+                          icon: Icon(FontAwesomeIcons.solidHeart,
+                              color: Theme.of(context).colorScheme.primary),
+                        ),
+                      ))
+                  .toList(),
+            ),
           const Divider(),
           ListTile(
             leading: Text(
@@ -621,45 +664,47 @@ class Profil extends HookWidget {
                     error: (err, stack) => const Icon(Icons.error))
                 : const SizedBox(),
           ),
-          if (other == null) streamMyUser.when(
-                  data: (user) => Column(
-                        children: user.types
-                            .map((e) => ListTile(
-                                  title: Text(
-                                    e?.toString() ?? '',
-                                    style:
-                                        Theme.of(context).textTheme.bodyText1,
-                                  ),
-                                  trailing: IconButton(
-                                    onPressed: null,
-                                    icon: Icon(FontAwesomeIcons.solidHeart,
-                                        color: Theme.of(context)
-                                            .colorScheme
-                                            .primary),
-                                  ),
-                                ))
-                            .toList(),
-                      ),
-                  loading: () => Center(
-                        child: CircularProgressIndicator(
-                            valueColor: AlwaysStoppedAnimation<Color>(
-                                Theme.of(context).colorScheme.primary)),
-                      ),
-                  error: (err, stack) => const Icon(Icons.error)) else Column(
-                  children: other.types
-                      .map((e) => ListTile(
-                            title: Text(
-                              e?.toString() ?? '',
-                              style: Theme.of(context).textTheme.bodyText1,
-                            ),
-                            trailing: IconButton(
-                              onPressed: null,
-                              icon: Icon(FontAwesomeIcons.solidHeart,
-                                  color: Theme.of(context).colorScheme.primary),
-                            ),
-                          ))
-                      .toList(),
-                ),
+          if (other == null)
+            streamMyUser.when(
+                data: (user) => Column(
+                      children: user.types
+                          .map((e) => ListTile(
+                                title: Text(
+                                  e?.toString() ?? '',
+                                  style: Theme.of(context).textTheme.bodyText1,
+                                ),
+                                trailing: IconButton(
+                                  onPressed: null,
+                                  icon: Icon(FontAwesomeIcons.solidHeart,
+                                      color: Theme.of(context)
+                                          .colorScheme
+                                          .primary),
+                                ),
+                              ))
+                          .toList(),
+                    ),
+                loading: () => Center(
+                      child: CircularProgressIndicator(
+                          valueColor: AlwaysStoppedAnimation<Color>(
+                              Theme.of(context).colorScheme.primary)),
+                    ),
+                error: (err, stack) => const Icon(Icons.error))
+          else
+            Column(
+              children: other.types
+                  .map((e) => ListTile(
+                        title: Text(
+                          e?.toString() ?? '',
+                          style: Theme.of(context).textTheme.bodyText1,
+                        ),
+                        trailing: IconButton(
+                          onPressed: null,
+                          icon: Icon(FontAwesomeIcons.solidHeart,
+                              color: Theme.of(context).colorScheme.primary),
+                        ),
+                      ))
+                  .toList(),
+            ),
           const Divider(),
           ListTile(
             leading: Icon(FontAwesomeIcons.envelope,
@@ -669,33 +714,62 @@ class Profil extends HookWidget {
               style: Theme.of(context).textTheme.bodyText1,
             ),
           ),
+          if (other != null)
+            StreamBuilder<MyUser>(
+                stream: context.read(myUserRepository).userStream(),
+                builder: (context, snapshot) {
+                  if (!snapshot.hasData) {
+                    return const SizedBox();
+                  }
+                  bool isBlocked = false;
+                  for (final id in snapshot.data.blockedUser) {
+                    if (id.toString() == other.id) {
+                      isBlocked = true;
+                      break;
+                    }
+                  }
+                  return FlatButton(
+                    onPressed: () async {
+                      if (isBlocked) {
+                        context
+                            .read(myUserRepository)
+                            .setUserUnBlocked(other.id);
+                      } else {
+                        context.read(myUserRepository).setUserBlocked(other.id);
+                      }
+                    },
+                    child: Text(isBlocked
+                        ? 'Débloquer le contact'
+                        : 'Bloquer le contact'),
+                  );
+                })
         ],
       ),
     );
   }
 }
 
-class CustomShapeBorder extends ContinuousRectangleBorder {
-  @override
-  Path getOuterPath(Rect rect, {TextDirection textDirection}) {
-    const double innerCircleRadius = 150.0;
-
-    final Path path = Path();
-    path.lineTo(0, rect.height);
-    path.quadraticBezierTo(rect.width / 2 - (innerCircleRadius / 2) - 30,
-        rect.height + 15, rect.width / 2 - 75, rect.height + 50);
-    path.cubicTo(
-        rect.width / 2 - 40,
-        rect.height + innerCircleRadius - 40,
-        rect.width / 2 + 40,
-        rect.height + innerCircleRadius - 40,
-        rect.width / 2 + 75,
-        rect.height + 50);
-    path.quadraticBezierTo(rect.width / 2 + (innerCircleRadius / 2) + 30,
-        rect.height + 15, rect.width, rect.height);
-    path.lineTo(rect.width, 0.0);
-    path.close();
-
-    return path;
-  }
-}
+// class CustomShapeBorder extends ContinuousRectangleBorder {
+//   @override
+//   Path getOuterPath(Rect rect, {TextDirection textDirection}) {
+//     const double innerCircleRadius = 150.0;
+//
+//     final Path path = Path();
+//     path.lineTo(0, rect.height);
+//     path.quadraticBezierTo(rect.width / 2 - (innerCircleRadius / 2) - 30,
+//         rect.height + 15, rect.width / 2 - 75, rect.height + 50);
+//     path.cubicTo(
+//         rect.width / 2 - 40,
+//         rect.height + innerCircleRadius - 40,
+//         rect.width / 2 + 40,
+//         rect.height + innerCircleRadius - 40,
+//         rect.width / 2 + 75,
+//         rect.height + 50);
+//     path.quadraticBezierTo(rect.width / 2 + (innerCircleRadius / 2) + 30,
+//         rect.height + 15, rect.width, rect.height);
+//     path.lineTo(rect.width, 0.0);
+//     path.close();
+//
+//     return path;
+//   }
+// }

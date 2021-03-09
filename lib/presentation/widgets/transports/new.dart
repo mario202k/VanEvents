@@ -12,62 +12,73 @@ class New extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return streamTransport.when(
-      data: (transports) => transports.isNotEmpty
-          ? ListView.builder(
-              itemCount: transports.length,
-              itemBuilder: (context, index) => ListTile(
-                    title: Text(
-                      transportStatusToString(
-                          transports[index].statusTransport),
-                      style: Theme.of(context).textTheme.bodyText1,
-                    ),
-                    trailing: Text(
-                      transports[index].nbPersonne,
-                      style: Theme.of(context).textTheme.bodyText1,
-                    ),
-                    leading: Text(
-                      DateFormat('dd/MM/yyyy')
-                          .format(transports[index].dateTime),
-                      style: Theme.of(context).textTheme.bodyText1,
-                    ),
-                    onTap: () async {
-                      final event = await context
-                          .read(myEventRepositoryProvider)
-                          .eventFuture(transports.elementAt(index).eventId);
+    return Stack(
+      children: [
+        streamTransport.when(
+          data: (transports) => transports.isNotEmpty
+              ? ListView.builder(
+                  itemCount: transports.length,
+                  itemBuilder: (context, index) => ListTile(
+                        title: Text(
+                          transportStatusToString(
+                              transports[index].statusTransport),
+                          style: Theme.of(context).textTheme.bodyText1,
+                        ),
+                        trailing: Text(
+                          transports[index].nbPersonne,
+                          style: Theme.of(context).textTheme.bodyText1,
+                        ),
+                        leading: Text(
+                          DateFormat('dd/MM/yyyy')
+                              .format(transports[index].dateTime),
+                          style: Theme.of(context).textTheme.bodyText1,
+                        ),
+                        onTap: () async {
+                          final event = await context
+                              .read(myEventRepositoryProvider)
+                              .eventFuture(transports.elementAt(index).eventId);
 
-                      ExtendedNavigator.of(context).push(
-                          Routes.transportDetailScreen,
-                          arguments: TransportDetailScreenArguments(
-                              myTransport: transports.elementAt(index),
-                              addressArriver: [
-                                ...event.adresseRue,
-                                ...event.adresseZone
-                              ].join(' ')));
-                    },
-                  ))
-          : Center(
-              child: Text(
-                'Pas de transports',
-                style: Theme.of(context).textTheme.bodyText1,
-              ),
+                          ExtendedNavigator.of(context).push(
+                              Routes.transportDetailScreen,
+                              arguments: TransportDetailScreenArguments(
+                                  myTransport: transports.elementAt(index),
+                                  addressArriver: [
+                                    ...event.adresseRue,
+                                    ...event.adresseZone
+                                  ].join(' ')));
+                        },
+                      ))
+              : Center(
+                  child: Text(
+                    'Pas de transports',
+                    style: Theme.of(context).textTheme.bodyText1,
+                  ),
+                ),
+          loading: () => Center(
+            child: CircularProgressIndicator(
+                valueColor: AlwaysStoppedAnimation<Color>(
+                    Theme.of(context).colorScheme.primary)),
+          ),
+          error: (error, stack) => Center(
+            child: Text(
+              'Erreur',
+              style: Theme.of(context).textTheme.bodyText1,
             ),
-      loading: () => Center(
-        child: CircularProgressIndicator(
-            valueColor: AlwaysStoppedAnimation<Color>(
-                Theme.of(context).colorScheme.primary)),
-      ),
-      error: (error, stack) => Center(
-        child: Text(
-          'Erreur',
-          style: Theme.of(context).textTheme.bodyText1,
+          ),
         ),
-      ),
+        Positioned(
+          bottom: 30,
+          right: 30,
+          child: FloatingActionButton.extended(
+            onPressed: () {
+              ExtendedNavigator.of(context).push(Routes.transportOnly);
+            },
+            label: const Text('Demande de devis'),
+          ),
+        ),
+      ],
     );
   }
-
-
-  
 }
 
 String transportStatusToString(StatusTransport statusTransport) {

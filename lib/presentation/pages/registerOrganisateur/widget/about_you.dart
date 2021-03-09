@@ -2,29 +2,37 @@ import 'dart:io';
 
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter_bloc/flutter_bloc.dart' hide ReadContext;
 import 'package:flutter_form_builder/flutter_form_builder.dart';
-import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:intl/intl.dart';
 import 'package:open_mail_app/open_mail_app.dart';
+import 'package:van_events_project/constants/credentials.dart';
 import 'package:van_events_project/presentation/pages/registerOrganisateur/bloc/bloc_organisateur.dart';
 import 'package:van_events_project/presentation/widgets/show.dart';
 import 'package:van_events_project/providers/toggle_bool.dart';
 
-class AboutYou extends HookWidget {
+class AboutYou extends StatefulWidget {
+  final PageController _pageController;
+
+  const AboutYou(this._pageController);
+
+  @override
+  _AboutYouState createState() => _AboutYouState();
+}
+
+class _AboutYouState extends State<AboutYou> with AutomaticKeepAliveClientMixin {
   final GlobalKey<FormBuilderState> _fbKeyAboutYou = GlobalKey<FormBuilderState>();
 
   final List<FocusScopeNode> listFocusNode =
       List.generate(6, (index) => FocusScopeNode());
-  final PageController _pageController;
-
-  AboutYou(this._pageController);
 
   @override
   Widget build(BuildContext context) {
-    final boolToggleRead = useProvider(boolToggleProvider);
+    super.build(context);
+    final boolToggleRead = context.read(boolToggleProvider);
+
     return BlocListener<RegisterBlocOrganisateur, RegisterStateOrganisateur>(
       listener: (context, state) async {
         if (state.isSubmitting) {
@@ -138,6 +146,7 @@ class AboutYou extends HookWidget {
                                     ),
                                   ),
                                   onEditingComplete: () {
+
                                     if (_fbKeyAboutYou.currentState.fields['Prénom']
                                         .validate()) {
                                       listFocusNode[0].unfocus();
@@ -149,7 +158,7 @@ class AboutYou extends HookWidget {
                                     FormBuilderValidators.required(context,
                                         errorText: 'Champs requis'),
                                     FormBuilderValidators.match(context,
-                                        r'^[a-zA-ZáàâäãåçéèêëíìîïñóòôöõúùûüýÿæœÁÀÂÄÃÅÇÉÈÊËÍÌÎÏÑÓÒÔÖÕÚÙÛÜÝŸÆŒ. ]{2,60}$',
+                                        regExpNom,
                                         errorText: 'Erreur de saisie')
                                   ]),
                                 ),
@@ -189,7 +198,7 @@ class AboutYou extends HookWidget {
                                     FormBuilderValidators.required(context,
                                         errorText: 'Champs requis'),
                                     FormBuilderValidators.match(context,
-                                        r'^[a-zA-ZáàâäãåçéèêëíìîïñóòôöõúùûüýÿæœÁÀÂÄÃÅÇÉÈÊËÍÌÎÏÑÓÒÔÖÕÚÙÛÜÝŸÆŒ. ]{2,60}$',
+                                        regExpNom,
                                         errorText: 'Erreur de saisie')
                                   ]),
                                 ),
@@ -274,6 +283,7 @@ class AboutYou extends HookWidget {
                                     builder: (context, watch,child) {
 
                                       return FormBuilderTextField(
+                                        enableInteractiveSelection: false,
                                         keyboardType: TextInputType.text,
                                         style: TextStyle(
                                             color:
@@ -310,7 +320,7 @@ class AboutYou extends HookWidget {
                                         },
 
                                         validator: FormBuilderValidators.compose([FormBuilderValidators.required(context,errorText: 'Champs requis'),
-                                          FormBuilderValidators.match(context, r'^(?=.*[a-z])(?=.*[A-Z])(?=.*\d.*)[a-zA-Z0-9\S]{8,15}$',errorText: '1 majuscule, 1 chiffre, 8 caractères')]),
+                                          FormBuilderValidators.match(context, regExpMDP,errorText: '1 majuscule, 1 chiffre, 8 caractères')]),
 
                                       );
                                     }
@@ -396,7 +406,7 @@ class AboutYou extends HookWidget {
                           //     duration: Duration(milliseconds: 300),
                           //     curve: Curves.easeInOutBack);
 
-                          _pageController.jumpToPage(1);
+                          widget._pageController.jumpToPage(1);
                         }
 
                       },
@@ -457,4 +467,7 @@ class AboutYou extends HookWidget {
                 ],
               ));
   }
+
+  @override
+  bool get wantKeepAlive => true;
 }

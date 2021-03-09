@@ -31,7 +31,6 @@ class Billets extends HookWidget {
         initialData: const [],
         builder: (context, snapshot) {
           if (snapshot.hasError) {
-            print(snapshot.error.toString());
             return const Center(
               child: Text('Erreur de connexion'),
             );
@@ -154,8 +153,8 @@ Future askRefund(BuildContext context, Billet billet) async {
           .getDocId(path: MyPath.refunds(billet.organisateurId)),
       amount: billet.amount,
       paymentIntent: billet.paymentIntentId,
-      status: RefundStatus.new_demand,
-      reason: RefundReason.requested_by_customer,
+      status: RefundStatus.newDemand,
+      reason: RefundReason.requestedByCustomer,
     );
     context
         .read(stripeRepositoryProvider)

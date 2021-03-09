@@ -13,7 +13,6 @@ import 'package:van_events_project/presentation/pages/full_photo.dart';
 import 'package:van_events_project/presentation/pages/login/login_screen.dart';
 import 'package:van_events_project/presentation/pages/monitoring_scanner.dart';
 import 'package:van_events_project/presentation/pages/other_profil.dart';
-import 'package:van_events_project/presentation/pages/pick_up_screen.dart';
 import 'package:van_events_project/presentation/pages/refund_screen.dart';
 import 'package:van_events_project/presentation/pages/reset_password.dart';
 import 'package:van_events_project/presentation/pages/screen_chat_room.dart';
@@ -22,6 +21,7 @@ import 'package:van_events_project/presentation/pages/settings.dart';
 import 'package:van_events_project/presentation/pages/splash_screen.dart';
 import 'package:van_events_project/presentation/pages/stripe_profile/screen_stripe_profile.dart';
 import 'package:van_events_project/presentation/pages/transport_details_screen.dart';
+import 'package:van_events_project/presentation/pages/transport_only.dart';
 import 'package:van_events_project/presentation/pages/transport_screen.dart';
 import 'package:van_events_project/presentation/pages/upload_event.dart';
 import 'package:van_events_project/presentation/pages/walkthrough.dart';
@@ -59,8 +59,8 @@ import 'package:van_events_project/route_authentication.dart';
   MaterialRoute(page: AboutScreen, fullscreenDialog: true, initial: false),
   MaterialRoute(page: RefundScreen, fullscreenDialog: true, initial: false),
   MaterialRoute(page: OtherProfile, fullscreenDialog: true, initial: false),
-  MaterialRoute(page: PickupScreen, fullscreenDialog: true, initial: false),
   MaterialRoute(page: CallScreen, fullscreenDialog: true, initial: false),
+  MaterialRoute(page: TransportOnly, fullscreenDialog: true, initial: false),
   //This route returns result of type [bool]
   // CupertinoRoute(page: LoginScreen, fullscreenDialog: true),
   // CustomRoute<bool>(page: LoginScreen, transitionsBuilder: TransitionsBuilders.slideLeftWithFade,durationInMilliseconds: 5000),

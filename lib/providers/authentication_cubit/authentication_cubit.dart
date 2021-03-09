@@ -15,7 +15,6 @@ class AuthenticationCubit extends Cubit<AuthenticationState> {
       MyUserRepository myUserRepository, BuildContext context) async {
     emit(AuthenticationLoading());
 
-    print('authenticationStarted!!!!!!');
     // myUserRepository.signOut();
 
     await myUserRepository.checkDynamicLinkData(context);

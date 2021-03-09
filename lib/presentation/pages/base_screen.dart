@@ -2,6 +2,7 @@ import 'dart:io';
 import 'dart:math' as math;
 
 import 'package:auto_route/auto_route.dart';
+
 // import 'package:awesome_notifications/awesome_notifications.dart';
 import 'package:badges/badges.dart';
 import 'package:curved_navigation_bar/curved_navigation_bar.dart';
@@ -17,6 +18,7 @@ import 'package:van_events_project/presentation/pages/chat.dart';
 import 'package:van_events_project/presentation/pages/home_events.dart';
 import 'package:van_events_project/presentation/pages/profile.dart';
 import 'package:van_events_project/presentation/widgets/model_screen.dart';
+import 'package:van_events_project/presentation/widgets/show.dart';
 import 'package:van_events_project/providers/toggle_bool.dart';
 import 'package:van_events_project/services/firebase_cloud_messaging.dart';
 
@@ -29,9 +31,8 @@ class BaseScreens extends HookWidget {
 
   @override
   Widget build(BuildContext context) {
-
-    final _animationController = useAnimationController(
-        duration: const Duration(milliseconds: 400));
+    final _animationController =
+        useAnimationController(duration: const Duration(milliseconds: 400));
     final myUser = context.read(myUserProvider);
     NotificationHandler().initializeFcmNotification(myUser.id, context);
     final boolToggle = context.read(boolToggleProvider);
@@ -45,14 +46,16 @@ class BaseScreens extends HookWidget {
             appBar: AppBar(
               title: Consumer(builder: (context, watch, _) {
                 final nav = watch(navigationProvider).state;
-                return Platform.isAndroid? Padding(
-                  padding: const EdgeInsets.only(left:  30),
-                  child: Text(
-                    nav,
-                  ),
-                ):Text(
-                  nav,
-                );
+                return Platform.isAndroid
+                    ? Padding(
+                        padding: const EdgeInsets.only(left: 30),
+                        child: Text(
+                          nav,
+                        ),
+                      )
+                    : Text(
+                        nav,
+                      );
               }),
             ),
             body: Consumer(builder: (context, watch, _) {
@@ -206,6 +209,8 @@ class BaseScreens extends HookWidget {
                                                   Routes.searchUserEvent,
                                                   arguments:
                                                       SearchUserEventArguments(
+                                                          fromBilletForm: false,
+                                                          fromTransport: false,
                                                           isEvent: false));
                                             },
                                             child: Icon(
@@ -231,22 +236,24 @@ class BaseScreens extends HookWidget {
                                       child: Transform.scale(
                                         scale: _animationController.value,
                                         child: FloatingActionButton(
-                                            heroTag: 2,
-                                            onPressed: () {
-                                              ExtendedNavigator.of(context).push(
-                                                  Routes.searchUserEvent,
-                                                  arguments:
-                                                      SearchUserEventArguments(
-                                                          isEvent: true));
-                                            },
+                                          heroTag: 2,
+                                          onPressed: () {
+                                            ExtendedNavigator.of(context).push(
+                                                Routes.searchUserEvent,
+                                                arguments:
+                                                    SearchUserEventArguments(
+                                                        fromBilletForm: false,
+                                                        fromTransport: false,
+                                                        isEvent: true));
+                                          },
 
-                                            child: Icon(
-                                              FontAwesomeIcons.users,
-                                              color: Theme.of(context)
-                                                  .colorScheme
-                                                  .onSecondary,
-                                            ),                                            //ExtendedNavigator.of(context).pushNamed(Routes.uploadEvent),
-                                            ),
+                                          child: Icon(
+                                            FontAwesomeIcons.users,
+                                            color: Theme.of(context)
+                                                .colorScheme
+                                                .onSecondary,
+                                          ), //ExtendedNavigator.of(context).pushNamed(Routes.uploadEvent),
+                                        ),
                                       ),
                                     ),
                                   ),
@@ -255,28 +262,21 @@ class BaseScreens extends HookWidget {
                                   bottom: 0,
                                   right: 0,
                                   child: FloatingActionButton(
-                                      heroTag: 3,
-                                      onPressed: () {
-                                        //  AwesomeNotifications().createNotification(
-                                        //     content: NotificationContent(
-                                        //         id: 10,
-                                        //         channelKey: 'basic_channel',
-                                        //         title: 'Simple Notification',
-                                        //         body: 'Simple body'
-                                        //     )
-                                        // );
-                                        // _animationController.isCompleted
-                                        //     ? _animationController.reverse()
-                                        //     : _animationController.forward();
-                                      },
+                                    heroTag: 3,
+                                    onPressed: () {
+                                      _animationController.isCompleted
+                                          ? _animationController.reverse()
+                                          : _animationController.forward();
 
-                                      child: Icon(
-                                        FontAwesomeIcons.search,
-                                        color: Theme.of(context)
-                                            .colorScheme
-                                            .onSecondary,
-                                      ),                                      //ExtendedNavigator.of(context).pushNamed(Routes.uploadEvent),
-                                      ),
+                                    },
+
+                                    child: Icon(
+                                      FontAwesomeIcons.search,
+                                      color: Theme.of(context)
+                                          .colorScheme
+                                          .onSecondary,
+                                    ), //ExtendedNavigator.of(context).pushNamed(Routes.uploadEvent),
+                                  ),
                                 ),
                               ],
                             ),

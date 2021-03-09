@@ -21,7 +21,7 @@ class _AppLifeCycleManagerState extends State<AppLifeCycleManager> with WidgetsB
   }
 
   @override
-  void didChangeAppLifecycleState(AppLifecycleState state) {
+  Future<void> didChangeAppLifecycleState(AppLifecycleState state) async {
     super.didChangeAppLifecycleState(state);
 
     if(myUserRepo == null){
@@ -33,6 +33,7 @@ class _AppLifeCycleManagerState extends State<AppLifeCycleManager> with WidgetsB
         break;
       case AppLifecycleState.resumed:
         myUserRepo.setOnline();
+
         break;
       case AppLifecycleState.inactive:
         myUserRepo.setInactive();

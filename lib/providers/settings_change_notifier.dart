@@ -3,12 +3,12 @@ import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:van_events_project/constants/theming_options.dart';
 
-final settingsProvider = ChangeNotifierProvider<SettingsChangeNotifier>((ref) {
+final settingsProvider = ChangeNotifierProvider.autoDispose<SettingsChangeNotifier>((ref) {
   return SettingsChangeNotifier();
 });
 
 enum MyThemes{
-  Dracula, Shinny, Clubbing
+  dracula, shinny, clubbing
 }
 
 class SettingsChangeNotifier extends ChangeNotifier{
@@ -36,15 +36,15 @@ class SettingsChangeNotifier extends ChangeNotifier{
   void setColorScheme(MyThemes myTheme){
     switch(myTheme){
 
-      case MyThemes.Dracula:
+      case MyThemes.dracula:
         onGoingcolorScheme = colorSchemeDracula;
         sharePref.setString('theme', 'Dracula');
         break;
-      case MyThemes.Shinny:
+      case MyThemes.shinny:
         onGoingcolorScheme = colorSchemeShinny;
         sharePref.setString('theme', 'Shinny');
         break;
-      case MyThemes.Clubbing:
+      case MyThemes.clubbing:
         onGoingcolorScheme = colorSchemeClubbing;
         sharePref.setString('theme', 'Clubbing');
         break;
@@ -64,15 +64,15 @@ class SettingsChangeNotifier extends ChangeNotifier{
 
     switch(theme){
       case 'Shinny':
-        setThemeNoNotif(MyThemes.Shinny);
+        setThemeNoNotif(MyThemes.shinny);
 
         break;
       case 'Dracula':
-        setThemeNoNotif(MyThemes.Dracula);
+        setThemeNoNotif(MyThemes.dracula);
 
         break;
       case 'Clubbing':
-        setThemeNoNotif(MyThemes.Clubbing);
+        setThemeNoNotif(MyThemes.clubbing);
 
         break;
     }

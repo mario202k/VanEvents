@@ -11,15 +11,16 @@ import 'package:platform_alert_dialog/platform_alert_dialog.dart';
 import 'package:shimmer/shimmer.dart';
 import 'package:swipe_to/swipe_to.dart';
 import 'package:van_events_project/domain/models/chat_membres.dart';
+import 'package:van_events_project/domain/models/event.dart';
 import 'package:van_events_project/domain/models/message.dart';
 import 'package:van_events_project/domain/models/my_user.dart';
 import 'package:van_events_project/domain/repositories/my_chat_repository.dart';
+import 'package:van_events_project/domain/repositories/my_event_repository.dart';
 import 'package:van_events_project/domain/repositories/my_user_repository.dart';
 import 'package:van_events_project/domain/routing/route.gr.dart';
 import 'package:van_events_project/presentation/widgets/chat_message_list_item.dart';
 import 'package:van_events_project/presentation/widgets/model_screen.dart';
 import 'package:van_events_project/presentation/widgets/show.dart';
-import 'package:van_events_project/providers/call_change_notifier.dart';
 import 'package:van_events_project/providers/chat_room_change_notifier.dart';
 
 class ChatRoom extends StatefulWidget {
@@ -136,17 +137,28 @@ class _ChatRoomState extends State<ChatRoom> with WidgetsBindingObserver {
                           color: Theme.of(context).colorScheme.onBackground,
                         ),
                         onPressed: () async {
+                          if (context.read(myUserRepository).user.isAnonymous) {
+                            Show.showDialogToDismiss(context, 'Dommage',
+                                'Vous devez vous connecter pour appeler', 'Ok');
+                            return;
+                          }
+                          if (context.read(chatRoomProvider).isBlocked) {
+                            Show.showDialogToDismiss(context, 'Dommage',
+                                'Vous avez été bloqué', 'Ok');
+                            return;
+                          }
 
-                          await db.sendCall(chatRoomRead,true);
+                          final callId = await db.sendCall(
+                              chatRoomRead, true, widget.chatId);
 
-                          ExtendedNavigator.of(context).push(
-                              Routes.callScreen,
+                          ExtendedNavigator.of(context).push(Routes.callScreen,
                               arguments: CallScreenArguments(
                                   imageUrl: chatRoomRead.friend.imageUrl,
                                   isVideoCall: true,
-                                  channel: context.read(myUserProvider).id,
+                                  isCaller: true,
+                                  callId: callId,
+                                  chatId: widget.chatId,
                                   nom: chatRoomRead.friend.nom));
-
                         },
                       ),
                       IconButton(
@@ -155,31 +167,43 @@ class _ChatRoomState extends State<ChatRoom> with WidgetsBindingObserver {
                           color: Theme.of(context).colorScheme.onBackground,
                         ),
                         onPressed: () async {
+                          if (context.read(myUserRepository).user.isAnonymous) {
+                            Show.showDialogToDismiss(context, 'Dommage',
+                                'Vous devez vous connecter pour appeler', 'Ok');
+                            return;
+                          }
+                          if (context.read(chatRoomProvider).isBlocked) {
+                            Show.showDialogToDismiss(context, 'Dommage',
+                                'Vous avez été bloqué', 'Ok');
+                            return;
+                          }
 
-                          await db.sendCall(chatRoomRead,false);
+                          final callId = await db.sendCall(
+                              chatRoomRead, false, widget.chatId);
 
-                          ExtendedNavigator.of(context).push(
-                              Routes.callScreen,
+                          ExtendedNavigator.of(context).push(Routes.callScreen,
                               arguments: CallScreenArguments(
                                   imageUrl: chatRoomRead.friend.imageUrl,
                                   isVideoCall: false,
-                                  channel: context.read(myUserProvider).id,
+                                  isCaller: true,
+                                  callId: callId,
+                                  chatId: widget.chatId,
                                   nom: chatRoomRead.friend.nom));
-
                         },
                       ),
                     ],
-                    title: InkWell(
-                      onTap: () {
-                        if (chatRoomRead.imageUrl?.isNotEmpty ?? false) {
-                          ExtendedNavigator.of(context).push(Routes.fullPhoto,
-                              arguments: FullPhotoArguments(
-                                  url: chatRoomRead.imageUrl));
-                        }
-                      },
-                      child: Row(
-                        children: <Widget>[
-                          Padding(
+                    title: Row(
+                      children: <Widget>[
+                        InkWell(
+                          onTap: () {
+                            if (chatRoomRead.imageUrl?.isNotEmpty ?? false) {
+                              ExtendedNavigator.of(context).push(
+                                  Routes.fullPhoto,
+                                  arguments: FullPhotoArguments(
+                                      url: chatRoomRead.imageUrl));
+                            }
+                          },
+                          child: Padding(
                               padding: const EdgeInsets.fromLTRB(0, 5, 10, 0),
                               child: chatRoomRead.imageUrl?.isNotEmpty ?? false
                                   ? CachedNetworkImage(
@@ -218,7 +242,27 @@ class _ChatRoomState extends State<ChatRoom> with WidgetsBindingObserver {
                                       backgroundImage: const AssetImage(
                                           'assets/img/normal_user_icon.png'),
                                     )),
-                          Flexible(
+                        ),
+                        Flexible(
+                          child: InkWell(
+                            onTap: () async {
+                              if (!chatRoomRead.myChat.isGroupe) {
+                                ExtendedNavigator.of(context).push(
+                                    Routes.otherProfile,
+                                    arguments: OtherProfileArguments(
+                                        myUser: chatRoomRead.getUserFriend()));
+                              } else {
+                                final MyEvent myEvent = (await context
+                                        .read(myEventRepositoryProvider)
+                                        .getEventFromChatId(
+                                            chatRoomRead.chatId))
+                                    .first;
+                                ExtendedNavigator.of(context)
+                                    .push(Routes.details,
+                                    arguments:
+                                    DetailsArguments(event: myEvent));
+                              }
+                            },
                             child: Column(
                               mainAxisAlignment: MainAxisAlignment.center,
                               crossAxisAlignment: CrossAxisAlignment.start,
@@ -235,6 +279,14 @@ class _ChatRoomState extends State<ChatRoom> with WidgetsBindingObserver {
                                           return const SizedBox();
                                         }
                                         final MyUser user = snapshot.data;
+
+                                        for (final id in user.blockedUser) {
+                                          if (id.toString() ==
+                                              chatRoomRead.uid) {
+                                            chatRoomRead.setIsBlocked();
+                                            break;
+                                          }
+                                        }
 
                                         return StreamBuilder<ChatMembre>(
                                             stream: context
@@ -271,8 +323,8 @@ class _ChatRoomState extends State<ChatRoom> with WidgetsBindingObserver {
                               ],
                             ),
                           ),
-                        ],
-                      ),
+                        ),
+                      ],
                     )),
                 body: Stack(
                   children: [
@@ -304,74 +356,98 @@ class _ChatRoomState extends State<ChatRoom> with WidgetsBindingObserver {
                             reverse: true,
                             child: Column(
                               children: [
-                                ListView.builder(
-                                    reverse: true,
-                                    shrinkWrap: true,
-                                    physics: const ClampingScrollPhysics(),
-                                    itemCount: chatRoomRead.oldMessages.length,
-                                    itemBuilder: (context, index) {
-                                      final oldMessage =
-                                          chatRoomRead.oldMessages[index];
+                                Consumer(builder: (context, watch, child) {
+                                  final watchChat = watch(chatRoomProvider);
+                                  return ListView.builder(
+                                      reverse: true,
+                                      shrinkWrap: true,
+                                      physics: const ClampingScrollPhysics(),
+                                      itemCount: watchChat.oldMessages.length,
+                                      itemBuilder: (context, index) {
+                                        final oldMessage =
+                                            watchChat.oldMessages[index];
 
-                                      final MyUser userFrom = chatRoomRead
-                                          .myUsersList
-                                          .firstWhere((user) =>
-                                              user.id == oldMessage.idFrom);
-                                      MyUser replyUser;
-                                      MyMessage replyMessage;
-                                      if (oldMessage.type ==
-                                          MyMessageType.reply) {
-                                        replyMessage = chatRoomRead
-                                            .myRepliedMessage[oldMessage.id];
-
-                                        replyUser = chatRoomRead.myUsersList
+                                        final MyUser userFrom = watchChat
+                                            .myUsersList
                                             .firstWhere((user) =>
-                                                user.id ==
-                                                chatRoomRead
-                                                    .myRepliedMessage[
-                                                        oldMessage.id]
-                                                    .idFrom);
-                                      }
+                                                user.id == oldMessage.idFrom);
+                                        MyUser replyUser;
+                                        MyMessage replyMessage;
+                                        if (oldMessage.type ==
+                                            MyMessageType.reply) {
+                                          replyMessage = watchChat
+                                              .myRepliedMessage[oldMessage.id];
 
-                                      return Column(
-                                        children: [
-                                          if (isAnotherDay(
-                                              index, chatRoomRead.oldMessages))
-                                            Text(
-                                              isToday(oldMessage.date)
-                                                  ? 'Aujourd\'hui'
-                                                  : isYesterday(oldMessage.date)
-                                                      ? 'Hier'
-                                                      : ' ${day(oldMessage.date.weekday)} ${oldMessage.date.day} ${month(oldMessage.date.month)}',
-                                              style: Theme.of(context)
-                                                  .textTheme
-                                                  .headline5
-                                                  .copyWith(
-                                                      color: Theme.of(context)
-                                                          .colorScheme
-                                                          .onBackground),
-                                            )
-                                          else
-                                            const SizedBox(),
-                                          if (db.uid != oldMessage.idFrom)
-                                            SwipeTo(
-                                              onRightSwipe: () {
-                                                chatRoomRead.setReplyToMessage(
-                                                    userFrom.nom,
-                                                    oldMessage.message,
-                                                    oldMessage.id,
-                                                    oldMessage.type);
-                                                FocusScope.of(context)
-                                                    .requestFocus(
-                                                        textFieldFocus);
-                                              },
-                                              rightSwipeWidget: Icon(
-                                                FontAwesomeIcons.reply,
-                                                color: Theme.of(context)
-                                                    .colorScheme
-                                                    .primary,
-                                              ),
-                                              child: ChatMessageListItem(
+                                          replyUser = watchChat.myUsersList
+                                              .firstWhere((user) =>
+                                                  user.id ==
+                                                  watchChat
+                                                      .myRepliedMessage[
+                                                          oldMessage.id]
+                                                      .idFrom);
+                                        }
+
+                                        return Column(
+                                          children: [
+                                            if (isAnotherDay(
+                                                index, watchChat.oldMessages))
+                                              Text(
+                                                isToday(oldMessage.date)
+                                                    ? 'Aujourd\'hui'
+                                                    : isYesterday(
+                                                            oldMessage.date)
+                                                        ? 'Hier'
+                                                        : ' ${day(oldMessage.date.weekday)} ${oldMessage.date.day} ${month(oldMessage.date.month)}',
+                                                style: Theme.of(context)
+                                                    .textTheme
+                                                    .headline5
+                                                    .copyWith(
+                                                        color: Theme.of(context)
+                                                            .colorScheme
+                                                            .onBackground),
+                                              )
+                                            else
+                                              const SizedBox(),
+                                            if (db.uid != oldMessage.idFrom)
+                                              SwipeTo(
+                                                onRightSwipe: () {
+                                                  watchChat.setReplyToMessage(
+                                                      userFrom.nom,
+                                                      oldMessage.message,
+                                                      oldMessage.id,
+                                                      oldMessage.type);
+                                                  FocusScope.of(context)
+                                                      .requestFocus(
+                                                          textFieldFocus);
+                                                },
+                                                rightSwipeWidget: Icon(
+                                                  FontAwesomeIcons.reply,
+                                                  color: Theme.of(context)
+                                                      .colorScheme
+                                                      .primary,
+                                                ),
+                                                child: ChatMessageListItem(
+                                                  message: oldMessage,
+                                                  isMe: db.uid ==
+                                                      oldMessage.idFrom,
+                                                  chatId:
+                                                      chatRoomRead.myChat.id,
+                                                  isGroupe: chatRoomRead
+                                                      .myChat.isGroupe,
+                                                  friendName: userFrom.nom,
+                                                  //name
+                                                  friendUrl: userFrom.imageUrl,
+                                                  idTo: oldMessage.idTo,
+                                                  replyName: replyUser?.nom,
+                                                  replyMessage: replyMessage,
+                                                  replyType:
+                                                      oldMessage.replyType,
+                                                  replyIsFromMe:
+                                                      replyUser?.id == db.uid,
+                                                ),
+                                              )
+                                            else
+                                              ChatMessageListItem(
                                                 message: oldMessage,
                                                 isMe:
                                                     db.uid == oldMessage.idFrom,
@@ -388,27 +464,10 @@ class _ChatRoomState extends State<ChatRoom> with WidgetsBindingObserver {
                                                 replyIsFromMe:
                                                     replyUser?.id == db.uid,
                                               ),
-                                            )
-                                          else
-                                            ChatMessageListItem(
-                                              message: oldMessage,
-                                              isMe: db.uid == oldMessage.idFrom,
-                                              chatId: chatRoomRead.myChat.id,
-                                              isGroupe:
-                                                  chatRoomRead.myChat.isGroupe,
-                                              friendName: userFrom.nom,
-                                              //name
-                                              friendUrl: userFrom.imageUrl,
-                                              idTo: oldMessage.idTo,
-                                              replyName: replyUser?.nom,
-                                              replyMessage: replyMessage,
-                                              replyType: oldMessage.replyType,
-                                              replyIsFromMe:
-                                                  replyUser?.id == db.uid,
-                                            ),
-                                        ],
-                                      );
-                                    }),
+                                          ],
+                                        );
+                                      });
+                                }),
                                 listNewMessage(db, chatRoomRead),
                               ],
                             ),
@@ -834,6 +893,11 @@ class _ChatRoomState extends State<ChatRoom> with WidgetsBindingObserver {
                       'Ok');
                   return;
                 }
+                if (context.read(chatRoomProvider).isBlocked) {
+                  Show.showDialogToDismiss(
+                      context, 'Dommage', 'Vous avez été bloqué', 'Ok');
+                  return;
+                }
 
                 final file = await Show.showDialogSource(context);
                 chatRoomRead.setNewTempImage(file);
@@ -859,6 +923,11 @@ class _ChatRoomState extends State<ChatRoom> with WidgetsBindingObserver {
                       'Ok');
                   return;
                 }
+                if (context.read(chatRoomProvider).isBlocked) {
+                  Show.showDialogToDismiss(
+                      context, 'Dommage', 'Vous avez été bloqué', 'Ok');
+                  return;
+                }
                 context
                     .read(myChatRepositoryProvider)
                     .pickGif(context, chatRoomRead);
@@ -875,10 +944,16 @@ class _ChatRoomState extends State<ChatRoom> with WidgetsBindingObserver {
                         'Ok');
                     return;
                   }
+                  if (context.read(chatRoomProvider).isBlocked) {
+                    Show.showDialogToDismiss(
+                        context, 'Dommage', 'Vous avez été bloqué', 'Ok');
+                    return;
+                  }
                 },
                 child: TextField(
                   controller: _textEditingController,
-                  enabled: !context.read(myUserRepository).user.isAnonymous,
+                  enabled: !context.read(myUserRepository).user.isAnonymous &&
+                      !context.read(chatRoomProvider).isBlocked,
                   focusNode: textFieldFocus,
                   style: Theme.of(context).textTheme.bodyText1,
                   onChanged: (val) {

@@ -11,6 +11,7 @@ import 'package:intl/intl.dart';
 import 'package:van_events_project/constants/credentials.dart';
 import 'package:van_events_project/domain/models/my_user.dart';
 import 'package:van_events_project/domain/repositories/my_user_repository.dart';
+import 'package:van_events_project/presentation/widgets/show.dart';
 import 'package:van_events_project/providers/toggle_bool.dart';
 
 enum Lieu { address, aroundMe }
@@ -81,9 +82,10 @@ class _LieuQuandAlertDialogState extends State<LieuQuandAlertDialog>
                           transitionDuration: const Duration(milliseconds: 500),
                           transitionBuilder: (context, anim1, anim2, child) {
                             return SlideTransition(
-                              position:
-                                  Tween(begin: const Offset(0, 1), end: const Offset(0, 0))
-                                      .animate(anim1),
+                              position: Tween(
+                                      begin: const Offset(0, 1),
+                                      end: const Offset(0, 0))
+                                  .animate(anim1),
                               child: child,
                             );
                           },
@@ -111,7 +113,7 @@ class _LieuQuandAlertDialogState extends State<LieuQuandAlertDialog>
                                           controller: _searchEditingController,
                                           style: Theme.of(context)
                                               .textTheme
-                                              .headline5,
+                                              .bodyText1,
                                           cursorColor: Theme.of(context)
                                               .colorScheme
                                               .onBackground,
@@ -122,17 +124,20 @@ class _LieuQuandAlertDialogState extends State<LieuQuandAlertDialog>
                                               border: const OutlineInputBorder(
                                                 borderSide: BorderSide.none,
                                               ),
-                                              focusedBorder: const OutlineInputBorder(
+                                              focusedBorder:
+                                                  const OutlineInputBorder(
                                                 borderSide: BorderSide.none,
                                               ),
                                               disabledBorder:
                                                   const OutlineInputBorder(
                                                 borderSide: BorderSide.none,
                                               ),
-                                              enabledBorder: const OutlineInputBorder(
+                                              enabledBorder:
+                                                  const OutlineInputBorder(
                                                 borderSide: BorderSide.none,
                                               ),
-                                              errorBorder: const OutlineInputBorder(
+                                              errorBorder:
+                                                  const OutlineInputBorder(
                                                 borderSide: BorderSide.none,
                                               ),
                                               focusedErrorBorder:
@@ -140,8 +145,8 @@ class _LieuQuandAlertDialogState extends State<LieuQuandAlertDialog>
                                                 borderSide: BorderSide.none,
                                               ),
                                               icon: IconButton(
-                                                icon:
-                                                    const Icon(Icons.arrow_back_ios),
+                                                icon: const Icon(
+                                                    Icons.arrow_back_ios),
                                                 onPressed: () {
                                                   Navigator.of(context).pop();
                                                 },
@@ -166,13 +171,13 @@ class _LieuQuandAlertDialogState extends State<LieuQuandAlertDialog>
                                                       Navigator.of(context)
                                                           .pop();
                                                     },
-                                                    leading:
-                                                        const Icon(Icons.location_on),
+                                                    leading: const Icon(
+                                                        Icons.location_on),
                                                     title: Text(
                                                       e.description,
                                                       style: Theme.of(context)
                                                           .textTheme
-                                                          .headline5,
+                                                          .bodyText1,
                                                     )))
                                                 .toList(),
                                           );
@@ -216,12 +221,11 @@ class _LieuQuandAlertDialogState extends State<LieuQuandAlertDialog>
 
                     if (permission == LocationPermission.always ||
                         permission == LocationPermission.whileInUse) {
-                      final Position position = await Geolocator.getCurrentPosition(
-                          desiredAccuracy: LocationAccuracy.high);
+                      final Position position =
+                          await Geolocator.getCurrentPosition(
+                              desiredAccuracy: LocationAccuracy.high);
 
-
-                      context.read(myUserRepository)
-                          .setUserPosition(position);
+                      context.read(myUserRepository).setUserPosition(position);
                     } else {
                       context.read(boolToggleProvider).setLieux(Lieu.address);
                     }
@@ -280,13 +284,14 @@ class _LieuQuandAlertDialogState extends State<LieuQuandAlertDialog>
 //                      _dateDebut = dt;
 //                    });
                   },
-                  style: TextStyle(
-                      color: Theme.of(context).colorScheme.onSurface),
+                  style:
+                      TextStyle(color: Theme.of(context).colorScheme.onSurface),
                   cursorColor: Theme.of(context).colorScheme.onSurface,
                   inputType: InputType.date,
                   format: DateFormat("dd/MM/yyyy"),
-                  decoration: InputDecoration(labelText: 'Date',labelStyle: Theme.of(context).textTheme.bodyText1),
-
+                  decoration: InputDecoration(
+                      labelText: 'Date',
+                      labelStyle: Theme.of(context).textTheme.bodyText1),
                 ),
               );
             }),
@@ -354,18 +359,18 @@ class _LieuQuandAlertDialogState extends State<LieuQuandAlertDialog>
     const String types = '(regions)';
 
     final String request =
-        '$baseURL?input=$text&key=$PLACES_API_KEY&components=$components&language=$language&types=$types';
+        '$baseURL?input=$text&key=$placesApiKey&components=$components&language=$language&types=$types';
 
     final Response response = await Dio().get(request);
 
-    final predictions = response.data['predictions'] as List<Map<dynamic,dynamic>>;
+    final predictions = response.data['predictions'] as List;
 
     final List<Prediction> suggestions = <Prediction>[];
 
     for (final prediction in predictions) {
       // String name = prediction['description'];
 
-      suggestions.add(Prediction.fromJson(prediction));
+      suggestions.add(Prediction.fromJson(prediction as Map));
     }
 
     context.read(boolToggleProvider).setSuggestions(suggestions);

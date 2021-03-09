@@ -1,4 +1,3 @@
-
 import 'package:async/async.dart';
 import 'package:auto_route/auto_route.dart';
 import 'package:cached_network_image/cached_network_image.dart';
@@ -39,8 +38,9 @@ class HomeEvents extends HookWidget {
 
     StreamZip<List<MyEvent>> streamZipMaSelection;
     streamMyUser.whenData((user) {
+
       streamZipMaSelection = StreamZip([
-        myEventRepo.eventStreamMaSelectionGenre(user?.genres as List<String> ?? [],
+        myEventRepo.eventStreamMaSelectionGenre(user?.genres ?? [],
             user?.lieu ?? [], user?.quand ?? [], user?.geoPoint),
         myEventRepo.eventStreamMaSelectionType(user?.types ?? [],
             user?.lieu ?? [], user?.quand ?? [], user?.geoPoint),
@@ -64,16 +64,14 @@ class HomeEvents extends HookWidget {
             ),
             child: Padding(
               padding: const EdgeInsets.all(8.0),
-              child: Text(
-                'À l\'affiche',
-                style: Theme.of(context)
-                    .textTheme
-                    .headline3.copyWith(color: Theme.of(context).colorScheme.onSecondary)
-
-              ),
+              child: Text('À l\'affiche',
+                  style: Theme.of(context).textTheme.headline3.copyWith(
+                      color: Theme.of(context).colorScheme.onSecondary)),
             ),
           ),
-          const SizedBox(height: 15,),
+          const SizedBox(
+            height: 15,
+          ),
 
           StreamBuilder<List<MyEvent>>(
               stream: eventsAffiche,
@@ -105,68 +103,72 @@ class HomeEvents extends HookWidget {
                 events.removeWhere((element) =>
                     element.dateDebutAffiche.compareTo(DateTime.now()) > 0);
 
-                return events.isNotEmpty? SizedBox(
-                  height: 280,
-                  child: Swiper(
-                      itemCount: events.length,
-                      pagination: const SwiperPagination(),
-                      control: const SwiperControl(),
-                      autoplay: true,
-                      autoplayDelay: 5000,
-                      itemBuilder: (context, index){
+                return events.isNotEmpty
+                    ? SizedBox(
+                        height: 280,
+                        child: Swiper(
+                            itemCount: events.length,
+                            pagination: const SwiperPagination(),
+                            control: const SwiperControl(),
+                            controller: SwiperController(),
+                            autoplay: true,
+                            autoplayDelay: 5000,
+                            itemBuilder: (context, index) {
+                              return FittedBox(
+                                child: CachedNetworkImage(
+                                  imageUrl: events[index].imageFlyerUrl,
+                                  imageBuilder: (context, imageProvider) {
+                                    return InkWell(
+                                      onTap: () {
+                                        Navigator.of(context).push(
+                                            MaterialPageRoute(
+                                                builder: (context) =>
+                                                    Details(events[index])));
 
-                        return FittedBox(
-
-                          child: CachedNetworkImage(
-                            imageUrl: events[index].imageFlyerUrl,
-                            imageBuilder: (context, imageProvider) {
-
-                              return InkWell(
-                                onTap: () {
-                                  Navigator.of(context).push(MaterialPageRoute(
-                                      builder: (context) =>
-                                          Details(events[index])));
-
-                                  // return ExtendedNavigator.of(context).push(
-                                  //   Routes.details,
-                                  //   arguments: DetailsArguments(
-                                  //       event: events.elementAt(index)));
-                                },
-                                child: Container(
-                                    height: 280,
-                                    clipBehavior: Clip.hardEdge,
-                                    decoration: const BoxDecoration(
-                                      color: Colors.amber,
-                                      borderRadius:
-                                      BorderRadius.all(Radius.circular(25)),
+                                        // return ExtendedNavigator.of(context).push(
+                                        //   Routes.details,
+                                        //   arguments: DetailsArguments(
+                                        //       event: events.elementAt(index)));
+                                      },
+                                      child: Container(
+                                          height: 280,
+                                          clipBehavior: Clip.hardEdge,
+                                          decoration: const BoxDecoration(
+                                            color: Colors.amber,
+                                            borderRadius: BorderRadius.all(
+                                                Radius.circular(25)),
+                                          ),
+                                          child: Image(
+                                            image: imageProvider,
+                                          )),
+                                    );
+                                  },
+                                  placeholder: (context, url) =>
+                                      Shimmer.fromColors(
+                                    baseColor: Colors.white,
+                                    highlightColor:
+                                        Theme.of(context).colorScheme.primary,
+                                    child: Container(
+                                      width: 172,
+                                      height: 280,
+                                      decoration: const BoxDecoration(
+                                          borderRadius: BorderRadius.all(
+                                              Radius.circular(25)),
+                                          color: Colors.white),
                                     ),
-                                    child: Image(
-                                      image: imageProvider,
-                                    )),
+                                  ),
+                                  errorWidget: (context, url, error) =>
+                                      const Icon(Icons.error),
+                                ),
                               );
-                            },
-                            placeholder: (context, url) => Shimmer.fromColors(
-                              baseColor: Colors.white,
-                              highlightColor: Theme.of(context).colorScheme.primary,
-                              child: Container(
-                                width: 172,
-                                height: 280,
-                                decoration: const BoxDecoration(
-                                    borderRadius:
-                                    BorderRadius.all(Radius.circular(25)),
-                                    color: Colors.white),
-                              ),
-                            ),
-                            errorWidget: (context, url, error) => const Icon(Icons.error),
-                          ),
-                        );
-                      }),
-                ) : Center(
-                  child: Text(
-                    'Pas d\'évenements',
-                    style: Theme.of(context).textTheme.bodyText1,
-                  ),
-                );
+                            }),
+                      )
+                    : Center(
+                        child: Text(
+                          'Pas d\'évenements',
+                          style: Theme.of(context).textTheme.bodyText1,
+                        ),
+                      );
 
                 // return Container(
                 //   height: 280,
@@ -261,7 +263,7 @@ class HomeEvents extends HookWidget {
           // myListEvent(first, second),
           StreamBuilder<List<List<MyEvent>>>(
               stream: streamZipMaSelection,
-              builder: (context,  snap) {
+              builder: (context, snap) {
                 if (snap.connectionState == ConnectionState.waiting) {
                   return Center(
                     child: CircularProgressIndicator(
@@ -310,7 +312,8 @@ class HomeEvents extends HookWidget {
                   height: 200,
                   child: Center(
                     child: ListView.separated(
-                        separatorBuilder: (context, index) => const VerticalDivider(),
+                        separatorBuilder: (context, index) =>
+                            const VerticalDivider(),
                         shrinkWrap: true,
                         scrollDirection: Axis.horizontal,
                         itemCount: events.length,
@@ -330,8 +333,8 @@ class HomeEvents extends HookWidget {
                                       image: DecorationImage(
                                           image: imageProvider,
                                           fit: BoxFit.fill),
-                                      borderRadius:
-                                          const BorderRadius.all(Radius.circular(25)),
+                                      borderRadius: const BorderRadius.all(
+                                          Radius.circular(25)),
                                       color: Colors.white),
                                 );
                               },
@@ -408,9 +411,10 @@ class HomeEvents extends HookWidget {
                                     ? CachedNetworkImage(
                                         imageUrl: events[index].imageFlyerUrl,
                                         imageBuilder: (_, imageProvider) {
-
-                                          context.read(boolToggleProvider).addEventsPhotos(
-                                              imageProvider, events[index].imageFlyerUrl);
+                                          context
+                                              .read(boolToggleProvider)
+                                              .addEventsPhotos(imageProvider,
+                                                  events[index].imageFlyerUrl);
 
                                           return Hero(
                                             tag: events[index].id,
@@ -421,8 +425,9 @@ class HomeEvents extends HookWidget {
                                                   image: DecorationImage(
                                                       image: imageProvider,
                                                       fit: BoxFit.fill),
-                                                  borderRadius: const BorderRadius.all(
-                                                      Radius.circular(25)),
+                                                  borderRadius:
+                                                      const BorderRadius.all(
+                                                          Radius.circular(25)),
                                                   color: Colors.white),
                                             ),
                                           );
@@ -437,7 +442,7 @@ class HomeEvents extends HookWidget {
                                             width: 220,
                                             height: 220,
                                             //color: Colors.white,
-                                            decoration:const  BoxDecoration(
+                                            decoration: const BoxDecoration(
                                                 borderRadius: BorderRadius.all(
                                                     Radius.circular(25)),
                                                 color: Colors.white),
@@ -498,7 +503,8 @@ class HomeEvents extends HookWidget {
                     decoration: BoxDecoration(
                         image: DecorationImage(
                             image: imageProvider, fit: BoxFit.fill),
-                        borderRadius: const BorderRadius.all( Radius.circular(25)),
+                        borderRadius:
+                            const BorderRadius.all(Radius.circular(25)),
                         color: Colors.white),
                   ),
                   placeholder: (context, url) => Shimmer.fromColors(

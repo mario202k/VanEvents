@@ -149,7 +149,7 @@ class MyMessage {
         id: data['data']['id'] as String,
         idFrom: data['data']['idFrom'] as String,
         idTo: data['data']['idTo'] as String,
-        message: data['notification']['body'] as String,
+        message: data['data']['body'] as String,
         date: DateTime.parse(data['data']['date'] as String)  ?? DateTime.now() ,
         type: myMessageType,
         replyType: myMessageReplyType,

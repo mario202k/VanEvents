@@ -5,7 +5,6 @@ import 'package:cloud_functions/cloud_functions.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:giphy_picker/giphy_picker.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
-import 'package:uuid/uuid.dart';
 import 'package:van_events_project/constants/credentials.dart';
 import 'package:van_events_project/domain/models/call.dart';
 import 'package:van_events_project/domain/models/chat_membres.dart';
@@ -16,7 +15,7 @@ import 'package:van_events_project/providers/chat_room_change_notifier.dart';
 import 'package:van_events_project/services/firestore_path.dart';
 import 'package:van_events_project/services/firestore_service.dart';
 
-final myChatRepositoryProvider = Provider<MyChatRepository>((ref) {
+final myChatRepositoryProvider = Provider.autoDispose<MyChatRepository>((ref) {
   final uid = ref.watch(myUserProvider).id;
   return MyChatRepository(uid: uid);
 });
@@ -88,43 +87,52 @@ class MyChatRepository {
     //création d'un chatRoom
     String idChatRoom = '';
 
-    await _service
-        .collectionFuture(
-            path: MyPath.chats(),
-            queryBuilder: (query) => query
-                .where('membres.${friend.id}', isEqualTo: true)
-                .where('membres.$uid', isEqualTo: true)
-                .where('isGroupe', isEqualTo: false),
-            builder: (data) => MyChat.fromMap(data))
-        .then((value) async {
-      if (value != null && value.isNotEmpty) {
-        idChatRoom = value.first.id;
+    final snapshot = await _service.collectionFuture(path: MyPath.chats(),builder: (map)=>MyChat.fromMap(map));
+    if (snapshot.isEmpty) {
+      idChatRoom = await creationChat(friend);
+    } else {
+      await _service
+          .collectionFuture(
+              path: MyPath.chats(),
+              queryBuilder: (query) => query
+                  .where('membres.${friend.id}', isEqualTo: true)
+                  .where('membres.$uid', isEqualTo: true)
+                  .where('isGroupe', isEqualTo: false),
+              builder: (data) => MyChat.fromMap(data))
+          .then((value) async {
+        if (value != null && value.isNotEmpty) {
+          idChatRoom = value.first.id;
+        } else {
+          idChatRoom = await creationChat(friend);
+        }
+      });
+    }
 
-      } else {
-        idChatRoom = _service.getDocId(path: MyPath.chats());
-        await _service.setData(path: MyPath.chat(idChatRoom), data: {
-          'id': idChatRoom,
-          'createdAt': FieldValue.serverTimestamp(),
-          'isGroupe': false,
-          'membres': {uid: true, friend.id: true},
-        }).then((value) async {
-          await _service.setData(
-              path: MyPath.chatMembre(idChatRoom, uid),
-              data: {
-                'id': uid,
-                'lastReading': FieldValue.serverTimestamp(),
-                'isReading': true
-              });
-        }).then((value) async {
-          await _service.setData(
-              path: MyPath.chatMembre(idChatRoom, friend.id),
-              data: {
-                'id': friend.id,
-                'lastReading': friend.lastActivity,
-                'isReading': false
-              });
-        });
-      }
+    return idChatRoom;
+  }
+
+  Future<String> creationChat(MyUser friend) async {
+    final idChatRoom = _service.getDocId(path: MyPath.chats());
+    await _service.setData(path: MyPath.chat(idChatRoom), data: {
+      'id': idChatRoom,
+      'createdAt': FieldValue.serverTimestamp(),
+      'isGroupe': false,
+      'membres': {uid: true, friend.id: true},
+    }).then((value) async {
+      await _service.setData(path: MyPath.chatMembre(idChatRoom, uid), data: {
+        'id': uid,
+        'lastReading': FieldValue.serverTimestamp(),
+        'isReading': true,
+        'isWriting': false
+      });
+    }).then((value) async {
+      await _service
+          .setData(path: MyPath.chatMembre(idChatRoom, friend.id), data: {
+        'id': friend.id,
+        'lastReading': friend.lastActivity,
+        'isReading': false,
+        'isWriting': false
+      });
     });
     return idChatRoom;
   }
@@ -143,20 +151,20 @@ class MyChatRepository {
         .doc(uid)
         .snapshots()
         .map((membre) {
-          final mb = ChatMembre.fromMap(membre.data());
-          return FirebaseFirestore.instance
-            .collection('chats')
-            .doc(chatId)
-            .collection('messages')
-            .where('date',
-                isGreaterThan: mb.lastReading)
-            .snapshots()
-            .map((docs) {
-
-
-              return mb.isWriting?0 : docs.size;
-            });
-        });
+      final chatMembre = ChatMembre.fromMap(membre.data());
+      if (chatMembre == null) {
+        return Stream.value(0);
+      }
+      return FirebaseFirestore.instance
+          .collection('chats')
+          .doc(chatId)
+          .collection('messages')
+          .where('date', isGreaterThan: chatMembre.lastReading)
+          .snapshots()
+          .map((docs) {
+        return chatMembre.isWriting  ? 0 : docs.size;
+      });
+    });
   }
 
   Future<MyChat> getMyChat(String chatId) {
@@ -182,13 +190,13 @@ class MyChatRepository {
     return _service.setData(path: MyPath.chat(chatId), data: {
       'membres': {uid: true}
     }).then((value) async {
-      return _service.setData(
-          path: MyPath.chatMembre(chatId, uid),
-          data: {
-            'id': uid,
-            'lastReading': FieldValue.serverTimestamp(),
-            'isReading': true
-          });
+      return _service.setData(path: MyPath.chatMembre(chatId, uid), data: {
+        'id': uid,
+        'lastReading': FieldValue.serverTimestamp(),
+        'isReading': true,
+        'isSubscribeToTopic': true,
+        'isWriting': false
+      });
     });
   }
 
@@ -209,10 +217,9 @@ class MyChatRepository {
   }
 
   Future setIsWriting() async {
-    return _service.setData(path: MyPath.chatMembre(chatId, uid), data: {
-      'lastReading': FieldValue.serverTimestamp(),
-      'isWriting': true
-    });
+    return _service.setData(
+        path: MyPath.chatMembre(chatId, uid),
+        data: {'lastReading': FieldValue.serverTimestamp(), 'isWriting': true});
   }
 
   void displayAndSendImage(File image, ChatRoomChangeNotifier chatRoomRead) {
@@ -278,7 +285,7 @@ class MyChatRepository {
   Future<void> pickGif(
       BuildContext context, ChatRoomChangeNotifier chatRoomRead) async {
     final gif =
-        await GiphyPicker.pickGif(context: context, apiKey: GIPHY_API_KEY);
+        await GiphyPicker.pickGif(context: context, apiKey: giphyApiKey);
 
     if (gif != null) {
       final String messageId = _service.getDocId(path: MyPath.messages(chatId));
@@ -359,22 +366,28 @@ class MyChatRepository {
         builder: (map) => MyMessage.fromMap(map));
   }
 
-  Future<String> sendCall(ChatRoomChangeNotifier chatRoomRead, bool hasVideo) async {
+  Future<String> sendCall(
+      ChatRoomChangeNotifier chatRoomRead, bool hasVideo, String chatId) async {
     final String callId = _service.getDocId(path: MyPath.calls(chatId));
 
-    final uuid = Uuid().v4();
     final Call myCall = Call(
-      id: callId,
-      date: DateTime.now(),
-      uuid: uuid,
-      idFrom: uid,
-      idTo: chatRoomRead.friend.id,
-      hasVideo: hasVideo
-    );
+        id: callId,
+        chatId: chatId,
+        date: DateTime.now(),
+        idFrom: uid,
+        callStatus: CallStatus.callSent,
+        idTo: chatRoomRead.friend.id,
+        hasVideo: hasVideo);
 
     await _service.setData(
-        path: MyPath.call(chatId,callId), data: myCall.toMap());
-    return uuid;
+        path: MyPath.call(chatId, callId), data: myCall.toMap());
+
+    return callId;
+  }
+
+  Stream<Call> callStream(String chatId, String callId) {
+    return _service.documentStream(
+        path: MyPath.call(chatId, callId), builder: (map) => Call.fromMap(map));
   }
 
   Future<HttpsCallableResult> getAgoraToken(String channelName) async {
@@ -394,5 +407,55 @@ class MyChatRepository {
     }
 
     return agoraResponse;
+  }
+
+  Future<void> setCallPickUp({String callId, String chatId}) async {
+    return _service.updateData(
+        path: MyPath.call(chatId, callId), data: {'callStatus': 'pickUp'});
+  }
+
+  Future<void> setCallReceived({String callId, String chatId}) async {
+    return _service.updateData(
+        path: MyPath.call(chatId, callId),
+        data: {'callStatus': 'callReceived'});
+  }
+
+  Future<void> setCallNotReachable({String callId, String chatId}) async {
+    return _service.updateData(
+        path: MyPath.call(chatId, callId),
+        data: {'callStatus': 'notReachable'});
+  }
+
+  Future<void> setCallHangUp({String callId, String chatId}) async {
+    return _service.updateData(
+        path: MyPath.call(chatId, callId), data: {'callStatus': 'hangUp'});
+  }
+
+  Future<void> setCallRefused({String callId, String chatId}) async {
+    return _service.updateData(
+        path: MyPath.call(chatId, callId), data: {'callStatus': 'refused'});
+  }
+
+  Future<void> setCallNotRespond({String callId, String chatId}) async {
+    return _service.updateData(
+        path: MyPath.call(chatId, callId), data: {'callStatus': 'notRespond'});
+  }
+
+  Future<void> setCallDuration(
+      {String callId, String chatId, int h, int m, int s}) async {
+    return _service.updateData(
+        path: MyPath.call(chatId, callId), data: {'duration': 'h$h:m$m:s:$s'});
+  }
+
+  Future<void> setChatMembreUnsubscribe(String chatId, String id) {
+    return _service.updateData(
+        path: MyPath.chatMembre(chatId, id),
+        data: {'isSubscribeToTopic': false});
+  }
+
+  Future<void> setChatMembreSubscribe(String chatId, String id) {
+    return _service.updateData(
+        path: MyPath.chatMembre(chatId, id),
+        data: {'isSubscribeToTopic': true});
   }
 }

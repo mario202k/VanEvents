@@ -38,7 +38,7 @@ class _ForStripeState extends State<ForStripe> {
             );
           }
 
-          List<Refund> refundList = data.data;
+          final List<Refund> refundList = data.data;
 
           return refundList.isNotEmpty
               ? ListView.builder(

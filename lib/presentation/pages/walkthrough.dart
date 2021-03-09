@@ -84,28 +84,24 @@ class _WalkthroughState extends State<Walkthrough> {
   Widget myFlareAnim({String name, String animation, String comment}) {
     return Padding(
       padding: const EdgeInsets.all(40.0),
-      child: Wrap(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Center(
-            child: LimitedBox(
-              maxHeight: MediaQuery.of(context).size.height*0.8,
-              child: AspectRatio(
-                aspectRatio: 1,
-                child: FlareCacheBuilder([AssetFlare(bundle: rootBundle, name: name)],
-                    builder: (context, isWarm) {
-                  return !isWarm
-                      ? Center(
-                          child: CircularProgressIndicator(
-                              valueColor: AlwaysStoppedAnimation<Color>(
-                                  Theme.of(context).colorScheme.primary)),
-                        )
-                      : FlareActor(
-                          name,
-                          animation: animation,
-                        );
-                }),
-              ),
-            ),
+          AspectRatio(
+            aspectRatio: 1,
+            child: FlareCacheBuilder([AssetFlare(bundle: rootBundle, name: name)],
+                builder: (context, isWarm) {
+              return !isWarm
+                  ? Center(
+                      child: CircularProgressIndicator(
+                          valueColor: AlwaysStoppedAnimation<Color>(
+                              Theme.of(context).colorScheme.primary)),
+                    )
+                  : FlareActor(
+                      name,
+                      animation: animation,
+                    );
+            }),
           ),
           Text(
             comment,
@@ -131,140 +127,52 @@ class _WalkthroughState extends State<Walkthrough> {
                   minWidth: viewportConstraints.maxWidth,
                   minHeight: viewportConstraints.maxHeight,
                 ),
-                child: IntrinsicHeight(
-                  child: Column(
-                    children: <Widget>[
-                      Container(
-                        alignment: Alignment.centerRight,
-                        child: FlatButton(
-                          onPressed: () async {
-                            final rep = await SharedPreferences.getInstance();
+                child: Column(
+                  children: <Widget>[
+                    Container(
+                      alignment: Alignment.centerRight,
+                      child: FlatButton(
+                        onPressed: () async {
+                          final rep = await SharedPreferences.getInstance();
 
-                            final seen = rep.getBool('seen');
-                            if (seen == null) {
-                              ExtendedNavigator.of(context)
-                                  .replace(Routes.mySplashScreen);
-                            } else {
-                              ExtendedNavigator.of(context)
-                                  .pop(); //vers paramètre
-                            }
-                          },
-                          child: Text(
-                            'Passer',
-                            style: Theme.of(context).textTheme.button.copyWith(
-                                color:
-                                    Theme.of(context).colorScheme.onBackground),
-                          ),
+                          final seen = rep.getBool('seen');
+                          if (seen == null) {
+                            ExtendedNavigator.of(context)
+                                .replace(Routes.mySplashScreen);
+                          } else {
+                            ExtendedNavigator.of(context)
+                                .pop(); //vers paramètre
+                          }
+                        },
+                        child: Text(
+                          'Passer',
+                          style: Theme.of(context).textTheme.button.copyWith(
+                              color:
+                                  Theme.of(context).colorScheme.onBackground),
                         ),
                       ),
-                      SizedBox(
-                        height: (MediaQuery.of(context).size.width * 7) / 4.25,
-                        child: PageView(
-                          physics: const ClampingScrollPhysics(),
-                          controller: _pageController,
-                          onPageChanged: (int page) {
-                            setState(() {
-                              _currentPage = page;
-                            });
-                          },
-                          children: [
-                            ...nameAnimation.keys.map((key) {
-                            return myFlareAnim(
-                              animation: nameAnimation[key].keys.first,
-                              name: key,
-                              comment: nameAnimation[key].values.first,
-                            );
-                          }).toList()],
-                          // children: <Widget>[
-                          //   Padding(
-                          //     padding: EdgeInsets.all(40.0),
-                          //     child: Wrap(
-                          //       children: <Widget>[
-                          //         Center(
-                          //             child: AspectRatio(
-                          //                 aspectRatio: 1,
-                          //                 child: FlareActor(
-                          //                   'assets/animations/easypurchase.flr',
-                          //                   alignment: Alignment.center,
-                          //                   animation: 'start',
-                          //                 ))),
-                          //         SizedBox(height: 30.0),
-                          //         Text(
-                          //           'Achetez vos billets simplement.',
-                          //           style:
-                          //               Theme.of(context).textTheme.bodyText1,
-                          //         ),
-                          //       ],
-                          //     ),
-                          //   ),
-                          //   Padding(
-                          //     padding: EdgeInsets.all(40.0),
-                          //     child: Wrap(
-                          //       children: <Widget>[
-                          //         Center(
-                          //             child: AspectRatio(
-                          //                 aspectRatio: 1,
-                          //                 child: FlareActor(
-                          //                   'assets/animations/easyscan.flr',
-                          //                   alignment: Alignment.center,
-                          //                   animation: 'start',
-                          //                 ))),
-                          //         SizedBox(height: 30.0),
-                          //         Text(
-                          //           'Ne faîtes plus la queue!',
-                          //           style:
-                          //               Theme.of(context).textTheme.bodyText1,
-                          //         ),
-                          //       ],
-                          //     ),
-                          //   ),
-                          //   Padding(
-                          //     padding: EdgeInsets.all(40.0),
-                          //     child: Wrap(
-                          //       children: <Widget>[
-                          //         Center(
-                          //             child: AspectRatio(
-                          //                 aspectRatio: 1,
-                          //                 child: FlareActor(
-                          //                   'assets/animations/VTC.flr',
-                          //                   alignment: Alignment.center,
-                          //                   animation: 'door open',
-                          //                 ))),
-                          //         SizedBox(height: 30.0),
-                          //         Text(
-                          //           'Réserver votre chauffeur privé.',
-                          //           style:
-                          //               Theme.of(context).textTheme.bodyText1,
-                          //         ),
-                          //       ],
-                          //     ),
-                          //   ),
-                          //   Padding(
-                          //     padding: EdgeInsets.all(40.0),
-                          //     child: Wrap(
-                          //       children: <Widget>[
-                          //         Center(
-                          //             child: AspectRatio(
-                          //                 aspectRatio: 1,
-                          //                 child: FlareActor(
-                          //                   'assets/animations/easychat.flr',
-                          //                   alignment: Alignment.center,
-                          //                   animation: 'start',
-                          //                 ))),
-                          //         SizedBox(height: 30.0),
-                          //         Text(
-                          //           'Restez en contact avec\nles participants',
-                          //           style:
-                          //               Theme.of(context).textTheme.bodyText1,
-                          //         ),
-                          //       ],
-                          //     ),
-                          //   ),
-                          // ],
-                        ),
+                    ),
+                    SizedBox(
+                      height: (MediaQuery.of(context).size.width * 7) / 4.25,
+                      child: PageView(
+                        physics: const ClampingScrollPhysics(),
+                        controller: _pageController,
+                        onPageChanged: (int page) {
+                          setState(() {
+                            _currentPage = page;
+                          });
+                        },
+                        children: [
+                          ...nameAnimation.keys.map((key) {
+                          return myFlareAnim(
+                            animation: nameAnimation[key].keys.first,
+                            name: key,
+                            comment: nameAnimation[key].values.first,
+                          );
+                        }).toList()],
                       ),
-                    ],
-                  ),
+                    ),
+                  ],
                 ),
               ),
             );

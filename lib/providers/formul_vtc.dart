@@ -4,84 +4,108 @@ import 'package:flutter_polyline_points/flutter_polyline_points.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:google_maps_webservice/places.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
+import 'package:van_events_project/domain/models/event.dart';
 import 'package:van_events_project/domain/models/formule.dart';
+import 'package:van_events_project/domain/models/my_user.dart';
 import 'package:van_events_project/presentation/pages/formula_choice.dart';
+import 'package:van_events_project/presentation/widgets/card_formula.dart';
+import 'package:van_events_project/presentation/widgets/card_participant.dart';
 
-final formuleVTCProvider = ChangeNotifierProvider<FormuleVTC>((ref) {
+final formuleVTCProvider = ChangeNotifierProvider.autoDispose<FormuleVTC>((ref) {
   return FormuleVTC();
 });
 
 class FormuleVTC extends ChangeNotifier {
+  MyEvent myEvent;
   bool showSpinner;
   bool isNotDisplay;
-  Map<CardFormula, CardFormIntParticipant> formuleParticipant ;
-  Map<Formule, List<GlobalKey<FormBuilderState>>> listFbKey ;
-  List<Formule> formules ;
+  Map<CardFormula, CardFormIntParticipant> formuleParticipant;
+  ScrollController scrollController;
+  GlobalKey<FormBuilderState> fbKeyTransport;
+
+  Map<Formule, List<MyParticipant>> listFbKey;
+  Map<Formule, List<MyUser>> buyingFor;
+
+  List<Formule> formules;
+
   String placeDistance;
-  int indexParticipants ;
-  double totalCost ;
-  Set<Marker> markers ;
+  int indexParticipants;
+
+  double totalCost;
+
+  Set<Marker> markers;
+
   LatLng latLngDepart;
-  bool autoPlay ;
+  bool autoPlay;
+
   PolylinePoints polylinePoints;
-  List<LatLng> polylineCoordinates ;
-  Set<Polyline> polylines ;
+  List<LatLng> polylineCoordinates;
+
+  Set<Polyline> polylines;
+
   double totalDistance;
-  String onGoingCar ;
+  String onGoingCar;
+
   GoogleMapController controller;
   PlacesDetailsResponse placesDetailsResponse;
+  TextEditingController _buyingForController;
+  Formule _formule;
 
-  static final FormuleVTC _formuleVTC = FormuleVTC._internal();
+  // static final FormuleVTC _formuleVTC = FormuleVTC._internal();
+  //
+  // factory FormuleVTC() {
+  //   return _formuleVTC;
+  // }
+  //
+  // FormuleVTC._internal();
 
-  factory FormuleVTC(){
-    return _formuleVTC;
-  }
+  void initBillet(MyEvent event) {
 
-  FormuleVTC._internal();
-
-  void init() {
+    myEvent = event;
     showSpinner = false;
-    isNotDisplay = true;
     formuleParticipant = <CardFormula, CardFormIntParticipant>{};
-    listFbKey = <Formule, List<GlobalKey<FormBuilderState>>>{};
-
+    listFbKey = <Formule, List<MyParticipant>>{};
+    buyingFor = <Formule, List<MyUser>>{};
     formules = <Formule>[];
     indexParticipants = 0;
     totalCost = 0;
-    markers = {};
-    autoPlay = true;
+    initSelectionTransport();
+  }
 
+  void initSelectionTransport() {
+    scrollController = ScrollController();
+    fbKeyTransport = GlobalKey<FormBuilderState>();
+    isNotDisplay = true;
+    autoPlay = true;
+    markers = {};
     polylineCoordinates = [];
     polylines = {};
     totalDistance = 0;
     onGoingCar = 'classee';
-
   }
 
   void myDispose() {
-      showSpinner = null;
-      isNotDisplay = null;
-      formuleParticipant =
-      null;
-      listFbKey =
-      null;
-
-      formules = null;
-      placeDistance = null;
-      indexParticipants = null;
-      totalCost = null;
-      markers = null;
-      latLngDepart = null;
-      autoPlay = null;
-      polylinePoints = null;
-      polylineCoordinates = null;
-      polylines = null;
-      totalDistance = null;
-      onGoingCar = null;
-      controller = null;
-      placesDetailsResponse = null;
-
-
+    myEvent = null;
+    showSpinner = null;
+    isNotDisplay = null;
+    formuleParticipant = null;
+    listFbKey = null;
+    buyingFor = null;
+    formules = null;
+    placeDistance = null;
+    indexParticipants = null;
+    totalCost = null;
+    markers = null;
+    latLngDepart = null;
+    autoPlay = null;
+    polylinePoints = null;
+    polylineCoordinates = null;
+    polylines = null;
+    totalDistance = null;
+    onGoingCar = null;
+    controller = null;
+    placesDetailsResponse = null;
+    scrollController = null;
   }
 
   void setplacesDetailsResponse(PlacesDetailsResponse placesDetailsResponse) {
@@ -141,7 +165,7 @@ class FormuleVTC extends ChangeNotifier {
 
   void setlatLngDepart(LatLng value) {
     latLngDepart = value;
-    notifyListeners();
+    //notifyListeners();
   }
 
   void setautoPlay(bool value) {
@@ -170,7 +194,6 @@ class FormuleVTC extends ChangeNotifier {
   }
 
   void settotalDistancePlus(double value) {
-
     totalDistance += value;
     notifyListeners();
   }
@@ -195,22 +218,30 @@ class FormuleVTC extends ChangeNotifier {
   }
 
   void onChangeParticipant(Formule formule, GlobalKey<FormBuilderState> fbKey,
-      int index, bool isToDestroy, bool isNewKey) {
+      int index, bool isToDestroy, bool isNewKey, String isUserBuyingFor) {
     if (isToDestroy) {
       if (listFbKey[formule].isNotEmpty) {
         listFbKey[formule].removeAt(index);
       }
     } else if (!listFbKey.keys.contains(formule)) {
       listFbKey.addAll({
-        formule: [fbKey]
+        formule: [
+          MyParticipant(formBuilderKey: fbKey, isUserBuyingFor: isUserBuyingFor)
+        ]
       });
     } else if (isNewKey) {
-      listFbKey[formule].insert(index, fbKey);
+      listFbKey[formule].insert(
+          index,
+          MyParticipant(
+              formBuilderKey: fbKey, isUserBuyingFor: isUserBuyingFor));
     } else {
       if (listFbKey[formule].isNotEmpty) {
         listFbKey[formule].removeAt(index);
       }
-      listFbKey[formule].insert(index, fbKey);
+      listFbKey[formule].insert(
+          index,
+          MyParticipant(
+              formBuilderKey: fbKey, isUserBuyingFor: isUserBuyingFor));
     }
   }
 
@@ -272,5 +303,42 @@ class FormuleVTC extends ChangeNotifier {
 
     return myList;
   }
+
+  void setUserBuyingFor(MyUser myUser) {
+    if (myUser != null) {
+      if (buyingFor[_formule] != null) {
+        buyingFor[_formule].add(myUser);
+      } else {
+        buyingFor.addAll({
+          _formule: [myUser]
+        });
+      }
+      _buyingForController.text = myUser.nom;
+    }
+  }
+
+  void setCurrent(
+      Formule formule, TextEditingController textEditingController) {
+    _buyingForController = textEditingController;
+    _formule = formule;
+  }
+
+  String isUserBuyingFor(Formule formule, String val) {
+    if (buyingFor.isEmpty) {
+      return '';
+    }
+
+    return buyingFor[formule]
+        ?.where((element) =>
+            element.nom.trim().toLowerCase() == val.trim().toLowerCase())
+        ?.first
+        ?.id;
+  }
+
+  void setMyEvent(MyEvent event) {
+    myEvent = event;
+    notifyListeners();
+  }
+
 
 }

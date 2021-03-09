@@ -6,13 +6,14 @@ class ChatMembre {
   final DateTime lastReceived;
   final bool isReading;
   final bool isWriting;
+  final bool isSubscribeToTopic;
 
   ChatMembre(
       {this.id,
       this.lastReading,
       this.lastReceived,
       this.isReading,
-      this.isWriting});
+      this.isWriting,this.isSubscribeToTopic});
 
   Map<String, dynamic> toMap() {
     return {
@@ -21,10 +22,14 @@ class ChatMembre {
       'lastReceived': lastReceived,
       'isReading': isReading,
       'isWriting': isWriting,
+      'isSubscribeToTopic': isSubscribeToTopic
     };
   }
 
   factory ChatMembre.fromMap(Map<String, dynamic> map) {
+    if(map == null){
+      return null;
+    }
     return ChatMembre(
       id: map['id'] as String,
       lastReading:
@@ -33,11 +38,12 @@ class ChatMembre {
           (map['lastReceived'] as Timestamp ?? Timestamp.now())?.toDate(),
       isReading: map['isReading'] as bool,
       isWriting: map['isWriting'] as bool,
+      isSubscribeToTopic: map['isSubscribeToTopic'] as bool
     );
   }
 
   @override
   String toString() {
-    return 'ChatMembre{id: $id, lastReading: $lastReading, lastReceived: $lastReceived, isReading: $isReading, isWriting: $isWriting}';
+    return 'ChatMembre{id: $id, lastReading: $lastReading, lastReceived: $lastReceived, isReading: $isReading, isWriting: $isWriting, isSubscribeToTopic: $isSubscribeToTopic}';
   }
 }

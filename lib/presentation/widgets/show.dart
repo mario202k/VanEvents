@@ -78,7 +78,7 @@ class Show {
                             }
 
                             final GoogleMapsPlaces _places =
-                                GoogleMapsPlaces(apiKey: PLACES_API_KEY);
+                                GoogleMapsPlaces(apiKey: placesApiKey);
 
                             final PlacesAutocompleteResponse
                                 placesAutocompleteResponse =
@@ -146,8 +146,7 @@ class Show {
 //
                             ),
                         validator: (val) {
-                          final RegExp regex = RegExp(
-                              r'^[a-zA-ZáàâäãåçéèêëíìîïñóòôöõúùûüýÿæœÁÀÂÄÃÅÇÉÈÊËÍÌÎÏÑÓÒÔÖÕÚÙÛÜÝŸÆŒ\-. ]{2,60}$');
+                          final RegExp regex = RegExp(regExpNom);
 
                           if (regex.allMatches(val).isEmpty) {
                             return 'Non valide';
@@ -188,7 +187,7 @@ class Show {
             ));
 
     final GoogleMapsPlaces _places =
-        GoogleMapsPlaces(apiKey: PLACES_API_KEY); //Same API_KEY as above
+        GoogleMapsPlaces(apiKey: placesApiKey); //Same API_KEY as above
 
     if (str == null) {
       return null;
@@ -554,50 +553,52 @@ class Show {
                   ),
                   Padding(
                     padding: const EdgeInsets.all(16.0),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.end,
-                      children: [
-                        FlatButton(
-                          onPressed: () {
-                            Navigator.of(context).pop();
-                          },
-                          child: const Text('Annuler'),
-                        ),
-                        RaisedButton(
-                          onPressed: () {
-                            context.read(myUserRepository).updateMyUserGenre(
-                                context.read(boolToggleProvider).genre);
-                            context.read(myUserRepository).updateMyUserType(
-                                context.read(boolToggleProvider).type);
+                    child: FittedBox(
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.end,
+                        children: [
+                          FlatButton(
+                            onPressed: () {
+                              Navigator.of(context).pop();
+                            },
+                            child: const Text('Annuler'),
+                          ),
+                          RaisedButton(
+                            onPressed: () {
+                              context.read(myUserRepository).updateMyUserGenre(
+                                  context.read(boolToggleProvider).genre);
+                              context.read(myUserRepository).updateMyUserType(
+                                  context.read(boolToggleProvider).type);
 
-                            context
-                                .read(myUserRepository)
-                                .updateMyUserLieuQuand(
-                                    context.read(boolToggleProvider).lieu,
-                                    context
-                                        .read(boolToggleProvider)
-                                        .selectedAdress,
-                                    context.read(boolToggleProvider).zone == 0
-                                        ? 25
-                                        : context
-                                                    .read(boolToggleProvider)
-                                                    .zone ==
-                                                1 / 3
-                                            ? 50
-                                            : context
-                                                        .read(
-                                                            boolToggleProvider)
-                                                        .zone ==
-                                                    2 / 3
-                                                ? 100
-                                                : null,
-                                    context.read(boolToggleProvider).quand,
-                                    context.read(boolToggleProvider).date);
-                            Navigator.of(context).pop();
-                          },
-                          child: const Text('Ok'),
-                        ),
-                      ],
+                              context
+                                  .read(myUserRepository)
+                                  .updateMyUserLieuQuand(
+                                      context.read(boolToggleProvider).lieu,
+                                      context
+                                          .read(boolToggleProvider)
+                                          .selectedAdress,
+                                      context.read(boolToggleProvider).zone == 0
+                                          ? 25
+                                          : context
+                                                      .read(boolToggleProvider)
+                                                      .zone ==
+                                                  1 / 3
+                                              ? 50
+                                              : context
+                                                          .read(
+                                                              boolToggleProvider)
+                                                          .zone ==
+                                                      2 / 3
+                                                  ? 100
+                                                  : null,
+                                      context.read(boolToggleProvider).quand,
+                                      context.read(boolToggleProvider).date);
+                              Navigator.of(context).pop();
+                            },
+                            child: const Text('Ok'),
+                          ),
+                        ],
+                      ),
                     ),
                   )
                 ],
@@ -1037,12 +1038,12 @@ class Show {
       BuildContext context, double amoutOfItem) async {
     final GlobalKey<FormBuilderState> _fbKey = GlobalKey<FormBuilderState>();
     final Map response = {
-      'reason': RefundReason.requested_by_customer,
+      'reason': RefundReason.requestedByCustomer,
       'amount': null
     };
     final List<RefundReason> myList = List.from(RefundReason.values);
     myList.removeWhere(
-        (element) => element == RefundReason.expired_uncaptured_charge);
+        (element) => element == RefundReason.expiredUncapturedCharge);
     return showDialog<Map>(
         context: context,
         builder: (_) => Platform.isAndroid
@@ -1053,7 +1054,8 @@ class Show {
                     Consumer(builder: (context, watch, child) {
                       return DropdownButton<RefundReason>(
                           value: watch(boolToggleProvider).reason,
-                          hint: Text('Selectionner une raison',style: Theme.of(context).textTheme.bodyText1),
+                          hint: Text('Selectionner une raison',
+                              style: Theme.of(context).textTheme.bodyText1),
                           items: myList.map((val) {
                             return DropdownMenuItem(
                                 value: val, child: Text(toNormalReason(val)));
@@ -1384,5 +1386,215 @@ class Show {
             ),
           );
         });
+  }
+
+  static Future<bool> showDialogChoicesAvatar(BuildContext context) async {
+    return showDialog<bool>(
+        context: context,
+        builder: (_) => Platform.isAndroid
+            ? AlertDialog(
+                title: const Text('Avatar'),
+                content: const Text('Que voulez-vous changer?'),
+                actions: <Widget>[
+                  FlatButton(
+                    onPressed: () {
+                      Navigator.of(context).pop();
+                    },
+                    child: const Text('Annuler'),
+                  ),
+                  FlatButton(
+                    onPressed: () {
+                      Navigator.of(context).pop(false);
+                    },
+                    child: const Text('Image'),
+                  ),
+                  FlatButton(
+                    onPressed: () {
+                      Navigator.of(context).pop(true);
+                    },
+                    child: const Text('Nom'),
+                  ),
+                ],
+              )
+            : CupertinoAlertDialog(
+                title: const Text('Avatar'),
+                content: const Text('Que voulez-vous changer?'),
+                actions: <Widget>[
+                  FlatButton(
+                    onPressed: () {
+                      Navigator.of(context).pop();
+                    },
+                    child: const Text('Annuler'),
+                  ),
+                  FlatButton(
+                    onPressed: () {
+                      Navigator.of(context).pop(false);
+                    },
+                    child: const Text('Image'),
+                  ),
+                  FlatButton(
+                    onPressed: () {
+                      Navigator.of(context).pop(true);
+                    },
+                    child: const Text('Nom'),
+                  ),
+                ],
+              ));
+  }
+
+  static Future<String> showNewName(BuildContext context) {
+    final GlobalKey<FormBuilderState> fbKey = GlobalKey<FormBuilderState>();
+    return showDialog<String>(
+        context: context,
+        builder: (_) => Platform.isAndroid
+            ? AlertDialog(
+                title: const Text('Nouveau nom'),
+                content: FormBuilder(
+                  key: fbKey,
+                  child: FormBuilderTextField(
+                    keyboardType: TextInputType.text,
+                    autofocus: true,
+                    style: Theme.of(context).textTheme.bodyText1,
+                    cursorColor: Theme.of(context).colorScheme.onBackground,
+                    name: 'nom',
+                    decoration: const InputDecoration(
+//labelText: 'Ville',
+                      hintText: 'Nom',
+                      border: OutlineInputBorder(
+                        borderSide: BorderSide.none,
+                      ),
+                      focusedBorder: OutlineInputBorder(
+                        borderSide: BorderSide.none,
+                      ),
+                      disabledBorder: OutlineInputBorder(
+                        borderSide: BorderSide.none,
+                      ),
+                      enabledBorder: OutlineInputBorder(
+                        borderSide: BorderSide.none,
+                      ),
+                      errorBorder: OutlineInputBorder(
+                        borderSide: BorderSide.none,
+                      ),
+                      focusedErrorBorder: OutlineInputBorder(
+                        borderSide: BorderSide.none,
+                      ),
+//
+                    ),
+                    validator: (val) {
+                      final RegExp regex = RegExp(regExpNom);
+
+                      if (regex.allMatches(val).isEmpty) {
+                        return 'Non valide';
+                      }
+                      return null;
+                    },
+                  ),
+                ),
+                actions: <Widget>[
+                  FlatButton(
+                    onPressed: () {
+                      Navigator.of(context).pop();
+                    },
+                    child: const Text('Annuler'),
+                  ),
+                  FlatButton(
+                    onPressed: () {
+                      if (fbKey.currentState.validate()) {
+                        Navigator.of(context).pop(
+                            fbKey.currentState.fields['nom'].value.toString());
+                      }
+                    },
+                    child: const Text('Ok'),
+                  ),
+                ],
+              )
+            : CupertinoAlertDialog(
+                title: const Text('Nouveau nom'),
+                content: FormBuilder(
+                  key: fbKey,
+                  child: FormBuilderTextField(
+                    keyboardType: TextInputType.text,
+                    autofocus: true,
+                    style: Theme.of(context).textTheme.bodyText1,
+                    cursorColor: Theme.of(context).colorScheme.onBackground,
+                    name: 'nom',
+                    decoration: const InputDecoration(
+//labelText: 'Ville',
+                      hintText: 'Nom',
+                      border: OutlineInputBorder(
+                        borderSide: BorderSide.none,
+                      ),
+                      focusedBorder: OutlineInputBorder(
+                        borderSide: BorderSide.none,
+                      ),
+                      disabledBorder: OutlineInputBorder(
+                        borderSide: BorderSide.none,
+                      ),
+                      enabledBorder: OutlineInputBorder(
+                        borderSide: BorderSide.none,
+                      ),
+                      errorBorder: OutlineInputBorder(
+                        borderSide: BorderSide.none,
+                      ),
+                      focusedErrorBorder: OutlineInputBorder(
+                        borderSide: BorderSide.none,
+                      ),
+//
+                    ),
+                    validator: (val) {
+                      final RegExp regex = RegExp(regExpNom);
+
+                      if (regex.allMatches(val).isEmpty) {
+                        return 'Non valide';
+                      }
+                      return null;
+                    },
+                  ),
+                ),
+                actions: <Widget>[
+                  FlatButton(
+                    onPressed: () {
+                      Navigator.of(context).pop();
+                    },
+                    child: const Text('Annuler'),
+                  ),
+                  FlatButton(
+                    onPressed: () {
+                      if (fbKey.currentState.validate()) {
+                        Navigator.of(context).pop(
+                            fbKey.currentState.fields['nom'].value.toString());
+                      }
+                    },
+                    child: const Text('Ok'),
+                  ),
+                ],
+              ));
+  }
+
+  static Future<void> showLoading(BuildContext context) async {
+    return showGeneralDialog<String>(
+        barrierDismissible: false,
+        barrierLabel: "Label",
+        barrierColor: Colors.black.withOpacity(0.5),
+        transitionDuration: const Duration(milliseconds: 500),
+        transitionBuilder: (context, anim1, anim2, child) {
+          return SlideTransition(
+            position: Tween(begin: const Offset(0, 1), end: const Offset(0, 0))
+                .animate(anim1),
+            child: child,
+          );
+        },
+        context: context,
+        pageBuilder: (BuildContext context, anim1, anim2) => Center(
+              child: SizedBox(
+                height: 200.0,
+                width: 200.0,
+                child: CircularProgressIndicator(
+                  strokeWidth: 5,
+
+                    valueColor: AlwaysStoppedAnimation<Color>(
+                        Theme.of(context).colorScheme.primary)),
+              ),
+            ));
   }
 }

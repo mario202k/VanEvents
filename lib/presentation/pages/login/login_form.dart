@@ -9,6 +9,7 @@ import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:sign_in_with_apple/sign_in_with_apple.dart';
+import 'package:van_events_project/constants/credentials.dart';
 import 'package:van_events_project/domain/repositories/my_user_repository.dart';
 import 'package:van_events_project/domain/routing/route.gr.dart';
 import 'package:van_events_project/presentation/pages/login/bloc/bloc.dart';
@@ -175,6 +176,7 @@ class LoginForm extends HookWidget {
                                           builder: (context, watch, child) {
                                             return FormBuilderTextField(
                                               keyboardType: TextInputType.text,
+                                              enableInteractiveSelection: false,
                                               style: TextStyle(
                                                   color: Theme.of(context)
                                                       .colorScheme
@@ -224,7 +226,7 @@ class LoginForm extends HookWidget {
                                                     context,
                                                     errorText: 'Champs requis'),
                                                 FormBuilderValidators.match(context,
-                                                    r'^(?=.*[a-z])(?=.*[A-Z])(?=.*\d.*)[a-zA-Z0-9\S]{8,15}$',
+                                                    regExpMDP,
                                                     errorText:
                                                     '1 majuscule, 1 chiffre, 8 caractères')
                                               ]),
@@ -259,7 +261,7 @@ class LoginForm extends HookWidget {
                                         text: 'avec Apple',
                                         style: watch(settingsProvider)
                                             .onGoingTheme ==
-                                            MyThemes.Dracula
+                                            MyThemes.dracula
                                             ? SignInWithAppleButtonStyle.white
                                             : SignInWithAppleButtonStyle.black,
                                         onPressed: () {

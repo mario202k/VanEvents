@@ -71,7 +71,7 @@ String toNormalReason(RefundReason reason) {
     case RefundReason.fraudulent:
       return 'Frauduleux';
       break;
-    case RefundReason.requested_by_customer:
+    case RefundReason.requestedByCustomer:
       return 'Demande du client';
       break;
     default: //RefundReason.expired_uncaptured_charge

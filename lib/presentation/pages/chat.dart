@@ -60,48 +60,35 @@ class Chat extends HookWidget {
                         .getNbChatMessageNonLu(chat.id);
                     MyUser participant = MyUser();
 
-                    return Slidable(
-                      actionPane: const SlidableDrawerActionPane(),
-                      actionExtentRatio: 0.15,
-                      actions: const <Widget>[
-                        // IconSlideAction(
-                        //   caption: 'Call',
-                        //   color: Theme.of(context).colorScheme.secondary,
-                        //   icon: FontAwesomeIcons.phone,
-                        //   onTap: () => CallUtils.dial(
-                        //       from: user, to: userFriend, context: context),
-                        // ),
-                      ],
-                      child: StreamBuilder<List<MyUser>>(
-                          stream: streamUserFriend,
-                          builder: (context, snapshot) {
-                            if (!snapshot.hasData || snapshot.data == null) {
-                              return const SizedBox();
-                            }
+                    return StreamBuilder<List<MyUser>>(
+                        stream: streamUserFriend,
+                        builder: (context, snapshot) {
+                          if (!snapshot.hasData || snapshot.data == null) {
+                            return const SizedBox();
+                          }
 
-                            List<MyUser> users = <MyUser>[];
+                          List<MyUser> users = <MyUser>[];
 
-                            users = snapshot.data;
+                          users = snapshot.data;
 
-                            if (!chat.isGroupe && users.isNotEmpty) {
-                              for (final MyUser myUser in users) {
-                                if (myUser.id != myChatRepo.uid) {
-                                  participant = myUser;
-                                }
+                          if (!chat.isGroupe && users.isNotEmpty) {
+                            for (final MyUser myUser in users) {
+                              if (myUser.id != myChatRepo.uid) {
+                                participant = myUser;
                               }
                             }
+                          }
 
-                            String titre = '';
-                            if (chat.isGroupe) {
-                              titre = chat.titre;
-                            } else {
-                              titre = participant.nom;
-                            }
+                          String titre = '';
+                          if (chat.isGroupe) {
+                            titre = chat.titre;
+                          } else {
+                            titre = participant.nom;
+                          }
 
-                            return buildListTile(titre, chat, users, lastMsg,
-                                participant, msgNonLu, context);
-                          }),
-                    );
+                          return buildListTile(titre, chat, users, lastMsg,
+                              participant, msgNonLu, context);
+                        });
                   })
               : Center(
                   child: Text(

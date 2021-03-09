@@ -1,5 +1,6 @@
 import 'dart:io';
 
+import 'package:auto_route/auto_route.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_circular_chart/flutter_circular_chart.dart';
@@ -19,7 +20,7 @@ import 'package:van_events_project/presentation/pages/upload_event.dart';
 import 'package:van_events_project/presentation/widgets/show.dart';
 
 final uploadEventProvider =
-    ChangeNotifierProvider<UploadEventChangeNotifier>((ref) {
+    ChangeNotifierProvider.autoDispose<UploadEventChangeNotifier>((ref) {
   return UploadEventChangeNotifier();
 });
 
@@ -252,6 +253,7 @@ class UploadEventChangeNotifier extends ChangeNotifier {
 
   void setDateDebut(DateTime dateDebut) {
     this.dateDebut = dateDebut;
+    notifyListeners();
     dateAffiche();
     updateDaysAffiche();
     notifyListeners();
@@ -334,9 +336,11 @@ class UploadEventChangeNotifier extends ChangeNotifier {
           }
 
           nbTotal = 0;
-          data[0].entries.forEach((d) {
-            nbTotal += d.value.toInt();
-          });
+
+          for(final segment in data[0].entries){
+            nbTotal += segment.value.toInt();
+          }
+
         }
         notifyListeners();
       },
@@ -367,9 +371,9 @@ class UploadEventChangeNotifier extends ChangeNotifier {
     formulesWidgets.removeLast();
     listIndicator.removeLast();
     nbTotal = 0;
-    data[0].entries.forEach((d) {
-      nbTotal += d.value.toInt();
-    });
+    for(final segment in data[0].entries){
+      nbTotal += segment.value.toInt();
+    }
     notifyListeners();
   }
 
@@ -528,7 +532,7 @@ class UploadEventChangeNotifier extends ChangeNotifier {
 
       final List<Formule> formules = <Formule>[];
 
-      formulesWidgets.forEach((f) {
+      for(final f in formulesWidgets){
         if (f is CardFormula) {
           if (f.fbKey.currentState.validate()) {
             formules.add(Formule(
@@ -544,7 +548,7 @@ class UploadEventChangeNotifier extends ChangeNotifier {
             return;
           }
         }
-      });
+      }
 
       if (formules.length == formulesWidgets.length / 2) {
         if ((eventCostDiscounted ?? eventCost) < 0.5) {
@@ -591,6 +595,7 @@ class UploadEventChangeNotifier extends ChangeNotifier {
 
   Future upload(
       List<Formule> formules, Coords coords, BuildContext context) async {
+    Show.showLoading(context);
     await context
         .read(myEventRepositoryProvider)
         .uploadEvent(
@@ -613,10 +618,12 @@ class UploadEventChangeNotifier extends ChangeNotifier {
           stripeAccount: myEvent?.stripeAccount ?? myStripeAccount,
         )
         .then((rep) {
+          ExtendedNavigator.root.pop();
       showSpinner = false;
       Show.showSnackBar('Event ajouter', myScaffoldKey);
       notifyListeners();
     }).catchError((e) {
+      ExtendedNavigator.root.pop();
       debugPrint(e.toString());
       Show.showSnackBar('Impossible d\'ajouter l\'Event', myScaffoldKey);
       showSpinner = false;

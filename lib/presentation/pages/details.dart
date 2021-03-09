@@ -9,12 +9,14 @@ import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:intl/intl.dart';
 import 'package:map_launcher/map_launcher.dart';
 import 'package:shimmer/shimmer.dart';
+import 'package:van_events_project/domain/models/chat_membres.dart';
 import 'package:van_events_project/domain/models/event.dart';
 import 'package:van_events_project/domain/models/my_user.dart';
 import 'package:van_events_project/domain/repositories/my_chat_repository.dart';
 import 'package:van_events_project/domain/repositories/my_event_repository.dart';
 import 'package:van_events_project/domain/routing/route.gr.dart';
 import 'package:van_events_project/presentation/widgets/model_screen.dart';
+import 'package:van_events_project/presentation/widgets/show.dart';
 import 'package:van_events_project/providers/toggle_bool.dart';
 
 import 'gallery_page.dart';
@@ -27,12 +29,12 @@ class Details extends HookWidget {
   @override
   Widget build(BuildContext context) {
     final db = context.read(myEventRepositoryProvider);
+    final chatRead = context.read(myChatRepositoryProvider);
     final participants = db.participantsEvent(event.id);
     final boolToggle = context.read(boolToggleProvider);
     final FirebaseMessaging firebaseMessaging = FirebaseMessaging();
 
     boolToggle.imageProviderDetail.clear();
-
     return Consumer(builder: (context, watch, child) {
       return ModelScreen(
         child: Scaffold(
@@ -48,11 +50,16 @@ class Details extends HookWidget {
                   pinned: true,
                   flexibleSpace: FlexibleSpaceBar(
                     centerTitle: true,
-                    title: Text(
-                        event.titre[0].toUpperCase() + event.titre.substring(1),
-                        overflow: TextOverflow.ellipsis,
-                        textAlign: TextAlign.center,
-                        style: Theme.of(context).textTheme.headline4),
+                    title: FittedBox(
+                      child: Padding(
+                        padding: const EdgeInsets.only(left: 50,right: 15),
+                        child: Text(
+                            event.titre[0].toUpperCase() + event.titre.substring(1),
+                            overflow: TextOverflow.ellipsis,
+                            textAlign: TextAlign.center,
+                            style: Theme.of(context).textTheme.headline4),
+                      ),
+                    ),
                     background: boolToggle
                                 .imageProviderEvent[event.imageFlyerUrl] !=
                             null
@@ -123,63 +130,107 @@ class Details extends HookWidget {
                       ),
                     ],
                   ),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                    children: <Widget>[
-                      // RaisedButton.icon(
-                      //     onPressed: () {
-                      //       final Event myEvent = Event(
-                      //         title: event.titre,
-                      //         description: event.description,
-                      //         location: [
-                      //           ...event.adresseRue,
-                      //           ...event.adresseZone
-                      //         ].join(' '),
-                      //         startDate: event.dateDebut,
-                      //         endDate: event.dateFin,
-                      //       );
-                      //
-                      //       Add2Calendar.addEvent2Cal(myEvent);
-                      //     },
-                      //     icon: Icon(
-                      //       Icons.calendar_today,
-                      //     ),
-                      //     label: Flexible(child: Text("Plannifier"))),
-                      RaisedButton.icon(
-                          onPressed: () async {
-                            firebaseMessaging.subscribeToTopic(event.chatId);
-                            await context
-                                .read(myChatRepositoryProvider)
-                                .addAmongGroupe(event.chatId)
-                                .then((_) {
-                              ExtendedNavigator.of(context).push(
-                                  Routes.chatRoom,
-                                  arguments:
-                                      ChatRoomArguments(chatId: event.chatId));
-                            });
-                          },
-                          icon: const FaIcon(FontAwesomeIcons.comments),
-                          label: const Text('Chat')),
-                      RaisedButton.icon(
-                          onPressed: () async {
-                            final availableMaps =
-                                await MapLauncher.installedMaps;
+                  Column(
+                    children: [
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                        children: <Widget>[
+                          // RaisedButton.icon(
+                          //     onPressed: () {
+                          //       final Event myEvent = Event(
+                          //         title: event.titre,
+                          //         description: event.description,
+                          //         location: [
+                          //           ...event.adresseRue,
+                          //           ...event.adresseZone
+                          //         ].join(' '),
+                          //         startDate: event.dateDebut,
+                          //         endDate: event.dateFin,
+                          //       );
+                          //
+                          //       Add2Calendar.addEvent2Cal(myEvent);
+                          //     },
+                          //     icon: Icon(
+                          //       Icons.calendar_today,
+                          //     ),
+                          //     label: Flexible(child: Text("Plannifier"))),
+                          RaisedButton.icon(
+                              onPressed: () async {
+                                Show.showLoading(context);
+                                firebaseMessaging
+                                    .subscribeToTopic(event.chatId);
+                                await chatRead
+                                    .addAmongGroupe(event.chatId)
+                                    .then((_) {
+                                  ExtendedNavigator.root.pop();
+                                  ExtendedNavigator.of(context).push(
+                                      Routes.chatRoom,
+                                      arguments: ChatRoomArguments(
+                                          chatId: event.chatId));
+                                });
+                              },
+                              icon: const FaIcon(FontAwesomeIcons.comments),
+                              label: const Text('Chat')),
+                          RaisedButton.icon(
+                              onPressed: () async {
+                                final availableMaps =
+                                    await MapLauncher.installedMaps;
 
-                            await availableMaps.first.showMarker(
-                              coords: Coords(event.position.latitude,
-                                  event.position.longitude),
-                              title: event.titre,
-                              description: 'event.addressZone',
-                            );
-                          },
-                          icon: const Icon(
-                            Icons.map,
-                          ),
-                          label: const Flexible(child: Text("Y aller"))),
+                                await availableMaps.first.showMarker(
+                                  coords: Coords(event.position.latitude,
+                                      event.position.longitude),
+                                  title: event.titre,
+                                  description: 'event.addressZone',
+                                );
+                              },
+                              icon: const Icon(
+                                Icons.map,
+                              ),
+                              label: const Flexible(child: Text("Y aller"))),
+                        ],
+                      ),
+                      StreamBuilder<ChatMembre>(
+                          stream: chatRead
+                              .getChatMembre(event.chatId,
+                                  context.read(myUserProvider).id),
+                          builder: (context, snapshot) {
+                            if (!snapshot.hasData) {
+                              return const SizedBox();
+                            }
+
+                            final bool isSubscribed =
+                                snapshot.data.isSubscribeToTopic;
+
+                            return FlatButton(
+                                onPressed: () {
+                                  if (isSubscribed) {
+                                    FirebaseMessaging()
+                                        .unsubscribeFromTopic(event.chatId)
+                                        .then((_) {
+                                      chatRead
+                                          .setChatMembreUnsubscribe(
+                                              event.chatId,
+                                              context.read(myUserProvider).id);
+                                    });
+                                  } else {
+                                    FirebaseMessaging()
+                                        .subscribeToTopic(event.chatId)
+                                        .then((_) {
+                                      context
+                                          .read(myChatRepositoryProvider)
+                                          .setChatMembreSubscribe(event.chatId,
+                                              context.read(myUserProvider).id);
+                                    });
+                                  }
+                                },
+                                child: Text(isSubscribed
+                                    ? 'Quitter le groupe'
+                                    : 'Rejoindre le groupe'));
+                          })
                     ],
                   ),
                   const SizedBox(
-                    height: 25,
+                    height: 15,
                   ),
                   const Divider(),
                   Padding(
@@ -289,7 +340,7 @@ class Details extends HookWidget {
                       style: Theme.of(context).textTheme.headline5),
                   SizedBox(
                     height: 100,
-                    child: FutureBuilder<List<Future<MyUser>>>(
+                    child: FutureBuilder<List<List<Future<MyUser>>>>(
                         future: participants,
                         builder: (context, snapshot) {
                           if (snapshot.hasError) {
@@ -303,19 +354,26 @@ class Details extends HookWidget {
                                   valueColor: AlwaysStoppedAnimation<Color>(
                                       Theme.of(context).colorScheme.secondary)),
                             );
+                          } else if (!snapshot.hasData) {
+                            return const SizedBox();
                           }
-                          final List<Future<MyUser>> participantsList =
+                          final List<List<Future<MyUser>>> participantsList =
                               snapshot.data;
+                          final List<Future<MyUser>> myList = [];
 
-                          return participantsList.isNotEmpty
+                          for (final List<Future<MyUser>> list
+                              in participantsList) {
+                            myList.addAll(list);
+                          }
+
+                          return myList.isNotEmpty
                               ? ListView.builder(
                                   shrinkWrap: true,
                                   scrollDirection: Axis.horizontal,
-                                  itemCount: participantsList.length,
+                                  itemCount: myList.length,
                                   itemBuilder: (context, index) {
                                     return FutureBuilder<MyUser>(
-                                        future:
-                                            participantsList.elementAt(index),
+                                        future: myList.elementAt(index),
                                         builder: (context, snapshot) {
                                           if (snapshot.hasError) {
                                             return const Center(
@@ -333,6 +391,8 @@ class Details extends HookWidget {
                                                               .colorScheme
                                                               .secondary)),
                                             );
+                                          } else if (!snapshot.hasData) {
+                                            return const SizedBox();
                                           }
 
                                           final MyUser user = snapshot.data;

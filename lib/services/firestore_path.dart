@@ -1,4 +1,6 @@
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_form_builder/flutter_form_builder.dart';
 
 class MyPath {
   static String user(String uid) => 'users/$uid';
@@ -75,5 +77,10 @@ class MyPath {
   static String stripeDocs(String id, String front)  => 'imageStripeDoc/$id/$front';
 
   static String abouts() => 'about';
+  
+  static prenom (BuildContext context){
+    return FormBuilderValidators.match(context,
+      r'^[a-zA-ZáàâäãåçéèêëíìîïñóòôöõúùûüýÿæœÁÀÂÄÃÅÇÉÈÊËÍÌÎÏÑÓÒÔÖÕÚÙÛÜÝŸÆŒ -]{2,60}$',errorText: 'Erreur de saisie');
+  }
 
 }

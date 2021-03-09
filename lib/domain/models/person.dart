@@ -10,9 +10,8 @@ class Person {
   Requirements requirements;
   Verification verification;
 
-
-  Person({
-      this.id,
+  Person(
+      {this.id,
       this.object,
       this.account,
       this.created,
@@ -23,19 +22,18 @@ class Person {
       this.requirements,
       this.verification});
 
-
   Map toJson() => {
-    "id": id,
-    "object": object,
-    "account": account,
-    "created": created,
-    "dob": dob,
-    "first_name": firstName,
-    "last_name": lastName,
-    "relationship": relationship,
-    "requirements": requirements,
-    "verification": verification,
-  };
+        "id": id,
+        "object": object,
+        "account": account,
+        "created": created,
+        "dob": dob,
+        "first_name": firstName,
+        "last_name": lastName,
+        "relationship": relationship,
+        "requirements": requirements,
+        "verification": verification,
+      };
 
   factory Person.fromMap(dynamic map) {
     if (null == map) return null;
@@ -64,12 +62,17 @@ class Verification {
   Document document;
   String status;
 
-  Verification({this.additionalDocument, this.details, this.detailsCode,
-      this.document, this.status});
+  Verification(
+      {this.additionalDocument,
+      this.details,
+      this.detailsCode,
+      this.document,
+      this.status});
 
   factory Verification.fromMap(Map map) {
     return Verification(
-      additionalDocument: AdditionalDocument.fromMap(map['additional_document'] as Map<dynamic,dynamic>),
+      additionalDocument: AdditionalDocument.fromMap(
+          map['additional_document'] as Map<dynamic, dynamic>),
       details: map['details'] as dynamic,
       detailsCode: map['detailsCode'] as dynamic,
       document: Document.fromMap(map['document'] as Map),
@@ -78,12 +81,12 @@ class Verification {
   }
 
   Map toJson() => {
-    "additional_document": additionalDocument,
-    "details": details,
-    "details_code": detailsCode,
-    "document": document,
-    "status": status,
-  };
+        "additional_document": additionalDocument,
+        "details": details,
+        "details_code": detailsCode,
+        "document": document,
+        "status": status,
+      };
 }
 
 class Document {
@@ -94,7 +97,7 @@ class Document {
 
   static Document fromMap(Map map) {
     if (map == null) return null;
-    Document document = Document();
+    final Document document = Document();
     document.back = map['back'];
     document.details = map['details'];
     document.detailsCode = map['details_code'];
@@ -103,11 +106,11 @@ class Document {
   }
 
   Map toJson() => {
-    "back": back,
-    "details": details,
-    "details_code": detailsCode,
-    "front": front,
-  };
+        "back": back,
+        "details": details,
+        "details_code": detailsCode,
+        "front": front,
+      };
 }
 
 class AdditionalDocument {
@@ -118,7 +121,7 @@ class AdditionalDocument {
 
   static AdditionalDocument fromMap(Map map) {
     if (map == null) return null;
-    AdditionalDocument additionalDocument = AdditionalDocument();
+    final AdditionalDocument additionalDocument = AdditionalDocument();
     additionalDocument.back = map['back'];
     additionalDocument.details = map['details'];
     additionalDocument.detailsCode = map['details_code'];
@@ -127,11 +130,11 @@ class AdditionalDocument {
   }
 
   Map toJson() => {
-    "back": back,
-    "details": details,
-    "details_code": detailsCode,
-    "front": front,
-  };
+        "back": back,
+        "details": details,
+        "details_code": detailsCode,
+        "front": front,
+      };
 }
 
 class Requirements {
@@ -143,7 +146,7 @@ class Requirements {
 
   static Requirements fromMap(Map map) {
     if (map == null) return null;
-    Requirements requirements = Requirements();
+    final Requirements requirements = Requirements();
     requirements.currentlyDue = map['currently_due'] as List;
     requirements.errors = map['errors'] as List;
     requirements.eventuallyDue = map['eventually_due'] as List;
@@ -153,12 +156,12 @@ class Requirements {
   }
 
   Map toJson() => {
-    "currently_due": currentlyDue,
-    "errors": errors,
-    "eventually_due": eventuallyDue,
-    "past_due": pastDue,
-    "pending_verification": pendingVerification,
-  };
+        "currently_due": currentlyDue,
+        "errors": errors,
+        "eventually_due": eventuallyDue,
+        "past_due": pastDue,
+        "pending_verification": pendingVerification,
+      };
 }
 
 class Relationship {
@@ -169,8 +172,13 @@ class Relationship {
   bool representative;
   dynamic title;
 
-  Relationship({this.director, this.executive, this.owner, this.percentOwnership,
-      this.representative, this.title});
+  Relationship(
+      {this.director,
+      this.executive,
+      this.owner,
+      this.percentOwnership,
+      this.representative,
+      this.title});
 
   factory Relationship.fromMap(Map map) {
     return Relationship(
@@ -184,16 +192,14 @@ class Relationship {
   }
 
   Map toJson() => {
-    "director": director,
-    "executive": executive,
-    "owner": owner,
-    "percent_ownership": percentOwnership,
-    "representative": representative,
-    "title": title,
-  };
+        "director": director,
+        "executive": executive,
+        "owner": owner,
+        "percent_ownership": percentOwnership,
+        "representative": representative,
+        "title": title,
+      };
 }
-
-
 
 class Dob {
   dynamic day;
@@ -202,7 +208,7 @@ class Dob {
 
   static Dob fromMap(Map map) {
     if (map == null) return null;
-    Dob dob = Dob();
+    final Dob dob = Dob();
     dob.day = map['day'];
     dob.month = map['month'];
     dob.year = map['year'];
@@ -210,8 +216,8 @@ class Dob {
   }
 
   Map toJson() => {
-    "day": day,
-    "month": month,
-    "year": year,
-  };
+        "day": day,
+        "month": month,
+        "year": year,
+      };
 }

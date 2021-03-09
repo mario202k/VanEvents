@@ -8,68 +8,32 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
+import 'package:system_alert_window/system_alert_window.dart';
+
 // import 'package:system_alert_window/system_alert_window.dart';
 import 'package:uuid/uuid.dart';
+import 'package:van_events_project/domain/models/call.dart';
 import 'package:van_events_project/domain/models/message.dart';
 import 'package:van_events_project/domain/models/my_user.dart';
+import 'package:van_events_project/domain/repositories/my_chat_repository.dart';
 import 'package:van_events_project/domain/routing/route.gr.dart';
 import 'package:van_events_project/providers/chat_room_change_notifier.dart';
-import 'package:van_events_project/providers/toggle_bool.dart';
 import 'package:van_events_project/services/firestore_path.dart';
 import 'package:van_events_project/services/firestore_service.dart';
 // import 'package:awesome_notifications/awesome_notifications.dart';
 
 FirebaseMessaging _fcm = FirebaseMessaging();
 final FlutterCallkeep _callKeep = FlutterCallkeep();
-bool _callKeepInited = false,
-_isShowingWindow = false,
-_isUpdatedWindow = false;
-
-
+FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
+    FlutterLocalNotificationsPlugin();
+bool _callKeepInited = false;
 
 Future<dynamic> myBackgroundMessageHandler(Map<String, dynamic> message) async {
   await Firebase.initializeApp();
-  print(message);
-  if (message['data']['caller_id'] != null) {
-    final payload = message['data'];
-    final callerId = payload['caller_id'] as String;
-    final callerName = payload['caller_name'] as String;
-    final hasVideo = payload['has_video'] == "true";
 
-
-
-    bool appIsOpened = await _callKeep.backToForeground();
-    print(appIsOpened);
-    print('appIsOpened');
-    if (appIsOpened) {
-
-      print('APP is opened, use callkeep display incoming call now.');
-
-      // NotificationHandler().showCall(message);
-
-      print('test!!!');
-
-    } else {
-      print('APP is closed, wake it up and use callkeep to display incoming calls.');
-    }
-
-
-
-    return null;
-  } else if(message["data"]["chatId"] != null) {
-
-    return NotificationHandler().showNotificationChatMessage(message);
-  }
-}
-
-class Call {
-  Call(this.number);
-
-  String number;
-  bool held = false;
-  bool muted = false;
+  return NotificationHandler().showNotification(message);
 }
 
 class NotificationHandler {
@@ -80,10 +44,12 @@ class NotificationHandler {
   String chatId = '';
   MyUser myUserFromCall;
   bool hasVideo;
+  String channel;
+  String callId;
 
+  Map<String, dynamic> messageBackground;
   String uid;
   StreamSubscription iosSubscription;
-  Map<String, Call> calls = {};
   Timer timeOutTimer;
   bool isTalking = false;
 
@@ -98,7 +64,12 @@ class NotificationHandler {
 
   String get platformVersion => _platformVersion;
 
-  initializeFcmNotification(String myUid, BuildContext myContext) async {
+  Future<void> initializeFcmNotification(
+      String myUid, BuildContext myContext) async {
+    if (Platform.isAndroid) {
+      await SystemAlertWindow.requestPermissions;
+    }
+
     context = myContext;
     uid = myUid;
 
@@ -120,38 +91,34 @@ class NotificationHandler {
       'android': {
         'alertTitle': 'Permissions required',
         'alertDescription':
-        'This application needs to access your phone accounts',
+            'This application needs to access your phone accounts',
         'cancelButton': 'Cancel',
         'okButton': 'ok',
       },
     });
 
-
     initLocalNotification();
 
     if (Platform.isIOS) {
       iosSubscription = _fcm.onIosSettingsRegistered.listen((data) {
-        //_saveDeviceToken(uid);
+        _saveDeviceToken(uid);
         // save the token  OR subscribe to a topic here
       });
 
       _fcm.requestNotificationPermissions();
     } else {
-      //_saveDeviceToken(uid);
+      _saveDeviceToken(uid);
     }
 
-
-
+    // if (Platform.isAndroid) {
+    //   _saveDeviceToken(uid);
+    // }
 
     _fcm.configure(
       onBackgroundMessage:
           Platform.isAndroid ? myBackgroundMessageHandler : null,
       onMessage: (Map<String, dynamic> message) async {
-        print(message);
-
-
-        if (message.containsKey('chatId') ||
-            message['data']['chatId'] != null) {
+        if (message.toString().contains('chatId')) {
           MyMessage myMessage;
           String chatId = '';
           if (Platform.isAndroid) {
@@ -162,8 +129,6 @@ class NotificationHandler {
             chatId = message['chatId'].toString();
           }
 
-          print(chatId);
-          print(myContext.read(chatRoomProvider).chatId);
           if (myMessage.idFrom != uid &&
               myContext.read(chatRoomProvider).chatId == null) {
             FirebaseFirestore.instance
@@ -174,16 +139,17 @@ class NotificationHandler {
                 .update({'lastReceived': DateTime.now()});
           } else if (myMessage.idFrom != uid &&
               myContext.read(chatRoomProvider).chatId == chatId) {
-            print('!!!!!');
             myContext.read(chatRoomProvider).myNewMessages(myMessage);
+          }
+        } else if (message.toString().contains('caller_id')) {
+          if (Platform.isAndroid) {
+            showCall(message);
           }
         } else if (message['from'] == 'topics/newEvent' ||
             message['notification']['title']
                 .toString()
                 .startsWith('Nouvel évènement')) {
-          showNotificationChatMessage(message);
-        } else {
-          showCall(message);
+          showNotification(message);
         }
       },
       onLaunch: (Map<String, dynamic> message) async {
@@ -191,7 +157,7 @@ class NotificationHandler {
             message['notification']['title']
                 .toString()
                 .startsWith('Nouvel évènement')) {
-          showNotificationChatMessage(message);
+          showNotification(message);
           return;
         }
         String chatId = '';
@@ -206,23 +172,24 @@ class NotificationHandler {
             ModalRoute.withName(Routes.routeAuthentication),
             arguments: ChatRoomArguments(chatId: chatId),
           );
+        } else if (message.toString().contains('caller_id')) {
+          if (Platform.isAndroid) {
+            showCall(message);
+          }
         }
       },
       onResume: (Map<String, dynamic> message) async {
-        print('onResume');
-        print(message);
         if (message['from'] == 'topics/newEvent' ||
             message['notification']['title']
                 .toString()
                 .startsWith('Nouvel évènement')) {
-          showNotificationChatMessage(message);
+          showNotification(message);
           return;
         }
-        String chatId = '';
-        if (Platform.isAndroid) {
-          chatId = message['data']['chatId'] as String;
-        } else {
-          chatId = message['chatId'] as String;
+        if (message.toString().contains('caller_id')) {
+          if (Platform.isAndroid) {
+            showCall(message);
+          }
         }
 
 //        Navigator.popUntil(context, ModalRoute.withName(Routes.authWidget));
@@ -233,56 +200,46 @@ class NotificationHandler {
 //           arguments: ChatRoomArguments(chatId: chatId),
 //         );
 
-
 //        ExtendedNavigator.ofRouter<Router>().popUntil((route) => route.toString() == Routes.baseScreens);
 //        ExtendedNavigator.ofRouter<Router>().pushNamed(
 //            Routes.chatRoom,
 //            arguments: ChatRoomArguments(chatId: chatId));
       },
     );
-
-  }
-
-  void removeCall(String callUUID) {
-    calls.remove(callUUID);
-  }
-
-  void setCallHeld(String callUUID, bool held) {
-    calls[callUUID].held = held;
-  }
-
-  void setCallMuted(String callUUID, bool muted) {
-    calls[callUUID].muted = muted;
   }
 
   Future<void> answerCall(CallKeepPerformAnswerCallAction event) async {
-    final String callUUID = event.callUUID;
-    final String number = calls[callUUID].number;
-    print('[answerCall] $callUUID, number: $number');
+    final Call myCall = await FirestoreService.instance.getDoc(
+        path: MyPath.call(chatId, callId), builder: (map) => Call.fromMap(map));
 
-    // _callKeep.startCall(event.callUUID, number, number);
-
-    ExtendedNavigator.root.push(Routes.callScreen,
-        arguments: CallScreenArguments(
-            nom: myUserFromCall.nom,
-            imageUrl: myUserFromCall.imageUrl,
-            isVideoCall: hasVideo ?? false,
-            channel: number));
+    if (myCall.callStatus == CallStatus.callSent) {
+      await ExtendedNavigator.root.push(Routes.callScreen,
+          arguments: CallScreenArguments(
+              nom: myUserFromCall.nom,
+              imageUrl: myUserFromCall.imageUrl,
+              isVideoCall: hasVideo ?? false,
+              isCaller: false,
+              chatId: chatId,
+              callId: callId));
+    }
+    //
+    // ExtendedNavigator.root.push(Routes.callScreen,
+    //     arguments: CallScreenArguments(
+    //         nom: myUserFromCall.nom,
+    //         imageUrl: myUserFromCall.imageUrl,
+    //         isVideoCall: hasVideo ?? false,
+    //         isCaller: false,
+    //         chatId: chatId,
+    //         channel: callId));
 
     // Timer(const Duration(seconds: 1), () {
-    //   print('[setCurrentCallActive] $callUUID, number: $number');
     //   _callKeep.setCurrentCallActive(callUUID);
     // });
   }
 
-  Future<void> endCall(CallKeepPerformEndCallAction event) async {
-    print('endCall: ${event.callUUID}');
-    removeCall(event.callUUID);
-  }
+  Future<void> endCall(CallKeepPerformEndCallAction event) async {}
 
-  Future<void> didPerformDTMFAction(CallKeepDidPerformDTMFAction event) async {
-    print('[didPerformDTMFAction] ${event.callUUID}, digits: ${event.digits}');
-  }
+  Future<void> didPerformDTMFAction(CallKeepDidPerformDTMFAction event) async {}
 
   Future<void> didReceiveStartCallAction(
       CallKeepDidReceiveStartCallAction event) async {
@@ -292,71 +249,35 @@ class NotificationHandler {
     //         imageUrl: imageUrl.toString(),
     //         channel: callUUID));
     if (event.handle == null) {
-      print('didReceiveStartCallAction');
       // @TODO: sometime we receive `didReceiveStartCallAction` with handle` undefined`
       return;
     }
     // final String callUUID = event.callUUID ?? newUUID();
     // calls[callUUID] = Call(event.handle);
-    // print('[didReceiveStartCallAction] $callUUID, number: ${event.handle}');
     //
     // _callKeep.startCall(callUUID, event.handle, event.handle);
     //
     // Timer(const Duration(seconds: 1), () {
-    //   print('[setCurrentCallActive] $callUUID, number: ${event.handle}');
     //   _callKeep.setCurrentCallActive(callUUID);
     // });
   }
 
   Future<void> didPerformSetMutedCallAction(
-      CallKeepDidPerformSetMutedCallAction event) async {
-    final String number = calls[event.callUUID].number;
-    print(
-        '[didPerformSetMutedCallAction] ${event.callUUID}, number: $number (${event.muted})');
-
-    setCallMuted(event.callUUID, event.muted);
-  }
+      CallKeepDidPerformSetMutedCallAction event) async {}
 
   Future<void> didToggleHoldCallAction(
-      CallKeepDidToggleHoldAction event) async {
-    final String number = calls[event.callUUID].number;
-    print(
-        '[didToggleHoldCallAction] ${event.callUUID}, number: $number (${event.hold})');
-
-    setCallHeld(event.callUUID, event.hold);
-  }
+      CallKeepDidToggleHoldAction event) async {}
 
   Future<void> hangup(String callUUID) async {
     _callKeep.endCall(callUUID);
-    removeCall(callUUID);
   }
 
   Future<void> setOnHold(String callUUID, bool held) async {
     _callKeep.setOnHold(callUUID, held);
-    final String handle = calls[callUUID].number;
-    print('[setOnHold: $held] $callUUID, number: $handle');
-    setCallHeld(callUUID, held);
   }
 
   Future<void> setMutedCall(String callUUID, bool muted) async {
     _callKeep.setMutedCall(callUUID, muted);
-    final String handle = calls[callUUID].number;
-    print('[setMutedCall: $muted] $callUUID, number: $handle');
-    setCallMuted(callUUID, muted);
-  }
-
-  Future<void> updateDisplay(String callUUID) async {
-    final String number = calls[callUUID].number;
-    // Workaround because Android doesn't display well displayName, se we have to switch ...
-    if (isIOS) {
-      _callKeep.updateDisplay(callUUID,
-          displayName: 'New Name', handle: number);
-    } else {
-      _callKeep.updateDisplay(callUUID,
-          displayName: number, handle: 'New Name');
-    }
-
-    print('[updateDisplay: $number] $callUUID');
   }
 
   Future<void> displayIncomingCallDelayed(String number) async {
@@ -366,115 +287,56 @@ class NotificationHandler {
   }
 
   Future<void> displayIncomingCall(String number) async {
-    final String callUUID = newUUID();
-    calls[callUUID] = Call(number);
-    print('Display incoming call now');
     final bool hasPhoneAccount = await _callKeep.hasPhoneAccount();
     if (!hasPhoneAccount) {
       await _callKeep.hasDefaultPhoneAccount(context, <String, dynamic>{
         'alertTitle': 'Permissions required',
         'alertDescription':
-        'This application needs to access your phone accounts',
+            'This application needs to access your phone accounts',
         'cancelButton': 'Cancel',
         'okButton': 'ok',
       });
     }
-
-    print('[displayIncomingCall] $callUUID number: $number');
-    _callKeep.displayIncomingCall(callUUID, number,
-        handleType: 'number', hasVideo: false);
   }
 
-  Future<void> didDisplayIncomingCall(CallKeepDidDisplayIncomingCall event) async {
-    var callUUID = event.callUUID;
-    var number = event.handle;
+  Future<void> didDisplayIncomingCall(
+      CallKeepDidDisplayIncomingCall event) async {
+    final number = event.handle;
     hasVideo = event.hasVideo;
-    print(event.fromPushKit);
-    print('[displayIncomingCall] $callUUID number: $number');
 
-    myUserFromCall = await FirestoreService.instance
-        .getDoc(path: MyPath.user(number),builder: (map)=>MyUser.fromMap(map));
+    final String idUserfrom = number.substring(0, number.indexOf('/'));
+    callId = number.substring(number.indexOf('/') + 1, number.indexOf('!'));
+    chatId = number.substring(number.indexOf('!') + 1);
 
-    calls[callUUID] = Call(number);
+    context
+        .read(myChatRepositoryProvider)
+        .setCallReceived(chatId: chatId, callId: callId);
+
+    myUserFromCall = await FirestoreService.instance.getDoc(
+        path: MyPath.user(idUserfrom), builder: (map) => MyUser.fromMap(map));
   }
 
   void onPushKitToken(CallKeepPushKitToken event) {
-    print('[onPushKitToken] token => ${event.token}');
-    _saveDeviceToken(uid, event.token);
+    _saveDeviceToken(uid, voIPToken: event.token);
   }
 
   Future<void> initLocalNotification() async {
-    // _initPlatformState();
-    // _requestPermissions();
-    // SystemAlertWindow.registerOnClickListener(callBack);
-    // // initialise the plugin. app_icon needs to be a added as a drawable resource to the Android head project
-    // const AndroidInitializationSettings initializationSettingsAndroid =
-    // AndroidInitializationSettings('app_icon');
-    // final IOSInitializationSettings initializationSettingsIOS =
-    // IOSInitializationSettings(
-    //     onDidReceiveLocalNotification: onDidReceiveLocalNotification);
-    //
-    // final InitializationSettings initializationSettings = InitializationSettings(
-    //     android: initializationSettingsAndroid,
-    //     iOS: initializationSettingsIOS);
-    // await flutterLocalNotificationsPlugin.initialize(initializationSettings,
-    //     onSelectNotification: onSelectNotification);
-
-    // AwesomeNotifications().initialize(
-    //     null,
-    //     [
-    //       NotificationChannel(
-    //           channelKey: 'basic_channel',
-    //           channelName: 'Basic notifications',
-    //           channelDescription: 'Notification channel for basic tests',
-    //           defaultColor: Color(0xFF9D50DD),
-    //           ledColor: Colors.white
-    //       )
-    //
-    //     ]
-    // );
-    //
-    // AwesomeNotifications().isNotificationAllowed().then((isAllowed) {
-    //   if (!isAllowed) {
-    //     // Insert here your friendly dialog box before call the request method
-    //     // This is very important to not harm the user experience
-    //     AwesomeNotifications().requestPermissionToSendNotifications();
-    //   }
-    // });
-    //
-    // AwesomeNotifications().actionStream.listen(
-    //         (receivedNotification){
-    //           print(receivedNotification.payload);
-    //
-    //           //
-    //           // ExtendedNavigator.root.push(Routes.pickupScreen,
-    //           //     arguments: PickupScreenArguments(nom: callerName, imageUrl: imageUrl));
-    //
-    //
-    //         }
-    // );
+    // initialise the plugin. app_icon needs to be a added as a drawable resource to the Android head project
+    const AndroidInitializationSettings initializationSettingsAndroid =
+        AndroidInitializationSettings('launcher_icon');
+    final IOSInitializationSettings initializationSettingsIOS =
+        IOSInitializationSettings(
+            onDidReceiveLocalNotification: onDidReceiveLocalNotification);
+    final InitializationSettings initializationSettings =
+        InitializationSettings(
+            android: initializationSettingsAndroid,
+            iOS: initializationSettingsIOS);
+    await flutterLocalNotificationsPlugin.initialize(initializationSettings,
+        onSelectNotification: onSelectNotification);
   }
-
-  // Platform messages are asynchronous, so we initialize in an async method.
-  Future<void> _initPlatformState() async {
-    // String platformVersion;
-    // // Platform messages may fail, so we use a try/catch PlatformException.
-    // try {
-    //   platformVersion = await SystemAlertWindow.platformVersion;
-    // } on PlatformException {
-    //   platformVersion = 'Failed to get platform version.';
-    // }
-    //
-    //
-    // print(platformVersion);
-  }
-
-  // Future<void> _requestPermissions() async {
-  //   await SystemAlertWindow.requestPermissions;
-  // }
 
   void setMessageReceived(String chatId, String uid, QuerySnapshot docs) {
-    List<MyMessage> myList =
+    final List<MyMessage> myList =
         List.from(docs.docs.map((e) => MyMessage.fromMap(e.data())));
 
     myList.sort((a, b) => a.date.compareTo(b.date));
@@ -487,240 +349,99 @@ class NotificationHandler {
         .update({'lastReceived': myList.last.date});
   }
 
-  Future<void> showNotificationChatMessage(Map<String, dynamic> message) async {
-    if (!context.read(boolToggleProvider).isNextEvents &&
-        message.containsKey('newEventId')) {
-      return;
-    }
-    if (!context.read(boolToggleProvider).isMessages &&
-        message.containsKey('chatId')) {
-      return;
-    }
+  Future<void> showNotification(Map<String, dynamic> message) async {
+    // if (!context.read(boolToggleProvider).isNextEvents &&
+    //     message.containsKey('newEventId') &&
+    //     message['data']['newEventId'] != null) {
+    //   return;
+    // }
+    // if (!context.read(boolToggleProvider).isMessages &&
+    //     message.containsKey('chatId') &&
+    //     message['data']['chatId'] != null) {
+    //   return;
+    // }
 
-    String title, type, body, chatId;
-
+    String title, type, body, chatId, idTo;
     if (Platform.isIOS) {
-      title = message['aps'] != null
-          ? message['aps']['alert']['title'] as String
-          : message['notification']['title'] as String;
-      type = message['type'] as String;
-      body = message['aps'] != null
-          ? message['aps']['alert']['body'] as String
-          : message['notification']['body'] as String;
-      chatId = message['chatId'] as String;
-    } else {
-      title = message['notification']['title'] as String;
+      return;
+    }
+    if (message['data']['chatId'] != null) {
+      //chat msg
+      title = message['data']['title'] as String;
       type = message['data']['type'] as String;
-      body = message['notification']['body'] as String;
+      body = message['data']['body'] as String;
       chatId = message['data']['chatId'] as String;
+      idTo = message['data']['idTo'] as String;
+
+      const androidPlatformChannelSpecifics = AndroidNotificationDetails(
+          'com.vanevents.VanEvents', 'VanEvents', 'VanEvents notification',
+          importance: Importance.max,
+          priority: Priority.high,
+          ticker: 'ticker');
+      const iOSPlatformChannelSpecifics = IOSNotificationDetails(
+          badgeNumber: 0,
+          presentAlert: true,
+          presentBadge: true,
+          presentSound: true);
+      const platformChannelSpecifics = NotificationDetails(
+          android: androidPlatformChannelSpecifics,
+          iOS: iOSPlatformChannelSpecifics);
+      String myBody;
+      if (type != null) {
+        myBody = type == MyMessageType.text.toString() ? body : 'image';
+      }
+      if (idTo != null) {
+        FirebaseFirestore.instance
+            .collection('chats')
+            .doc(chatId)
+            .collection('chatMembres')
+            .doc(idTo)
+            .set({'lastReceived': FieldValue.serverTimestamp()},
+                SetOptions(merge: true));
+      }
+
+      await flutterLocalNotificationsPlugin.show(
+          0, title, myBody, platformChannelSpecifics,
+          payload: message.toString());
+    } else if (message['data']['caller_id'] != null) {
+      _callKeep.backToForeground();
+      final payload = message['data'];
+      // final callerId = payload['caller_id'] as String;
+      final callerName = payload['caller_name'] as String;
+      final hasVideo = payload['has_video'] == "true";
+
+      final String isVideo =
+          hasVideo ? 'Appel video de : ' : 'Appel audio de : ';
+
+      const androidPlatformChannelSpecifics = AndroidNotificationDetails(
+          'com.vanevents.VanEvents', 'VanEvents', 'VanEvents notification',
+          sound: RawResourceAndroidNotificationSound('sonnerie'),
+          importance: Importance.max,
+          priority: Priority.max,
+          ticker: 'ticker');
+      const iOSPlatformChannelSpecifics = IOSNotificationDetails(
+          badgeNumber: 0,
+          presentAlert: true,
+          presentBadge: true,
+          presentSound: true);
+      const platformChannelSpecifics = NotificationDetails(
+          android: androidPlatformChannelSpecifics,
+          iOS: iOSPlatformChannelSpecifics);
+
+      await flutterLocalNotificationsPlugin.show(
+          0, 'Appel', isVideo + callerName, platformChannelSpecifics,
+          payload: message.toString());
     }
 
-    if (message['from'] == 'topics/newEvent' ||
-        message['notification']['title']
-            .toString()
-            .startsWith('Nouvel évènement')) {
-      type = MyMessageType.text.toString();
-    }
-
-    // var androidPlatformChannelSpecifics = AndroidNotificationDetails(
-    //     'com.vanevents.VanEvents', 'VanEvents', 'VanEvents notification',
-    //     playSound: true,
-    //     sound: RawResourceAndroidNotificationSound(
-    //         'android/app/src/main/res/raw/sonnerie.aac'),
-    //     enableVibration: true,
-    //     importance: Importance.max,
-    //     priority: Priority.high,
-    //     ticker: 'ticker');
-    // var iOSPlatformChannelSpecifics = IOSNotificationDetails(
-    //     badgeNumber: 0,
-    //     presentAlert: true,
-    //     presentBadge: true,
-    //     presentSound: true);
-    // var platformChannelSpecifics = NotificationDetails(
-    //     android: androidPlatformChannelSpecifics,
-    //     iOS: iOSPlatformChannelSpecifics);
-    //
-    // await flutterLocalNotificationsPlugin.show(
-    //     0,
-    //     title,
-    //     type == MyMessageType.text.toString() ? body : 'image',
-    //     platformChannelSpecifics,
-    //     payload: chatId);
-
-
-    FirebaseFirestore.instance
-        .collection('chats')
-        .doc(chatId)
-        .collection('chatMembres')
-        .doc(uid)
-        .update({'lastReceived': DateTime.now()});
+    // if (message['from'] == 'topics/newEvent' ||
+    //     message['notification']['title']
+    //         .toString()
+    //         .startsWith('Nouvel évènement')) {
+    //   type = MyMessageType.text.toString();
+    // }
   }
 
-  // void _showOverlayWindow(String callerNmae) {
-  //   if (!_isShowingWindow) {
-  //     SystemWindowHeader header = SystemWindowHeader(
-  //         title: SystemWindowText(text: "Incoming Call", fontSize: 10, textColor: Colors.black45),
-  //         padding: SystemWindowPadding.setSymmetricPadding(12, 12),
-  //         subTitle: SystemWindowText(text: "9898989899", fontSize: 14, fontWeight: FontWeight.BOLD, textColor: Colors.black87),
-  //         decoration: SystemWindowDecoration(startColor: Colors.grey[100]),
-  //         button: SystemWindowButton(text: SystemWindowText(text: "Personal", fontSize: 10, textColor: Colors.black45), tag: "personal_btn"),
-  //         buttonPosition: ButtonPosition.TRAILING);
-  //     SystemWindowBody body = SystemWindowBody(
-  //       rows: [
-  //         EachRow(
-  //           columns: [
-  //             EachColumn(
-  //               text: SystemWindowText(text: "Some body", fontSize: 12, textColor: Colors.black45),
-  //             ),
-  //           ],
-  //           gravity: ContentGravity.CENTER,
-  //         ),
-  //         EachRow(columns: [
-  //           EachColumn(
-  //               text: SystemWindowText(text: "Long data of the body", fontSize: 12, textColor: Colors.black87, fontWeight: FontWeight.BOLD),
-  //               padding: SystemWindowPadding.setSymmetricPadding(6, 8),
-  //               decoration: SystemWindowDecoration(startColor: Colors.black12, borderRadius: 25.0),
-  //               margin: SystemWindowMargin(top: 4)),
-  //         ], gravity: ContentGravity.CENTER),
-  //         EachRow(
-  //           columns: [
-  //             EachColumn(
-  //               text: SystemWindowText(text: "Notes", fontSize: 10, textColor: Colors.black45),
-  //             ),
-  //           ],
-  //           gravity: ContentGravity.LEFT,
-  //           margin: SystemWindowMargin(top: 8),
-  //         ),
-  //         EachRow(
-  //           columns: [
-  //             EachColumn(
-  //               text: SystemWindowText(text: "Some random notes.", fontSize: 13, textColor: Colors.black54, fontWeight: FontWeight.BOLD),
-  //             ),
-  //           ],
-  //           gravity: ContentGravity.LEFT,
-  //         ),
-  //       ],
-  //       padding: SystemWindowPadding(left: 16, right: 16, bottom: 12, top: 12),
-  //     );
-  //     SystemWindowFooter footer = SystemWindowFooter(
-  //         buttons: [
-  //           SystemWindowButton(
-  //             text: SystemWindowText(text: "Simple button", fontSize: 12, textColor: Color.fromRGBO(250, 139, 97, 1)),
-  //             tag: "simple_button",
-  //             padding: SystemWindowPadding(left: 10, right: 10, bottom: 10, top: 10),
-  //             width: 0,
-  //             height: SystemWindowButton.WRAP_CONTENT,
-  //             decoration: SystemWindowDecoration(startColor: Colors.white, endColor: Colors.white, borderWidth: 0, borderRadius: 0.0),
-  //           ),
-  //           SystemWindowButton(
-  //             text: SystemWindowText(text: "Focus button", fontSize: 12, textColor: Colors.white),
-  //             tag: "focus_button",
-  //             width: 0,
-  //             padding: SystemWindowPadding(left: 10, right: 10, bottom: 10, top: 10),
-  //             height: SystemWindowButton.WRAP_CONTENT,
-  //             decoration: SystemWindowDecoration(
-  //                 startColor: Color.fromRGBO(250, 139, 97, 1), endColor: Color.fromRGBO(247, 28, 88, 1), borderWidth: 0, borderRadius: 30.0),
-  //           )
-  //         ],
-  //         padding: SystemWindowPadding(left: 16, right: 16, bottom: 12),
-  //         decoration: SystemWindowDecoration(startColor: Colors.white),
-  //         buttonsPosition: ButtonPosition.CENTER);
-  //     SystemAlertWindow.showSystemWindow(
-  //         height: 230,
-  //         header: header,
-  //         body: body,
-  //         footer: footer,
-  //         margin: SystemWindowMargin(left: 8, right: 8, top: 200, bottom: 0),
-  //         gravity: SystemWindowGravity.TOP,
-  //         notificationTitle: "Appel entrant",
-  //         notificationBody: callerNmae);
-  //     _isShowingWindow = true;
-  //   } else if (!_isUpdatedWindow) {
-  //     SystemWindowHeader header = SystemWindowHeader(
-  //         title: SystemWindowText(text: "Outgoing Call", fontSize: 10, textColor: Colors.black45),
-  //         padding: SystemWindowPadding.setSymmetricPadding(12, 12),
-  //         subTitle: SystemWindowText(text: "8989898989", fontSize: 14, fontWeight: FontWeight.BOLD, textColor: Colors.black87),
-  //         decoration: SystemWindowDecoration(startColor: Colors.grey[100]),
-  //         button: SystemWindowButton(text: SystemWindowText(text: "Personal", fontSize: 10, textColor: Colors.black45), tag: "personal_btn"),
-  //         buttonPosition: ButtonPosition.TRAILING);
-  //     SystemWindowBody body = SystemWindowBody(
-  //       rows: [
-  //         EachRow(
-  //           columns: [
-  //             EachColumn(
-  //               text: SystemWindowText(text: "Updated body", fontSize: 12, textColor: Colors.black45),
-  //             ),
-  //           ],
-  //           gravity: ContentGravity.CENTER,
-  //         ),
-  //         EachRow(columns: [
-  //           EachColumn(
-  //               text: SystemWindowText(text: "Updated long data of the body", fontSize: 12, textColor: Colors.black87, fontWeight: FontWeight.BOLD),
-  //               padding: SystemWindowPadding.setSymmetricPadding(6, 8),
-  //               decoration: SystemWindowDecoration(startColor: Colors.black12, borderRadius: 25.0),
-  //               margin: SystemWindowMargin(top: 4)),
-  //         ], gravity: ContentGravity.CENTER),
-  //         EachRow(
-  //           columns: [
-  //             EachColumn(
-  //               text: SystemWindowText(text: "Notes", fontSize: 10, textColor: Colors.black45),
-  //             ),
-  //           ],
-  //           gravity: ContentGravity.LEFT,
-  //           margin: SystemWindowMargin(top: 8),
-  //         ),
-  //         EachRow(
-  //           columns: [
-  //             EachColumn(
-  //               text: SystemWindowText(text: "Updated random notes.", fontSize: 13, textColor: Colors.black54, fontWeight: FontWeight.BOLD),
-  //             ),
-  //           ],
-  //           gravity: ContentGravity.LEFT,
-  //         ),
-  //       ],
-  //       padding: SystemWindowPadding(left: 16, right: 16, bottom: 12, top: 12),
-  //     );
-  //     SystemWindowFooter footer = SystemWindowFooter(
-  //         buttons: [
-  //           SystemWindowButton(
-  //             text: SystemWindowText(text: "Updated Simple button", fontSize: 12, textColor: Color.fromRGBO(250, 139, 97, 1)),
-  //             tag: "updated_simple_button",
-  //             padding: SystemWindowPadding(left: 10, right: 10, bottom: 10, top: 10),
-  //             width: 0,
-  //             height: SystemWindowButton.WRAP_CONTENT,
-  //             decoration: SystemWindowDecoration(startColor: Colors.white, endColor: Colors.white, borderWidth: 0, borderRadius: 0.0),
-  //           ),
-  //           SystemWindowButton(
-  //             text: SystemWindowText(text: "Focus button", fontSize: 12, textColor: Colors.white),
-  //             tag: "focus_button",
-  //             width: 0,
-  //             padding: SystemWindowPadding(left: 10, right: 10, bottom: 10, top: 10),
-  //             height: SystemWindowButton.WRAP_CONTENT,
-  //             decoration: SystemWindowDecoration(
-  //                 startColor: Color.fromRGBO(250, 139, 97, 1), endColor: Color.fromRGBO(247, 28, 88, 1), borderWidth: 0, borderRadius: 30.0),
-  //           )
-  //         ],
-  //         padding: SystemWindowPadding(left: 16, right: 16, bottom: 12),
-  //         decoration: SystemWindowDecoration(startColor: Colors.white),
-  //         buttonsPosition: ButtonPosition.CENTER);
-  //     SystemAlertWindow.updateSystemWindow(
-  //         height: 230,
-  //         header: header,
-  //         body: body,
-  //         footer: footer,
-  //         margin: SystemWindowMargin(left: 8, right: 8, top: 200, bottom: 0),
-  //         gravity: SystemWindowGravity.TOP,
-  //         notificationTitle: "Outgoing Call",
-  //         notificationBody: "+1 646 980 4741");
-  //     _isUpdatedWindow = true;
-  //   } else {
-  //     _isShowingWindow = false;
-  //     _isUpdatedWindow = false;
-  //     SystemAlertWindow.closeSystemWindow();
-  //   }
-  // }
-
-  Future<void> _saveDeviceToken(String uid, String voIPToken) async {
+  Future<void> _saveDeviceToken(String uid, {String voIPToken}) async {
     await _fcm.getToken().then((token) async {
       await db //supprimer s'il en reste
           .collection('users')
@@ -729,14 +450,14 @@ class NotificationHandler {
           .get()
           .then((docs) async {
         if (docs.docs.isNotEmpty) {
-          docs.docs.forEach((doc) async {
+          for (final doc in docs.docs) {
             await db
                 .collection('users')
                 .doc(uid)
                 .collection('tokens')
                 .doc(doc.id)
                 .delete();
-          });
+          }
         }
 
         await db
@@ -744,12 +465,20 @@ class NotificationHandler {
             .doc(uid)
             .collection('tokens')
             .doc(token)
-            .set({
-          'token': token,
-          'voIPToken': voIPToken,
-          'createAt': FieldValue.serverTimestamp(),
-          'platform': Platform.operatingSystem,
-        }, SetOptions(merge: true));
+            .set(
+                voIPToken != null
+                    ? {
+                        'token': token,
+                        'voIPToken': voIPToken,
+                        'createAt': FieldValue.serverTimestamp(),
+                        'platform': Platform.operatingSystem,
+                      }
+                    : {
+                        'token': token,
+                        'createAt': FieldValue.serverTimestamp(),
+                        'platform': Platform.operatingSystem,
+                      },
+                SetOptions(merge: true));
       });
     }).catchError((err) {
       debugPrint(err.toString());
@@ -821,21 +550,72 @@ class NotificationHandler {
 
   Future onSelectNotification(String payload) async {
     if (payload != null) {
-      final newRouteName = Routes.chatRoom;
-      bool isNewRouteSameAsCurrent = false;
+      if (payload.contains('chatId')) {
+        final newRouteName = Routes.chatRoom;
+        bool isNewRouteSameAsCurrent = false;
 
-      Navigator.popUntil(context, (route) {
-        if (route.settings.name == newRouteName) {
-          isNewRouteSameAsCurrent = true;
+        Navigator.popUntil(context, (route) {
+          if (route.settings.name == newRouteName) {
+            isNewRouteSameAsCurrent = true;
+          }
+          return true;
+        });
+
+        if (!isNewRouteSameAsCurrent) {
+          await ExtendedNavigator.of(context).push(
+            Routes.chatRoom,
+            arguments: ChatRoomArguments(
+                chatId: payload.substring(payload.indexOf('chatId: ') + 8,
+                    payload.indexOf(', idFrom'))),
+          );
         }
-        return true;
-      });
+      } else if (payload.contains('caller_id')) {
+        //call
 
-      if (!isNewRouteSameAsCurrent) {
-        await ExtendedNavigator.of(context).push(
-          Routes.chatRoom,
-          arguments: ChatRoomArguments(chatId: payload),
-        );
+        final callerId = payload.substring(payload.indexOf('caller_id: ') + 11,
+            payload.indexOf(', has_video'));
+        final callerName = payload.substring(
+            payload.indexOf('caller_name: ') + 13, payload.indexOf('}}'));
+        final hasVideo = payload.substring(payload.indexOf('has_video: ') + 11,
+                payload.indexOf(', caller_id_type')) ==
+            "true";
+
+        final newRouteName = Routes.callScreen;
+        bool isNewRouteSameAsCurrent = false;
+
+        Navigator.popUntil(context, (route) {
+          if (route.settings.name == newRouteName) {
+            isNewRouteSameAsCurrent = true;
+          }
+          return true;
+        });
+
+        if (!isNewRouteSameAsCurrent) {
+          final String idUserfrom =
+              callerId.substring(0, callerId.indexOf('/'));
+          final String callId = callerId.substring(
+              callerId.indexOf('/') + 1, callerId.indexOf('!'));
+          final String chatId = callerId.substring(callerId.indexOf('!') + 1);
+
+          myUserFromCall = await FirestoreService.instance.getDoc(
+              path: MyPath.user(idUserfrom),
+              builder: (map) => MyUser.fromMap(map));
+
+          final Call myCall = await FirestoreService.instance.getDoc(
+              path: MyPath.call(chatId, callId),
+              builder: (map) => Call.fromMap(map));
+
+          if (myCall.callStatus == CallStatus.callSent) {
+            await ExtendedNavigator.root.push(Routes.callScreen,
+                arguments: CallScreenArguments(
+                    nom: callerName,
+                    imageUrl: myUserFromCall.imageUrl,
+                    isVideoCall: hasVideo ?? false,
+                    isCaller: false,
+                    chatId: chatId,
+                    callId: callId));
+          }
+        }
       }
     } else {
       await ExtendedNavigator.of(context).push(Routes.routeAuthentication);
@@ -870,24 +650,39 @@ class NotificationHandler {
     //onSelectNotification(payload);
   }
 
-  Future showCall(Map<String, dynamic> message) {
+  Future showCall(Map<String, dynamic> message) async {
     final payload = message['data'];
-    final callerId = payload['caller_id'] as String;
-    final callerNmae = payload['caller_name'] as String;
-    final uuid = payload['uuid'] as String;
+    final callerId = payload['caller_id'] as String; //idUserFrom/callId
+    final callerName = payload['caller_name'] as String;
     final hasVideo = payload['has_video'] == "true";
-    final imageUrl = payload['imageUrl'] == "true";
-    final callUUID = uuid ?? Uuid().v4();
 
-    // _showOverlayWindow(callerNmae);
+    final String idUserfrom = callerId.substring(0, callerId.indexOf('/'));
+    final String callId =
+        callerId.substring(callerId.indexOf('/') + 1, callerId.indexOf('!'));
+    final String chatId = callerId.substring(callerId.indexOf('!') + 1);
 
-    // ExtendedNavigator.root.push(Routes.pickupScreen,
-    //     arguments: PickupScreenArguments(
-    //         nom: callerNmae.toString(),
-    //         imageUrl: imageUrl.toString(),
-    //         channel: callUUID));
+    myUserFromCall = await FirestoreService.instance.getDoc(
+        path: MyPath.user(idUserfrom), builder: (map) => MyUser.fromMap(map));
+
+    final Call myCall = await FirestoreService.instance.getDoc(
+        path: MyPath.call(chatId, callId), builder: (map) => Call.fromMap(map));
+
+    if (myCall.callStatus == CallStatus.callSent) {
+      await ExtendedNavigator.root.push(Routes.callScreen,
+          arguments: CallScreenArguments(
+              nom: callerName,
+              imageUrl: myUserFromCall.imageUrl,
+              isVideoCall: hasVideo ?? false,
+              isCaller: false,
+              chatId: chatId,
+              callId: callId));
+    }
 
     return Future.value();
+  }
+
+  void setMessageBackground(Map<String, dynamic> message) {
+    messageBackground = message;
   }
 
 //
@@ -899,24 +694,5 @@ class NotificationHandler {
 //    await file.writeAsBytes(response.bodyBytes);
 //    return filePath;
 //  }
-
-  ///
-  /// Whenever a button is clicked, this method will be invoked with a tag (As tag is unique for every button, it helps in identifying the button).
-  /// You can check for the tag value and perform the relevant action for the button click
-  ///
-  void callBack(String tag) {
-    print(tag);
-    switch (tag) {
-      case "simple_button":
-      case "updated_simple_button":
-        // SystemAlertWindow.closeSystemWindow();
-        break;
-      case "focus_button":
-        print("Focus button has been called");
-        break;
-      default:
-        print("OnClick event of $tag");
-    }
-  }
 
 }

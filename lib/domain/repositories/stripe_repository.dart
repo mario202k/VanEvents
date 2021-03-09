@@ -9,18 +9,20 @@ import 'package:van_events_project/constants/credentials.dart';
 import 'package:van_events_project/domain/models/my_user.dart';
 import 'package:van_events_project/domain/models/refund.dart';
 import 'package:van_events_project/presentation/widgets/show.dart';
+import 'package:van_events_project/providers/formul_vtc.dart';
+import 'package:van_events_project/providers/toggle_bool.dart';
 import 'package:van_events_project/services/firestore_path.dart';
 import 'package:van_events_project/services/firestore_service.dart';
 
-final stripeRepositoryProvider = Provider<StripeRepository>((ref) {
+final stripeRepositoryProvider = Provider.autoDispose<StripeRepository>((ref) {
   return StripeRepository(ref.watch(myUserProvider).id);
 });
 
-final newRefundStreamProvider = StreamProvider<List<Refund>>((ref) {
+final newRefundStreamProvider = StreamProvider.autoDispose<List<Refund>>((ref) {
   return ref.read(stripeRepositoryProvider).getNewRefund();
 });
 
-final refusedRefundStreamProvider = StreamProvider<List<Refund>>((ref) {
+final refusedRefundStreamProvider = StreamProvider.autoDispose<List<Refund>>((ref) {
   return ref.read(stripeRepositoryProvider).getRefusedRefund();
 });
 
@@ -66,22 +68,34 @@ class StripeRepository {
 
     return stripeResponse;
   }
+
   //firebase deploy --only functions:addMessage,functions:makeUppercase
 
-  Future<dynamic> paymentIntentBillet(double amount, String stripeAccount,
-      String description, int length, int nbEvents, int nbOrganizer, BuildContext context ) async {
-
+  Future<dynamic> paymentIntentBillet(
+      double amount,
+      String stripeAccount,
+      String description,
+      int length,
+      int nbEvents,
+      int nbOrganizer,
+      BuildContext context) async {
     // precache
-    final assetProvider = AssetFlare(bundle: rootBundle, name: 'assets/animations/paymentProcess.flr');
+    final assetProvider = AssetFlare(
+        bundle: rootBundle, name: 'assets/animations/paymentProcess.flr');
     cachedActor(assetProvider);
 
     final stripePayment = FlutterStripePayment();
 
-    stripePayment.onCancel = () {
+    stripePayment.setStripeSettings(pkTest, 'merchant.com.vanina.vanevents');
+    stripePayment.onCancel = (){
+      context.read(formuleVTCProvider).setshowSpinner();
+      return;
     };
-    stripePayment.setStripeSettings(PK_TEST, 'merchant.com.vanina.vanevents');
-
-    final paymentResponse = await stripePayment.addPaymentMethod();
+    stripePayment.onError = (nb,[list]){
+      context.read(formuleVTCProvider).setshowSpinner();
+    };
+    final paymentResponse = await stripePayment
+        .addPaymentMethod();
 
     final String paymentMethodId = paymentResponse.paymentMethodId;
 
@@ -100,8 +114,8 @@ class StripeRepository {
             'description': description,
             'paymentMethodId': paymentMethodId,
             'nbParticipant': length,
-            'nbEvents':nbEvents,
-            'nbOrganizer':nbOrganizer
+            'nbEvents': nbEvents,
+            'nbOrganizer': nbOrganizer
           },
         );
       } on FirebaseFunctionsException catch (e) {
@@ -144,9 +158,8 @@ class StripeRepository {
       double amount, String description) async {
     final stripePayment = FlutterStripePayment();
 
-    stripePayment.onCancel = () {
-    };
-    stripePayment.setStripeSettings(PK_TEST, 'merchant.com.vanina.vanevents');
+    stripePayment.onCancel = () {};
+    stripePayment.setStripeSettings(pkTest, 'merchant.com.vanina.vanevents');
 
     final paymentResponse = await stripePayment.addPaymentMethod();
 
@@ -206,9 +219,8 @@ class StripeRepository {
       double amount, String description, String idPromotionCode) async {
     final stripePayment = FlutterStripePayment();
 
-    stripePayment.onCancel = () {
-    };
-    stripePayment.setStripeSettings(PK_TEST, 'merchant.com.vanina.vanevents');
+    stripePayment.onCancel = () {};
+    stripePayment.setStripeSettings(pkTest, 'merchant.com.vanina.vanevents');
 
     final paymentResponse = await stripePayment.addPaymentMethod();
 
@@ -390,7 +402,6 @@ class StripeRepository {
       );
     } on FirebaseFunctionsException catch (e) {
       debugPrint(e.toString());
-
     } catch (e) {
       debugPrint(e.toString());
     }
@@ -483,14 +494,14 @@ class StripeRepository {
     HttpsCallableResult stripeResponse;
     try {
       final HttpsCallable callable =
-      FirebaseFunctions.instanceFor(region: 'europe-west1').httpsCallable(
+          FirebaseFunctions.instanceFor(region: 'europe-west1').httpsCallable(
         'refundBillet',
       );
       stripeResponse = await callable.call(
         <String, dynamic>{
           'paymentIntentId': paymentIntentId,
-          'reason':reason,
-          'amount':amount
+          'reason': reason,
+          'amount': amount
         },
       );
     } on FirebaseFunctionsException catch (e) {
@@ -505,15 +516,12 @@ class StripeRepository {
     return stripeResponse;
   }
 
-
   Future setUrlFront(String url) async {
-    return _service
-        .setData(path: MyPath.user(uid), data: {'idRectoUrl': url});
+    return _service.setData(path: MyPath.user(uid), data: {'idRectoUrl': url});
   }
 
   Future setUrlBack(String url) async {
-    return _service
-        .setData(path: MyPath.user(uid), data: {'idVersoUrl': url});
+    return _service.setData(path: MyPath.user(uid), data: {'idVersoUrl': url});
   }
 
   Future setUrljustificatifDomicile(String url) {
@@ -540,7 +548,6 @@ class StripeRepository {
     }
     return intentResponse;
   }
-
 
   Stream<List<Refund>> getNewRefund() {
     return _service.collectionStream(
@@ -570,7 +577,7 @@ class StripeRepository {
   Future<List<Refund>> refundListFromFirestore() async {
     return _service.collectionFuture(
         path: MyPath.refunds(uid),
-        queryBuilder: (query)=>query.where('stripeId',isGreaterThan: ''),
+        queryBuilder: (query) => query.where('stripeId', isGreaterThan: ''),
         builder: (map) => Refund.fromMap(map));
   }
 

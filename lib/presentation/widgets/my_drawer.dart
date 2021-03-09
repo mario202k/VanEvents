@@ -58,45 +58,47 @@ class MyDrawer extends HookWidget {
                               elevation: 10,
                               shape: const StadiumBorder(),
                               child: Container(
+                                width: constraints.maxWidth,
+                                height: 50,
                                 padding:
                                 const EdgeInsets.only(left: 20.0, right: 20.0),
                                 decoration: BoxDecoration(
                                   borderRadius: BorderRadius.circular(25),
                                   color: Theme.of(context).colorScheme.primary,
                                 ),
-                                child: SizedBox(
-                                    width: constraints.maxWidth,
-                                    height: 50,
-                                    child: myUserStream.when(
-                                        data: (myUser) {
-                                          return Center(
-                                              child: Text(
-                                            myUser.nom ?? '',
-                                            style: Theme.of(context)
-                                                .textTheme
-                                                .headline3,
-                                          ));
-                                        },
-                                        loading: () => Shimmer.fromColors(
-                                              baseColor: Colors.white,
-                                              highlightColor: Theme.of(context)
-                                                  .colorScheme
-                                                  .primary,
-                                              child: Container(
-                                                width: 220,
-                                                height: 220,
-                                                //color: Colors.white,
-                                                decoration: BoxDecoration(
-                                                    borderRadius:
-                                                    const BorderRadius.all(
-                                                            Radius.circular(
-                                                                25)),
-                                                    color: Theme.of(context)
-                                                        .colorScheme
-                                                        .onPrimary),
-                                              ),
+                                child: FittedBox(fit: BoxFit.scaleDown,
+                                  child: myUserStream.when(
+
+                                      data: (myUser) {
+                                        return Center(
+                                            child: Text(
+                                          myUser.nom,
+                                          style: Theme.of(context)
+                                              .textTheme
+                                              .headline3,
+                                        ));
+                                      },
+                                      loading: () => Shimmer.fromColors(
+                                            baseColor: Colors.white,
+                                            highlightColor: Theme.of(context)
+                                                .colorScheme
+                                                .primary,
+                                            child: Container(
+                                              width: 220,
+                                              height: 220,
+                                              //color: Colors.white,
+                                              decoration: BoxDecoration(
+                                                  borderRadius:
+                                                  const BorderRadius.all(
+                                                          Radius.circular(
+                                                              25)),
+                                                  color: Theme.of(context)
+                                                      .colorScheme
+                                                      .onPrimary),
                                             ),
-                                        error: (err, stack) => const SizedBox())),
+                                          ),
+                                      error: (err, stack) => const SizedBox()),
+                                ),
                               ),
                             ),
                           ),

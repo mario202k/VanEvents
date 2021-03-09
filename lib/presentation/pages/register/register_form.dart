@@ -8,6 +8,7 @@ import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:open_mail_app/open_mail_app.dart';
+import 'package:van_events_project/constants/credentials.dart';
 import 'package:van_events_project/domain/repositories/my_user_repository.dart';
 import 'package:van_events_project/presentation/pages/register/bloc/bloc.dart';
 import 'package:van_events_project/presentation/pages/register/register_button.dart';
@@ -140,7 +141,7 @@ class RegisterForm extends HookWidget {
                             }
                           },
                           validator: FormBuilderValidators.compose([FormBuilderValidators.required(context,errorText: 'Champs requis'),
-                            FormBuilderValidators.match(context, r'^[a-zA-ZáàâäãåçéèêëíìîïñóòôöõúùûüýÿæœÁÀÂÄÃÅÇÉÈÊËÍÌÎÏÑÓÒÔÖÕÚÙÛÜÝŸÆŒ\- ]{2,60}$',errorText: 'Erreur de saisie')]),
+                            FormBuilderValidators.match(context, regExpNom,errorText: 'Erreur de saisie')]),
 
 
                         ),
@@ -173,7 +174,7 @@ class RegisterForm extends HookWidget {
                           },
 
                           validator: FormBuilderValidators.compose([FormBuilderValidators.required(context,errorText: 'Champs requis'),
-                            FormBuilderValidators.match(context, r'^[a-zA-ZáàâäãåçéèêëíìîïñóòôöõúùûüýÿæœÁÀÂÄÃÅÇÉÈÊËÍÌÎÏÑÓÒÔÖÕÚÙÛÜÝŸÆŒ\- ]{2,60}$',errorText: 'Erreur de saisie')]),
+                            FormBuilderValidators.match(context, regExpNom,errorText: 'Erreur de saisie')]),
 
                         ),
                       ),
@@ -217,6 +218,7 @@ class RegisterForm extends HookWidget {
                             builder: (context, watch,child) {
 
                             return FormBuilderTextField(
+                              enableInteractiveSelection: false,
                               keyboardType: TextInputType.text,
                               style: TextStyle(
                                   color:
@@ -253,7 +255,7 @@ class RegisterForm extends HookWidget {
                               },
 
                               validator: FormBuilderValidators.compose([FormBuilderValidators.required(context,errorText: 'Champs requis'),
-                                FormBuilderValidators.match(context, r'^(?=.*[a-z])(?=.*[A-Z])(?=.*\d.*)[a-zA-Z0-9\S]{8,15}$',errorText: '1 majuscule, 1 chiffre, 8 caractères')]),
+                                FormBuilderValidators.match(context, regExpMDP,errorText: '1 majuscule, 1 chiffre, 8 caractères')]),
 
                             );
                           }

@@ -3,23 +3,23 @@ import 'package:van_events_project/domain/models/my_transport.dart';
 import 'package:van_events_project/services/firestore_path.dart';
 import 'package:van_events_project/services/firestore_service.dart';
 
-final myTransportRepositoryProvider = Provider<MyTransportRepository>((ref) {
+final myTransportRepositoryProvider = Provider.autoDispose<MyTransportRepository>((ref) {
   return MyTransportRepository();
 });
 
 final myStreamTransportUpcomingProvider =
-    StreamProvider<List<MyTransport>>((ref) {
+    StreamProvider.autoDispose<List<MyTransport>>((ref) {
   return ref.read(myTransportRepositoryProvider).streamTransportsVtcUpcoming();
 });
 
 final myStreamTransportNonTraiterProvider =
-    StreamProvider<List<MyTransport>>((ref) {
+    StreamProvider.autoDispose<List<MyTransport>>((ref) {
   return ref
       .read(myTransportRepositoryProvider)
       .streamTransportsVtcNonTraiter();
 });
 
-final myStreamTransportDoneProvider = StreamProvider<List<MyTransport>>((ref) {
+final myStreamTransportDoneProvider = StreamProvider.autoDispose<List<MyTransport>>((ref) {
   return ref.read(myTransportRepositoryProvider).streamTransportsVtcDone();
 });
 
@@ -113,4 +113,6 @@ class MyTransportRepository {
       'statusTransport': 'holdOnCard'
     });
   }
+
+
 }

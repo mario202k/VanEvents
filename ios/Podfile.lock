@@ -135,6 +135,8 @@ PODS:
   - Flutter (1.0.0)
   - flutter_keyboard_visibility (0.0.1):
     - Flutter
+  - flutter_local_notifications (0.0.1):
+    - Flutter
   - flutter_stripe_payment (0.0.12):
     - Flutter
     - Stripe (= 19.0.1)
@@ -197,7 +199,7 @@ PODS:
     - GTMSessionFetcher/Core (= 1.5.0)
   - image_picker (0.0.1):
     - Flutter
-  - majascan (0.0.4):
+  - majascan (0.0.5):
     - Flutter
   - map_launcher (0.0.1):
     - Flutter
@@ -229,6 +231,8 @@ PODS:
     - Flutter
     - FMDB (>= 2.7.5)
   - Stripe (19.0.1)
+  - system_alert_window (0.0.1):
+    - Flutter
   - url_launcher (0.0.1):
     - Flutter
 
@@ -248,6 +252,7 @@ DEPENDENCIES:
   - FirebaseFirestore (from `https://github.com/invertase/firestore-ios-sdk-frameworks.git`, tag `6.33.0`)
   - Flutter (from `Flutter`)
   - flutter_keyboard_visibility (from `.symlinks/plugins/flutter_keyboard_visibility/ios`)
+  - flutter_local_notifications (from `.symlinks/plugins/flutter_local_notifications/ios`)
   - flutter_stripe_payment (from `.symlinks/plugins/flutter_stripe_payment/ios`)
   - geoflutterfire (from `.symlinks/plugins/geoflutterfire/ios`)
   - geolocator (from `.symlinks/plugins/geolocator/ios`)
@@ -265,6 +270,7 @@ DEPENDENCIES:
   - shared_preferences (from `.symlinks/plugins/shared_preferences/ios`)
   - sign_in_with_apple (from `.symlinks/plugins/sign_in_with_apple/ios`)
   - sqflite (from `.symlinks/plugins/sqflite/ios`)
+  - system_alert_window (from `.symlinks/plugins/system_alert_window/ios`)
   - url_launcher (from `.symlinks/plugins/url_launcher/ios`)
 
 SPEC REPOS:
@@ -330,6 +336,8 @@ EXTERNAL SOURCES:
     :path: Flutter
   flutter_keyboard_visibility:
     :path: ".symlinks/plugins/flutter_keyboard_visibility/ios"
+  flutter_local_notifications:
+    :path: ".symlinks/plugins/flutter_local_notifications/ios"
   flutter_stripe_payment:
     :path: ".symlinks/plugins/flutter_stripe_payment/ios"
   geoflutterfire:
@@ -364,6 +372,8 @@ EXTERNAL SOURCES:
     :path: ".symlinks/plugins/sign_in_with_apple/ios"
   sqflite:
     :path: ".symlinks/plugins/sqflite/ios"
+  system_alert_window:
+    :path: ".symlinks/plugins/system_alert_window/ios"
   url_launcher:
     :path: ".symlinks/plugins/url_launcher/ios"
 
@@ -404,6 +414,7 @@ SPEC CHECKSUMS:
   FirebaseStorage: 15e0f15ef3c7fec3d1899d68623e47d4447066b4
   Flutter: 0e3d915762c693b495b44d77113d4970485de6ec
   flutter_keyboard_visibility: 0339d06371254c3eb25eeb90ba8d17dca8f9c069
+  flutter_local_notifications: 0c0b1ae97e741e1521e4c1629a459d04b9aec743
   flutter_stripe_payment: 9baed5181b4aaf236ca4cdaa71b75abd56bafd03
   FMDB: 2ce00b547f966261cd18927a3ddb07cb6f3db82a
   geoflutterfire: 2a6493e01fb6eef1a6c9046b1baf9a943d0c5ffe
@@ -418,7 +429,7 @@ SPEC CHECKSUMS:
   GTMAppAuth: 197a8dabfea5d665224aa00d17f164fc2248dab9
   GTMSessionFetcher: b3503b20a988c4e20cc189aa798fd18220133f52
   image_picker: 9c3312491f862b28d21ecd8fdf0ee14e601b3f09
-  majascan: 6ad3804777ac93f1ca09160e5d38197e4387081d
+  majascan: 473bd426fa19600b6ca287bc948d40b2194d5c0b
   map_launcher: e325db1261d029ff33e08e03baccffe09593ffea
   multi_image_picker: 58577ab96d99b35c82d626db7d81906d14c2b667
   nanopb: 59317e09cf1f1a0af72f12af412d54edf52603fc
@@ -433,6 +444,7 @@ SPEC CHECKSUMS:
   sign_in_with_apple: 34f3f5456a45fd7ac5fb42905e2ad31dae061b4a
   sqflite: 6d358c025f5b867b29ed92fc697fd34924e11904
   Stripe: 03313f9520a0786e2c00d9a7a2672c11e08821af
+  system_alert_window: a66510ec18ad7ef4987eff00b6f5ad5d13093910
   url_launcher: 6fef411d543ceb26efce54b05a0a40bfd74cbbef
 
 PODFILE CHECKSUM: 9db884a8de33267c2abcdc27e6cc84b2ba5d134b

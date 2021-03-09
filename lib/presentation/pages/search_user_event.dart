@@ -14,11 +14,14 @@ import 'package:van_events_project/domain/models/my_user.dart';
 import 'package:van_events_project/domain/repositories/my_chat_repository.dart';
 import 'package:van_events_project/domain/routing/route.gr.dart';
 import 'package:van_events_project/presentation/widgets/model_screen.dart';
+import 'package:van_events_project/presentation/widgets/show.dart';
+import 'package:van_events_project/providers/formul_vtc.dart';
 
 class SearchUserEvent extends StatefulWidget {
-  final bool isEvent;
+  final bool isEvent, fromBilletForm, fromTransport;
 
-  const SearchUserEvent({this.isEvent});
+  const SearchUserEvent(
+      {this.isEvent, this.fromBilletForm, this.fromTransport});
 
   @override
   _SearchUserEventState createState() => _SearchUserEventState();
@@ -43,7 +46,7 @@ class _SearchUserEventState extends State<SearchUserEvent> {
     final uid = context.read(myUserProvider).id;
     return ModelScreen(
         child: Scaffold(
-          backgroundColor: Theme.of(context).colorScheme.background,
+      backgroundColor: Theme.of(context).colorScheme.background,
       appBar: PreferredSize(
         preferredSize: const Size.fromHeight(77),
         child: AppBar(
@@ -52,7 +55,8 @@ class _SearchUserEventState extends State<SearchUserEvent> {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               IconButton(
-                icon: const BackButtonIcon(),color: Theme.of(context).colorScheme.onPrimary,
+                icon: const BackButtonIcon(),
+                color: Theme.of(context).colorScheme.onPrimary,
                 onPressed: () {
                   ExtendedNavigator.of(context).pop();
                 },
@@ -89,7 +93,10 @@ class _SearchUserEventState extends State<SearchUserEvent> {
                 ),
               ),
               IconButton(
-                icon: Icon(Icons.clear,color: Theme.of(context).colorScheme.onPrimary,),
+                icon: Icon(
+                  Icons.clear,
+                  color: Theme.of(context).colorScheme.onPrimary,
+                ),
                 onPressed: () {
                   SystemChannels.textInput.invokeMethod('TextInput.hide');
                 },
@@ -108,64 +115,77 @@ class _SearchUserEventState extends State<SearchUserEvent> {
             MyEvent myEvent;
 
             if (!widget.isEvent) {
-              myUser =
-                  MyUser.fromMap(documentSnapshot.data());
+              myUser = MyUser.fromMap(documentSnapshot.data());
             } else {
-              myEvent =
-                  MyEvent.fromMap(documentSnapshot.data());
+              myEvent = MyEvent.fromMap(documentSnapshot.data());
             }
 
-            return(widget.isEvent ? myEvent.titre : myUser.nom)
-                .toLowerCase()
-                .contains(query.toLowerCase())? (myEvent != null || myUser.id != uid)? Padding(
-              padding: const EdgeInsets.all(8.0),
-              child: ListTile(
-                title: Text(widget.isEvent ? myEvent.titre : myUser.nom,
-                    style: Theme.of(context).textTheme.bodyText1),
-                leading: (widget.isEvent
-                    ? myEvent.imageFlyerUrl
-                    : myUser.imageUrl)
-                    .isNotEmpty
-                    ? CachedNetworkImage(
-                  imageUrl: widget.isEvent
-                      ? myEvent.imageFlyerUrl
-                      : myUser.imageUrl,
-                  imageBuilder: (context, imageProvider) =>
-                      CircleAvatar(
-                        backgroundImage: imageProvider,
-                        radius: 25,
-                        backgroundColor:
-                        Theme.of(context).colorScheme.primary,
-                      ),
-                  fit: BoxFit.cover,
-                  placeholder: (context, url) => Shimmer.fromColors(
-                    baseColor: Theme.of(context).colorScheme.onPrimary,
-                    highlightColor:
-                    Theme.of(context).colorScheme.primary,
-                    child: const CircleAvatar(
-                      radius: 25,
-                    ),
-                  ),
-                  errorWidget: (context, url, error) =>
-                      const Icon(Icons.error),
-                )
-                    : CircleAvatar(
-                  radius: 25,
-                  backgroundColor:
-                  Theme.of(context).colorScheme.primary,
-                  backgroundImage:
-                  const AssetImage('assets/img/normal_user_icon.png'),
-                ),
-                onTap: () async {
-                  final db = context.read(myChatRepositoryProvider);
-                  if (myUser != null) {
-                    await toChatRoomUser(db, myUser, context);
-                  } else if (myEvent != null) {
-                    await toChatRoomEvent(myEvent, db, context);
-                  }
-                },
-              ),
-            ): const SizedBox():const SizedBox();
+            return (widget.isEvent ? myEvent.titre : myUser.nom)
+                    .toLowerCase()
+                    .contains(query.toLowerCase())
+                ? (myEvent != null || myUser.id != uid)
+                    ? Padding(
+                        padding: const EdgeInsets.all(8.0),
+                        child: ListTile(
+                          title: Text(
+                              widget.isEvent ? myEvent.titre : myUser.nom,
+                              style: Theme.of(context).textTheme.bodyText1),
+                          leading: (widget.isEvent
+                                      ? myEvent.imageFlyerUrl
+                                      : myUser.imageUrl)
+                                  .isNotEmpty
+                              ? CachedNetworkImage(
+                                  imageUrl: widget.isEvent
+                                      ? myEvent.imageFlyerUrl
+                                      : myUser.imageUrl,
+                                  imageBuilder: (context, imageProvider) =>
+                                      CircleAvatar(
+                                    backgroundImage: imageProvider,
+                                    radius: 25,
+                                    backgroundColor:
+                                        Theme.of(context).colorScheme.primary,
+                                  ),
+                                  fit: BoxFit.cover,
+                                  placeholder: (context, url) =>
+                                      Shimmer.fromColors(
+                                    baseColor:
+                                        Theme.of(context).colorScheme.onPrimary,
+                                    highlightColor:
+                                        Theme.of(context).colorScheme.primary,
+                                    child: const CircleAvatar(
+                                      radius: 25,
+                                    ),
+                                  ),
+                                  errorWidget: (context, url, error) =>
+                                      const Icon(Icons.error),
+                                )
+                              : CircleAvatar(
+                                  radius: 25,
+                                  backgroundColor:
+                                      Theme.of(context).colorScheme.primary,
+                                  backgroundImage: const AssetImage(
+                                      'assets/img/normal_user_icon.png'),
+                                ),
+                          onTap: () async {
+                            if (!widget.fromBilletForm && !widget.fromTransport) {
+                              final db = context.read(myChatRepositoryProvider);
+                              if (myUser != null) {
+                                await toChatRoomUser(db, myUser, context);
+                              } else if (myEvent != null) {
+                                await toChatRoomEvent(myEvent, db, context);
+                              }
+                            } else if (widget.fromBilletForm &&
+                                myUser != null) {
+                              toChatBillet(myUser, context);
+                            } else if (widget.fromTransport &&
+                                myEvent != null) {
+                              toTransport(myEvent, context);
+                            }
+                          },
+                        ),
+                      )
+                    : const SizedBox()
+                : const SizedBox();
           },
           listeners: [
             refreshChangeListener,
@@ -190,23 +210,31 @@ class _SearchUserEventState extends State<SearchUserEvent> {
       MyEvent myEvent, MyChatRepository db, BuildContext context) async {
     firebaseMessaging.subscribeToTopic(myEvent.chatId);
 
+    Show.showLoading(context);
+
     await db.addAmongGroupe(myEvent.chatId).then((_) {
+      ExtendedNavigator.root.pop();
       ExtendedNavigator.of(context).push(Routes.chatRoom,
           arguments: ChatRoomArguments(chatId: myEvent.chatId));
     });
   }
 
   Future toChatRoomUser(
-      MyChatRepository db, MyUser myUser, BuildContext context) async{
+      MyChatRepository db, MyUser myUser, BuildContext context) async {
+    Show.showLoading(context);
     final chatId = await db.creationChatRoom(myUser);
+    ExtendedNavigator.root.pop();
+    ExtendedNavigator.of(context)
+        .push(Routes.chatRoom, arguments: ChatRoomArguments(chatId: chatId));
+  }
 
-    await db.getMyChat(chatId).then((myChat) {
-      ExtendedNavigator.of(context).push(Routes.chatRoom,
-          arguments: ChatRoomArguments(chatId: chatId));
-    }).catchError((onError) {
-      debugPrint(onError.toString());
-    });
+  void toChatBillet(MyUser myUser, BuildContext context) {
+    context.read(formuleVTCProvider).setUserBuyingFor(myUser);
+    ExtendedNavigator.of(context).pop();
+  }
 
-
+  void toTransport(MyEvent myEvent, BuildContext context) {
+    context.read(formuleVTCProvider).setMyEvent(myEvent);
+    ExtendedNavigator.of(context).pop();
   }
 }

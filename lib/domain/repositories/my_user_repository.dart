@@ -10,6 +10,7 @@ import 'package:geolocator/geolocator.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:sign_in_with_apple/sign_in_with_apple.dart';
+import 'package:van_events_project/constants/credentials.dart';
 import 'package:van_events_project/domain/models/about.dart';
 import 'package:van_events_project/domain/models/my_chat.dart';
 import 'package:van_events_project/domain/models/my_user.dart';
@@ -18,15 +19,16 @@ import 'package:van_events_project/providers/authentication_cubit/authentication
 import 'package:van_events_project/services/firestore_path.dart';
 import 'package:van_events_project/services/firestore_service.dart';
 
-final myUserRepository = Provider<MyUserRepository>((ref) {
+final myUserRepository = Provider.autoDispose<MyUserRepository>((ref) {
   return MyUserRepository();
 });
 
-final streamMyUserProvider = StreamProvider<MyUser>((ref) {
+final streamMyUserProvider = StreamProvider.autoDispose<MyUser>((ref) {
+
   return ref.read(myUserRepository).userStream();
 });
 
-final aboutFutureProvider = FutureProvider<List<About>>((ref) {
+final aboutFutureProvider = FutureProvider.autoDispose<List<About>>((ref) {
   return ref.read(myUserRepository).aboutFuture();
 });
 
@@ -38,8 +40,6 @@ class MyUserRepository {
   String uid;
   String email;
   User user;
-
-  MyUserRepository({String id}) : uid = id;
 
   Future<UserCredential> signInWithGoogle() async {
     final GoogleSignInAccount googleUser = await _googleSignIn.signIn();
@@ -55,7 +55,7 @@ class MyUserRepository {
 
   Future<UserCredential> signInWithApple() async {
     final b = await SignInWithApple.isAvailable();
-    if(!b){
+    if (!b) {
       return null;
     }
     // 1. perform the sign-in request
@@ -103,7 +103,6 @@ class MyUserRepository {
   }
 
   Future<void> handleLink(Uri link, BuildContext context) async {
-
     if (link != null) {
       final mode = link.queryParameters['mode'];
       final actionCode = link.queryParameters['oobCode'];
@@ -194,7 +193,6 @@ class MyUserRepository {
   }
 
   Future setInactive() {
-
     if (uid == null) {
       return Future.value();
     }
@@ -236,7 +234,8 @@ class MyUserRepository {
 
           if (image != null) {
             //création du path pour la photo profil
-            final String path = image.path.substring(image.path.lastIndexOf('/') + 1);
+            final String path =
+                image.path.substring(image.path.lastIndexOf('/') + 1);
 
             //création de l'url pour la photo profil
             await _service
@@ -322,10 +321,21 @@ class MyUserRepository {
 
   Future<void> signOut() async {
     setInactive();
-    return Future.wait([
-      _firebaseAuth.signOut(),
-      _googleSignIn.signOut(),
-    ]);
+    await _firebaseAuth.signOut().catchError((e) {
+      debugPrint('_firebaseAuth');
+      debugPrint(e.toString());
+    });
+    await _googleSignIn.signOut().catchError((e) {
+      debugPrint('_googleSignIn');
+      debugPrint(e.toString());
+    });
+    user = null;
+    uid = null;
+
+    // return Future.wait([
+    //   _firebaseAuth.signOut(),
+    //   _googleSignIn.signOut(),
+    // ]);
   }
 
   Future<bool> isSignedIn() async {
@@ -335,7 +345,8 @@ class MyUserRepository {
     if (currentUser != null) {
       await createOrUpdateUserOnDatabase(currentUser);
     }
-    return (currentUser != null && currentUser.emailVerified)||(currentUser != null && currentUser.isAnonymous);
+    return (currentUser != null && currentUser.emailVerified) ||
+        (currentUser != null && currentUser.isAnonymous);
   }
 
   User getFireBaseUser() {
@@ -360,19 +371,19 @@ class MyUserRepository {
 
     await _service.setData(path: MyPath.user(user.uid), data: {
       'id': user.uid,
-      'email' : user.email,
+      'email': user.email,
       'lastActivity': FieldValue.serverTimestamp(),
-      'nom': fromDb.nom ?? user?.displayName,
-      'imageUrl': fromDb.imageUrl ?? user?.photoURL,
-      'hasAcceptedCGUCGV': fromDb.hasAcceptedCGUCGV ?? false,
+      'nom': fromDb?.nom ?? user?.displayName,
+      'imageUrl': fromDb?.imageUrl ?? user?.photoURL,
+      'hasAcceptedCGUCGV': fromDb?.hasAcceptedCGUCGV ?? false,
       'isLogin': true
     });
 
-    return fromDb.hasAcceptedCGUCGV ?? false;
+    return fromDb?.hasAcceptedCGUCGV ?? false;
   }
 
   Future<MyUser> getMyUser(String uid) async {
-    return  _service.getDoc(
+    return _service.getDoc(
         path: MyPath.user(uid), builder: (data) => MyUser.fromMap(data));
   }
 
@@ -494,7 +505,6 @@ class MyUserRepository {
     });
   }
 
-
   Future<void> changePassword() async {
     return _firebaseAuth.sendPasswordResetEmail(
         email: _firebaseAuth.currentUser.email);
@@ -524,20 +534,74 @@ class MyUserRepository {
 
   Future<void> handleVerifyEmail(BuildContext context, String actionCode,
       String continueUrl, String lang) async {
-    await _firebaseAuth
-        .applyActionCode(actionCode)
-        .then((_) {
+    await _firebaseAuth.applyActionCode(actionCode).then((_) {
       final Uri deepLink = Uri.parse(continueUrl);
-
 
       BlocProvider.of<AuthenticationCubit>(context)
           .authenticationEmailLinkSuccess(deepLink.queryParameters['email']);
-        })
-        .catchError((e) {
+    }).catchError((e) {
       debugPrint(e.toString());
     });
+  }
 
+  Future<void> setUserBlocked(String id) {
+    return _service.updateData(path: MyPath.user(uid), data: {
+      'blockedUser': FieldValue.arrayUnion([id])
+    });
+  }
 
+  Future<void> setUserUnBlocked(String id) {
+    return _service.updateData(path: MyPath.user(uid), data: {
+      'blockedUser': FieldValue.arrayRemove([id])
+    });
+  }
 
+  Future<void> setUserNull(String id) {
+    return _firebaseAuth.signOut();
+  }
+
+  Future<void> setNewName(String newName) {
+    return _service.updateData(path: MyPath.user(uid), data: {'nom': newName});
+  }
+
+  Future<void> addDummyUser() async {
+    // await FirebaseFirestore.instance
+    //     .collection('users')
+    //     .get().then((value) async {
+    //
+    //       for(final user in value.docs){
+    //
+    //         final String id = user.id;
+    //
+    //         final MyUser myUser = MyUser.fromMap(user.data());
+    //
+    //         if(myUser.nom.contains("Britney") ||
+    //             myUser.nom.contains("Amaury") ||
+    //             myUser.nom.contains("Brad") ||
+    //             myUser.nom.contains("David") ||
+    //             myUser.nom.contains("Elon") ||
+    //             myUser.nom.contains("Le Pape") ||
+    //             myUser.nom.contains("Marlon") ||
+    //             myUser.nom.contains("Hiro") ||
+    //             myUser.nom.contains("Azziz") ||
+    //             myUser.nom.contains("Satya") ||
+    //             myUser.nom.contains("Mamoudou") ){
+    //           await _service.deleteDoc(
+    //             path: MyPath.user(id),
+    //           );
+    //         }
+    //       }
+    //
+    //       return null;
+    //     });
+
+    for (final user in dummyUser) {
+      final id = _service.getDocId(path: MyPath.users());
+
+      final Map<String,dynamic> map = Map.from(user);
+
+      map.addAll({"id": id});
+      await _service.setData(path: MyPath.user(id), data: map);
+    }
   }
 }

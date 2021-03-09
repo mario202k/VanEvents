@@ -4,7 +4,7 @@ import 'package:van_events_project/domain/models/my_user.dart';
 import 'package:van_events_project/services/firestore_path.dart';
 import 'package:van_events_project/services/firestore_service.dart';
 
-final myBilletRepositoryProvider = Provider<MyBilletRepository>((ref) {
+final myBilletRepositoryProvider = Provider.autoDispose<MyBilletRepository>((ref) {
   return MyBilletRepository(ref.watch(myUserProvider).id);
 });
 
@@ -27,7 +27,7 @@ class MyBilletRepository {
   Stream<List<Billet>> streamBilletsMyUser() {
     return _service.collectionStream(
         path: MyPath.billets(),
-        queryBuilder: (query)=>query.where('uid',isEqualTo: uid),
+        queryBuilder: (query)=>query.where('participantsId.$uid',isEqualTo: true),
         builder: (map) => Billet.fromMap(map));
   }
 
@@ -46,10 +46,11 @@ class MyBilletRepository {
   }
 
   Future<List<Billet>> futureBilletParticipation({String otherUid}) {
+    final String id = otherUid ?? uid;
     return _service.collectionFuture(
         path: MyPath.billets(),
         builder: (map) => Billet.fromMap(map),
-        queryBuilder: (query) => query.where('uid', isEqualTo: otherUid ?? uid));
+        queryBuilder: (query) => query.where('participantsId.$id', isEqualTo: true));
   }
 
   Future setToggleisHere(Map participant, String qrResult, int index) async {
@@ -97,4 +98,5 @@ class MyBilletRepository {
         path: MyPath.billet(billetId), data: {'status': 'refund_cancelled'});
 
   }
+
 }

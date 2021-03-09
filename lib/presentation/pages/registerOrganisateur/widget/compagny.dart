@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter_bloc/flutter_bloc.dart' hide ReadContext;
 import 'package:flutter_form_builder/flutter_form_builder.dart';
-import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:open_mail_app/open_mail_app.dart';
@@ -15,20 +14,27 @@ import 'package:van_events_project/presentation/pages/registerOrganisateur/regis
 import 'package:van_events_project/presentation/widgets/show.dart';
 import 'package:van_events_project/providers/toggle_bool.dart';
 
-class Company extends HookWidget {
+class Company extends StatefulWidget {
+  final PageController _pageController;
+
+  const Company(this._pageController);
+
+  @override
+  _CompanyState createState() => _CompanyState();
+}
+
+class _CompanyState extends State<Company> with AutomaticKeepAliveClientMixin {
   final GlobalKey<FormBuilderState> _fbKey = GlobalKey<FormBuilderState>();
 
   final List<FocusScopeNode> listFocusNode =
       List.generate(19, (index) => FocusScopeNode());
-  final PageController _pageController;
-
-  Company(this._pageController);
 
   @override
   Widget build(BuildContext context) {
-    final boolToggleRead = useProvider(boolToggleProvider);
-    final myUserRepo = useProvider(myUserRepository);
-    final stripeRepo = useProvider(stripeRepositoryProvider);
+    final boolToggleRead = context.read(boolToggleProvider);
+    final myUserRepo = context.read(myUserRepository);
+    final stripeRepo = context.read(stripeRepositoryProvider);
+
     return BlocListener<RegisterBlocOrganisateur, RegisterStateOrganisateur>(
       listener: (context, state) async {
         if (state.isSubmitting) {
@@ -97,7 +103,7 @@ class Company extends HookWidget {
               child: Column(
                 children: <Widget>[
                   RaisedButton.icon(onPressed: (){
-                    _pageController.jumpToPage(0);
+                    widget._pageController.jumpToPage(0);
                   }, icon: const FaIcon(FontAwesomeIcons.arrowLeft),
                       label: const Text('Précédent')),
                   FormBuilder(
@@ -672,4 +678,7 @@ class Company extends HookWidget {
   String parsePhoneNumber(String value) {
     return value.replaceFirst('0', '+33');
   }
+
+  @override
+  bool get wantKeepAlive => true;
 }

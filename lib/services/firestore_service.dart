@@ -25,10 +25,11 @@ class FirestoreService {
     await reference.update(data);
   }
 
-  Future<void> deleteData({@required String path}) async {
+  Future<void> deleteDoc({@required String path}) async {
     final reference = FirebaseFirestore.instance.doc(path);
     await reference.delete();
   }
+
 
   Stream<List<T>> collectionStream<T>({
     @required String path,

@@ -62,8 +62,8 @@ Future refundProcess(
     if(map == null){
       return;
     }
-    String pI = refunds[index].paymentIntent;
-    String reason = map['reason']
+    final String pI = refunds[index].paymentIntent;
+    final String reason = map['reason']
         .toString()
         .substring(map['reason'].toString().indexOf('.') + 1);
     final int myAmount = ((map['amount'] as int) * 100).toInt();

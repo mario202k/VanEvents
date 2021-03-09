@@ -19,7 +19,7 @@ import 'package:van_events_project/domain/repositories/my_chat_repository.dart';
 import 'package:van_events_project/presentation/widgets/lieu_quand_alertdialog.dart';
 import 'package:van_events_project/providers/settings_change_notifier.dart';
 
-final boolToggleProvider = ChangeNotifierProvider<BoolToggle>((ref) {
+final boolToggleProvider = ChangeNotifierProvider.autoDispose<BoolToggle>((ref) {
   return BoolToggle(ref.read(settingsProvider).sharePref);
 });
 
@@ -506,12 +506,12 @@ class BoolToggle with ChangeNotifier {
   @override
   void dispose() {
     streamSubscriptionListChat?.cancel();
-    streamSubscriptionListStream.forEach((element) {
-      element?.cancel();
-    });
-    streamSubscriptionNbMsgNonLu.forEach((element) {
-      element?.cancel();
-    });
+    for(final stream in streamSubscriptionListStream){
+      stream?.cancel();
+    }
+    for(final stream in streamSubscriptionNbMsgNonLu){
+      stream?.cancel();
+    }
 
     super.dispose();
   }
